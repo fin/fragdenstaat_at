@@ -1,0 +1,53 @@
+{% extends "cms/scaffold.html" %}
+
+{% load cms_tags %}
+{% load static %}
+{% load sekizai_tags %}
+
+{% block css %}
+  {% addtoblock "css" %}<link href="{% static 'css/main.css' %}" rel="stylesheet">{% endaddtoblock %}
+  {{ block.super }}
+{% endblock %}
+
+
+{% block body_tag %}
+  {% block top_block %}
+    {% static_placeholder "dropdown_banner" %}
+  {% endblock %}
+
+  {% block navbar %}
+    {% include "header.html" %}
+  {% endblock %}
+
+  {% block body_wrapper %}
+  <main class="main">
+
+    {% block messages %}
+      {% include "snippets/messages.html" %}
+    {% endblock messages %}
+
+    {% block body %}
+      <div class="container">
+        {% block app_body %}
+          {% placeholder "content" %}
+        {% endblock %}
+      </div>
+    {% endblock %}
+  </main>
+  {% endblock %}
+
+  {% block footer_container %}
+    {% include "footer.html" %}
+  {% endblock %}
+
+{% endblock body_tag %}
+
+{% block scripts %}
+  {% addtoblock "js" %}<script async src="{% static 'js/main.js' %}"></script>{% endaddtoblock %}
+  {{ block.super }}
+{% endblock %}
+
+{% block below_scripts %}
+  {% block tracking_code %}{% include "snippets/tracking.html" %}{% endblock %}
+{% endblock %}
+

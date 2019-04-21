@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  db:
+    image: mdillon/postgis:10-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  elasticsearch:
+    image: fragdenstaat_at-elasticsearch
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+      - elasticsearch-log:/var/log
+  backend:
+    build: .
+    command: honcho -f Procfile.dev start
+    cap_add:
+      - SYS_PTRACE
+    volumes:
+      - ./froide:/code/code/froide:cached
+      - ./frontend:/code/code/frontend:cached
+      - ./fragdenstaat_at:/code/code/fragdenstaat_at:cached
+    links:
+      - db
+      - elasticsearch
+    environment:
+        - DJANGO_SETTINGS_MODULE=fragdenstaat_at.settings.development
+        - DJANGO_CONFIGURATION=Dev
+        - DATABASE_URL=postgis://postgres@db/postgres
+        - DATABASE_HOST=db
+        - DATABASE_NAME=fragdenstaat
+        - DATABASE_USER=postgres
+    ports:
+      - "8000:8000"
+      - "8080:8080" # live reload
+    depends_on:
+      - db
+      - elasticsearch
+
+volumes:
+  postgres_data: {}
+  elasticsearch-data: {}
+  elasticsearch-log: {}

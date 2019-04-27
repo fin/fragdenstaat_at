@@ -339,11 +339,11 @@ class FragDenStaatBase(German, Base):
         config = super(FragDenStaatBase, self).FROIDE_CONFIG
         config.update(dict(
             create_new_publicbody=False,
-            publicbody_empty=True,
+            publicbody_empty=False,
             user_can_hide_web=True,
             public_body_officials_public=False,
             public_body_officials_email_public=False,
-            default_law=2,
+            default_law=1,
             doc_conversion_binary="/usr/bin/libreoffice",
             dryrun=False,
             read_receipt=True,
@@ -370,6 +370,7 @@ class FragDenStaatBase(German, Base):
                 rec(r"Sehr geehrte Damen und Herren,?"),
                 rec(r"Sehr geehrt(er? (?:Herr|Frau|Fr\.|Hr\.)?(?: ?Dr\.?)?(?: ?Prof\.?)? .*)"),
                 rec(r"^(?:Von|An|Cc|To|From): .*"),
+                rec(u"Sehr geehrt(er? (?:Herr|Frau)(?: ?Dr\.?)?(?: ?Prof\.?)? .*)"),
             ],
             custom_replacements=[
                 rec(r'[Bb][Gg]-[Nn][Rr]\.?\s*\:?\s*([a-zA-Z0-9\s/]+)')

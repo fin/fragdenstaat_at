@@ -1,1 +1,9 @@
-Email footer: Content verlinken (spenden? about?)
+- Email footer: Content verlinken (spenden? about?)
+- Froide Settings überarbeiten
+- Grußformeln überarbeiten
+- Deadlineberechnung doublechecken
+
+
+Postdeploy:
+- Namen für Behördenklassifikationen vergeben
+- Warning für NÖ/Stmk/Wien: Bescheidverlangen nur bis 3 Monate nach Anfrage möglich

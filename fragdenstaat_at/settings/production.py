@@ -26,14 +26,14 @@ class FragDenStaat(FragDenStaatBase):
 
     DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-    STATIC_URL = 'https://static.frag-den-staat.at/static/'
+    STATIC_URL = 'https://static.frag.denstaat.at/static/'
 
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
 
     USE_X_ACCEL_REDIRECT = True
     X_ACCEL_REDIRECT_PREFIX = '/protected'
 
-    ALLOWED_HOSTS = ('fragdenstaat.at', 'media.frag-den-staat.at', 'testserver')
+    ALLOWED_HOSTS = ('fragdenstaat.at', 'media.frag.denstaat.at', 'testserver')
     ALLOWED_REDIRECT_HOSTS = ('fragdenstaat.at',)
 
     CACHES = {'default': django_cache_url.config()}
@@ -75,7 +75,7 @@ class FragDenStaat(FragDenStaatBase):
     EMAIL_PORT = 25
     # FOI_EMAIL_ACCOUNT_NAME
     # FOI_EMAIL_ACCOUNT_PASSWORD
-    FOI_EMAIL_DOMAIN = ['fragdenstaat.at']
+    FOI_EMAIL_DOMAIN = ['foi.fragdenstaat.at']
     FOI_EMAIL_FIXED_FROM_ADDRESS = False
     FOI_EMAIL_FUNC = None
     # Values from env
@@ -151,10 +151,10 @@ class FragDenStaat(FragDenStaatBase):
     }
     MANAGERS = (('FragDenStaat.at', 'mail@fragdenstaat.at'),)
     MEDIA_ROOT = env('DJANGO_MEDIA_ROOT')
-    MEDIA_URL = 'https://media.frag-den-staat.at/files/'
+    MEDIA_URL = 'https://media.frag.denstaat.at/files/'
 
     FOI_MEDIA_TOKENS = True
-    FOI_MEDIA_DOMAIN = 'https://media.frag-den-staat.at'
+    FOI_MEDIA_DOMAIN = 'https://media.frag.denstaat.at'
 
     FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o2750
     FILE_UPLOAD_PERMISSIONS = 0o640

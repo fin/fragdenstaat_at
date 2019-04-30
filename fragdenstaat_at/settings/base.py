@@ -345,7 +345,7 @@ class FragDenStaatBase(German, Base):
             public_body_officials_email_public=False,
             default_law=1,
             doc_conversion_binary="/usr/bin/libreoffice",
-            dryrun=False,
+            dryrun=env('FROIDE_DRY_RUN', False),
             read_receipt=True,
             delivery_receipt=True,
             dsn=True,

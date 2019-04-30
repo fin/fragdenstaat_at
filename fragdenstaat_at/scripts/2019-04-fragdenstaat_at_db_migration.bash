@@ -21,3 +21,5 @@ python manage.py migrate --fake-initial
 # - foirequestfollower: Index
 
 python manage.py sqldiff -a | python manage.py dbshell
+
+# python manage.py loaddata fragdenstaat_at/test.json

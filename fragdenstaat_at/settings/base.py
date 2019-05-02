@@ -22,7 +22,7 @@ class FragDenStaatBase(German, Base):
 
     LANGUAGES = (
         ('de-at', _('Austrian')),
-        ('de', _('German')),
+    #    ('de', _('German')),
     )
     LANGUAGE_CODE = 'de-at'
 
@@ -102,9 +102,9 @@ class FragDenStaatBase(German, Base):
         1: (
             {'code': 'de-at'},
         ),
-        2: (
-            {'code': 'de'},
-        ),
+        #2: (
+        #    {'code': 'de'},
+        #),
         'default': {
             'hide_untranslated': False,   # the default; let .active_translations() return fallbacks too.
         }
@@ -129,16 +129,16 @@ class FragDenStaatBase(German, Base):
                 'fallbacks': ['de'],
             }
         ],
-        2: [
-            {
-                'public': True,
-                'code': 'de',
-                'hide_untranslated': False,
-                'name': _('German'),
-                'redirect_on_fallback': False,
-                'fallbacks': ['de-at'],
-            }
-        ],
+        #2: [
+        #    {
+        #        'public': True,
+        #        'code': 'de',
+        #        'hide_untranslated': False,
+        #        'name': _('German'),
+        #        'redirect_on_fallback': False,
+        #        'fallbacks': ['de-at'],
+        #    }
+        #],
     }
 
     CMS_TOOLBAR_ANONYMOUS_ON = False

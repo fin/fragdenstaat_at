@@ -136,6 +136,7 @@ class FragDenStaatBase(German, Base):
                 'hide_untranslated': False,
                 'name': _('German'),
                 'redirect_on_fallback': False,
+                'fallbacks': ['de-at'],
             }
         ],
     }

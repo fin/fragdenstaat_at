@@ -376,7 +376,7 @@ class FragDenStaatBase(German, Base):
             custom_replacements=[
                 rec(r'[Bb][Gg]-[Nn][Rr]\.?\s*\:?\s*([a-zA-Z0-9\s/]+)')
             ],
-            closings=[rec(r"([Mm]it )?(den )?(freundliche(n|m)?|vielen|besten)? ?Gr(ü|u)(ß|ss)(en?)?,?"), rec("Hochachtungsvoll,?"), rec(r'i\. ?A\.'), rec('[iI]m Auftrag')],
+            closings=[rec(r"([Mm]it )?(den )?([fF]reundliche(n|m)?|vielen|besten)? ?Gr(ü|u)(ß|ss)(en?)?,?"), rec("Hochachtungsvoll,?"), rec(r'i\. ?A\.'), rec('[iI]m Auftrag')],
             content_urls={
                 'terms': '/info/nutzungsbedingungen/',
                 'privacy': '/info/datenschutz/',

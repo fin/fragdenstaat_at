@@ -17,12 +17,13 @@
 
   {% block meta %}
     {% include "snippets/meta.html" %}
+    {% include "cms/social_meta.html" with object=request.current_page %}
   {% endblock %}
 
   {% block extra_head %}
   {% endblock %}
 </head>
-<body {% block body_extra_attribuets %}{% endblock %}>
+<body {% block body_extra_attributes %}{% endblock %}>
   {% cms_toolbar %}
   {% block body_tag %}{% endblock %}
   {% block extra_footer %}{% endblock %}

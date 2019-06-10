@@ -38,12 +38,7 @@ urlpatterns += [
     url(r'^', include('filer.server.urls')),
 ]
 
-urlpatterns += (
-    sitemap_urlpatterns +
-    froide_urlpatterns +
-    jurisdiction_urls
-)
-
+urlpatterns += sitemap_urlpatterns
 
 if settings.DEBUG:
     from django.contrib.sites.models import Site  # noqa
@@ -55,6 +50,11 @@ if settings.DEBUG:
         # Possibly during migration, ignore
         pass
 
-urlpatterns += admin_urls + [
-    url(r'^', include('cms.urls'))
-]
+
+urlpatterns += i18n_patterns(
+    *froide_urlpatterns,
+    *jurisdiction_urls,
+    *admin_urls,
+    url(r'^', include('cms.urls')),
+    prefix_default_language=False
+)

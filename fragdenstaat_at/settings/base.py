@@ -49,7 +49,7 @@ class FragDenStaatBase(German, Base):
 
             #'newsletter',
 
-            'fragdenstaat_at.fds_cms',
+            'fragdenstaat_at.fds_cms.apps.FdsCmsConfig',
 
             # Additional CMS plugins
             'djangocms_text_ckeditor',
@@ -58,9 +58,8 @@ class FragDenStaatBase(German, Base):
 
             'djcelery_email',
             'django.contrib.redirects',
-            'tinymce',
+            #'tinymce',
             'markdown_deux',
-            'raven.contrib.django.raven_compat',
 
             'django_extensions',
 
@@ -85,12 +84,12 @@ class FragDenStaatBase(German, Base):
         cps.extend([
             'sekizai.context_processors.sekizai',
             'cms.context_processors.cms_settings',
+            'fragdenstaat_at.theme.context_processors.theme_settings',
         ])
         return TEMP
 
     # Newsletter
 
-    NEWSLETTER_RICHTEXT_WIDGET = "tinymce.widgets.TinyMCE"
     DEFAULT_NEWSLETTER = 'fragdenstaat'
 
     # BLOG
@@ -263,11 +262,11 @@ class FragDenStaatBase(German, Base):
         return os.path.join(super(FragDenStaatBase,
                             self).PROJECT_ROOT, '..', 'data')
 
-    TINYMCE_DEFAULT_CONFIG = {
-        'plugins': "table,spellchecker,paste,searchreplace",
-        'theme': "advanced",
-        'cleanup_on_startup': False
-    }
+    # TINYMCE_DEFAULT_CONFIG = {
+    #     'plugins': "table,spellchecker,paste,searchreplace",
+    #     'theme': "advanced",
+    #     'cleanup_on_startup': False
+    # }
 
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
@@ -279,7 +278,7 @@ class FragDenStaatBase(German, Base):
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
-        'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
+        'fragdenstaat_at.theme.redirects.PathRedirectFallbackMiddleware', # instead of: 'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
         'froide.account.middleware.AcceptNewTermsMiddleware',
 
         'django.middleware.locale.LocaleMiddleware',
@@ -307,7 +306,7 @@ class FragDenStaatBase(German, Base):
 
     # ######### Debug ###########
 
-    SITE_NAME = "FragDenStaat"
+    SITE_NAME = "FragDenStaat.at"
     SITE_EMAIL = "info@fragdenstaat.at"
     SITE_URL = 'http://localhost:8000'
 
@@ -321,7 +320,8 @@ class FragDenStaatBase(German, Base):
     DEFAULT_FROM_EMAIL = 'FragDenStaat.at <info@fragdenstaat.at>'
     EMAIL_SUBJECT_PREFIX = '[AdminFragDenStaat] '
 
-    EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+    #EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+    EMAIL_BACKEND = 'fragdenstaat_at.theme.email_backend.CustomCeleryEmailBackend'
     CELERY_EMAIL_BACKEND = 'froide.foirequest.smtp.EmailBackend'
     CELERY_EMAIL_TASK_CONFIG = {
         'max_retries': None,
@@ -363,20 +363,29 @@ class FragDenStaatBase(German, Base):
             show_public_body_employee_name=False,
             request_throttle=[
                 (5, 5 * 60),  # X requests in X seconds
-                (10, 6 * 60 * 60),
-                (15, 24 * 60 * 60),
-                (30, 7 * 24 * 60 * 60),
+                (6, 6 * 60 * 60),
+                (10, 24 * 60 * 60),
+                (20, 7 * 24 * 60 * 60),
             ],
             greetings=[
                 rec(r"Sehr geehrte Damen und Herren,?"),
+                rec(r"Hallo\s+(.*)"),
                 rec(r"Sehr geehrt(er? (?:Herr|Frau|Fr\.|Hr\.)?(?: ?Dr\.?)?(?: ?Prof\.?)? .*)"),
-                rec(r"^(?:Von|An|Cc|To|From): .*"),
+                rec(r"Sehr (?:Herr|Frau|Fr\.|Hr\.) (.*)"),
+                rec(r"Sehr geehrte(.*)"),
+                rec(r"^(?:Von|An|Cc|To|From): (.*)"),
                 rec(u"Sehr geehrt(er? (?:Herr|Frau)(?: ?Dr\.?)?(?: ?Prof\.?)? .*)"),
             ],
             custom_replacements=[
-                rec(r'[Bb][Gg]-[Nn][Rr]\.?\s*\:?\s*([a-zA-Z0-9\s/]+)')
+                rec(r'[Bb][Gg]-[Nn][Rr]\.?\s*\:?\s*([a-zA-Z0-9\s/]+)'),
+                rec(r'Ihr Kennwort lautet: (.*)')
             ],
-            closings=[rec(r"([Mm]it )?(den )?([fF]reundliche(n|m)?|vielen|besten)? ?Gr(ü|u)(ß|ss)(en?)?,?"), rec("Hochachtungsvoll,?"), rec(r'i\. ?A\.'), rec('[iI]m Auftrag')],
+            closings=[
+                rec(r"([Mm]it )?(den )?(freundliche(n|m)?|vielen|besten)? ?Gr(ü|u|\?)(ß|ss|\?)(en?)?,?"),
+                rec("Hochachtungsvoll,?"),
+                rec(r'i\. ?A\.'),
+                rec('[iI]m Auftrag')
+            ],
             content_urls={
                 'terms': '/info/nutzungsbedingungen/',
                 'privacy': '/info/datenschutz/',
@@ -390,3 +399,5 @@ class FragDenStaatBase(German, Base):
             auto_reply_email_regex=rec('^auto(reply|responder|antwort)@')
         ))
         return config
+
+    SENTRY_JS_URL = ''

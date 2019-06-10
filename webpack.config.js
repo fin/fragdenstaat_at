@@ -13,32 +13,17 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const webpack = require('webpack')
 
 const devMode = process.env.NODE_ENV !== 'production'
-
-const PYTHON = childProcess.execSync('which python3').toString().trim()
-
-function getPythonPath (name) {
-  return path.resolve(childProcess.execSync(
-    PYTHON + ' -c "import ' + name + '; print(list(' + name + '.__path__)[0])"'
-  ).toString().trim())
-}
-
-// Get Froide install path
-const FROIDE_PATH = getPythonPath('froide')
-const FROIDE_STATIC = path.resolve(FROIDE_PATH, 'froide', 'static')
-const FROIDE_PLUGINS = {
-}
-
-console.log('Detected Froide at', FROIDE_PATH, FROIDE_STATIC)
-console.log('Froide plugins', FROIDE_PLUGINS)
+const ASSET_PATH = process.env.ASSET_PATH || '/static/';
 
 const ENTRY = {
   main: ['./frontend/javascript/main.ts'],
   publicbody: 'froide/frontend/javascript/publicbody.js',
   makerequest: 'froide/frontend/javascript/makerequest.js',
-  request: 'froide/frontend/javascript/request.ts',
+  request: 'froide//frontend/javascript/request.ts',
   redact: 'froide/frontend/javascript/redact.js',
   tagautocomplete: 'froide/frontend/javascript/tagautocomplete.ts',
-  docupload: 'froide/frontend/javascript/docupload.js'
+  docupload: 'froide/frontend/javascript/docupload.js',
+  geomatch: 'froide/frontend/javascript/geomatch.js',
 }
 
 const EXCLUDE_CHUNKS = [
@@ -55,17 +40,17 @@ CHUNK_LIST = CHUNK_LIST.join('|')
 const config = {
   entry: ENTRY,
   output: {
-    path: path.resolve(__dirname, 'fragdenstaat_at/theme/static/js'),
-    publicPath: process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8080/static/',
+    path: path.resolve(__dirname, 'fragdenstaat_de/theme/static/js'),
+    publicPath: process.env.NODE_ENV === 'production' ? ASSET_PATH : 'http://localhost:8080/static/',
     filename: '[name].js',
     chunkFilename: '[name].js',
     library: ['Froide', 'components', '[name]'],
     libraryTarget: 'umd'
   },
-  devtool: 'inline-source-map', // any "source-map"-like devtool is possible
+  devtool: 'source-map', // any "source-map"-like devtool is possible
   node: false,
   devServer: {
-    contentBase: path.resolve(__dirname, 'fragdenstaat_at/theme'),
+    contentBase: path.resolve(__dirname, 'fragdenstaat_de/theme'),
     headers: { 'Access-Control-Allow-Origin': '*' },
     hot: true,
     proxy: {
@@ -73,7 +58,7 @@ const config = {
         target: 'http://localhost:8000',
         bypass: function (req, res, proxyOptions) {
           var urlPath = req.path.substring(1)
-          urlPath = path.resolve(__dirname, 'fragdenstaat_at/theme', urlPath)
+          urlPath = path.resolve(__dirname, 'fragdenstaat_de/theme', urlPath)
           if (fs.existsSync(urlPath)) {
             return req.path
           }
@@ -84,18 +69,13 @@ const config = {
   },
   resolve: {
     modules: [
-      'fragdenstaat_at/theme/static',
-      FROIDE_STATIC,
+      'fragdenstaat_de/theme/static',
       path.resolve(__dirname, 'node_modules'), // Resolve all dependencies first in fds node_modules
       './node_modules'
     ],
     extensions: ['.js', '.ts', '.vue', '.json'],
     alias: {
       'vue$': 'vue/dist/vue.runtime.esm.js',
-      // 'zlib': 'browserify-zlib',
-      // 'froide': FROIDE_PATH,
-      'froide_static': FROIDE_STATIC
-      // ...FROIDE_PLUGINS
     }
   },
   module: {
@@ -105,7 +85,6 @@ const config = {
         use: {
           loader: 'bootstrap.native-loader',
           options: {
-            bsVersion: 4,
             only: ['modal', 'dropdown', 'collapse', 'alert', 'tab', 'tooltip']
           }
         }
@@ -171,8 +150,7 @@ const config = {
               ident: 'postcss',
               plugins: (loader) => [
                 require('autoprefixer')()
-              ],
-              sourceMap: true,
+              ]
             }
           },
           {
@@ -189,12 +167,6 @@ const config = {
                 'node_modules/'
               ]
             }
-          },
-          {
-            loader: 'sass-resources-loader',
-            options: {
-              resources: ['./frontend/styles/globalvars.scss']
-            }
           }
         ]
       },
@@ -205,7 +177,7 @@ const config = {
           limit: 10000,
           name: '../fonts/[name].[ext]',
           emitFile: true,
-          context: 'fragdenstaat_at/theme/static/js',
+          context: 'fragdenstaat_de/theme/static/js',
           publicPath: '/static/fonts/'
         }
       },
@@ -217,7 +189,7 @@ const config = {
             limit: 8192,
             name: '../img/[name].[ext]',
             emitFile: false,
-            context: 'fragdenstaat_at/theme/static/js',
+            context: 'fragdenstaat_de/theme/static/js',
             publicPath: '/static/img/'
           }
         }

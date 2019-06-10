@@ -2,7 +2,8 @@ import os
 
 import django_cache_url
 
-import raven
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegratio
 
 from .base import FragDenStaatBase, env
 
@@ -23,6 +24,7 @@ class FragDenStaat(FragDenStaatBase):
 
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
     DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
@@ -30,8 +32,7 @@ class FragDenStaat(FragDenStaatBase):
 
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
 
-    USE_X_ACCEL_REDIRECT = True
-    X_ACCEL_REDIRECT_PREFIX = '/protected'
+    INTERNAL_MEDIA_PREFIX = '/protected/'
 
     ALLOWED_HOSTS = ('fragdenstaat.at', 'media.frag.denstaat.at', 'testserver')
     ALLOWED_REDIRECT_HOSTS = ('fragdenstaat.at',)
@@ -46,7 +47,8 @@ class FragDenStaat(FragDenStaatBase):
             'HOST': env('DATABASE_HOST'),
             'USER': env('DATABASE_USER'),
             'PASSWORD': env('DATABASE_PASSWORD'),
-            'PORT': ''
+            'CONN_MAX_AGE': 0,
+            'PORT': '',
         }
     }
 
@@ -65,7 +67,7 @@ class FragDenStaat(FragDenStaatBase):
     CUSTOM_AUTH_USER_MODEL_DB = 'auth_user'
 
     DEFAULT_FROM_EMAIL = 'FragDenStaat.at <info@fragdenstaat.at>'
-    EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+    EMAIL_BACKEND = 'fragdenstaat_de.theme.email_backend.CustomCeleryEmailBackend'
     CELERY_EMAIL_BACKEND = 'froide.foirequest.smtp.EmailBackend'
     # EMAIL_HOST
     # EMAIL_HOST_PASSWORD
@@ -119,13 +121,8 @@ class FragDenStaat(FragDenStaatBase):
                 'propagate': True,
                 'handlers': ['normal']
             },
-            'raven': {
-                'handlers': ['normal'],
-                'propagate': False,
-                'level': 'DEBUG'
-            }
         },
-        'disable_existing_loggers': False,
+        'disable_existing_loggers': True,
         'handlers': {
             'normal': {
                 'filename': os.path.join(env('DJANGO_LOG_DIR'), 'froide.log'),
@@ -153,9 +150,6 @@ class FragDenStaat(FragDenStaatBase):
     MEDIA_ROOT = env('DJANGO_MEDIA_ROOT')
     MEDIA_URL = 'https://media.frag.denstaat.at/files/'
 
-    FOI_MEDIA_TOKENS = True
-    FOI_MEDIA_DOMAIN = 'https://media.frag.denstaat.at'
-
     FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o2750
     FILE_UPLOAD_PERMISSIONS = 0o640
 
@@ -170,14 +164,13 @@ class FragDenStaat(FragDenStaatBase):
     RAVEN_CONFIG = {
         'release': raven.fetch_git_sha(_base_dir)
     }
-    if env('DJANGO_SENTRY_DSN') is not None:
-        RAVEN_CONFIG['dsn'] = env('DJANGO_SENTRY_DSN')
 
+    SENTRY_JS_URL = env('DJANGO_SENTRY_PUBLIC_DSN')
     SERVER_EMAIL = 'info@fragdenstaat.at'
 
     SITE_EMAIL = 'info@fragdenstaat.at'
     SITE_ID = 1
-    SITE_NAME = 'FragDenStaat'
+    SITE_NAME = 'FragDenStaat.at'
     SITE_URL = 'https://fragdenstaat.at'
     META_SITE_PROTOCOL = 'https'
 
@@ -188,3 +181,9 @@ class FragDenStaat(FragDenStaatBase):
         P = super(FragDenStaat, self).OAUTH2_PROVIDER
         P['ALLOWED_REDIRECT_URI_SCHEMES'] = ['https', 'fragdenstaat']
         return P
+
+
+sentry_sdk.init(
+    dsn=env('DJANGO_SENTRY_DSN'),
+    integrations=[DjangoIntegration()]
+)

@@ -40,7 +40,7 @@ CHUNK_LIST = CHUNK_LIST.join('|')
 const config = {
   entry: ENTRY,
   output: {
-    path: path.resolve(__dirname, 'fragdenstaat_de/theme/static/js'),
+    path: path.resolve(__dirname, 'fragdenstaat_at/theme/static/js'),
     publicPath: process.env.NODE_ENV === 'production' ? ASSET_PATH : 'http://localhost:8080/static/',
     filename: '[name].js',
     chunkFilename: '[name].js',
@@ -50,7 +50,7 @@ const config = {
   devtool: 'source-map', // any "source-map"-like devtool is possible
   node: false,
   devServer: {
-    contentBase: path.resolve(__dirname, 'fragdenstaat_de/theme'),
+    contentBase: path.resolve(__dirname, 'fragdenstaat_at/theme'),
     headers: { 'Access-Control-Allow-Origin': '*' },
     hot: true,
     proxy: {
@@ -58,7 +58,7 @@ const config = {
         target: 'http://localhost:8000',
         bypass: function (req, res, proxyOptions) {
           var urlPath = req.path.substring(1)
-          urlPath = path.resolve(__dirname, 'fragdenstaat_de/theme', urlPath)
+          urlPath = path.resolve(__dirname, 'fragdenstaat_at/theme', urlPath)
           if (fs.existsSync(urlPath)) {
             return req.path
           }
@@ -69,7 +69,7 @@ const config = {
   },
   resolve: {
     modules: [
-      'fragdenstaat_de/theme/static',
+      'fragdenstaat_at/theme/static',
       path.resolve(__dirname, 'node_modules'), // Resolve all dependencies first in fds node_modules
       './node_modules'
     ],
@@ -177,7 +177,7 @@ const config = {
           limit: 10000,
           name: '../fonts/[name].[ext]',
           emitFile: true,
-          context: 'fragdenstaat_de/theme/static/js',
+          context: 'fragdenstaat_at/theme/static/js',
           publicPath: '/static/fonts/'
         }
       },
@@ -189,7 +189,7 @@ const config = {
             limit: 8192,
             name: '../img/[name].[ext]',
             emitFile: false,
-            context: 'fragdenstaat_de/theme/static/js',
+            context: 'fragdenstaat_at/theme/static/js',
             publicPath: '/static/img/'
           }
         }

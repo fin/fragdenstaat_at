@@ -161,9 +161,6 @@ class FragDenStaat(FragDenStaatBase):
     _base_dir = os.path.abspath(os.path.join(
         os.path.dirname(__file__), '..', '..')
     )
-    RAVEN_CONFIG = {
-        'release': raven.fetch_git_sha(_base_dir)
-    }
 
     SENTRY_JS_URL = env('DJANGO_SENTRY_PUBLIC_DSN')
     SERVER_EMAIL = 'info@fragdenstaat.at'

@@ -3,7 +3,7 @@ import os
 import django_cache_url
 
 import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegratio
+from sentry_sdk.integrations.django import DjangoIntegration
 
 from .base import FragDenStaatBase, env
 

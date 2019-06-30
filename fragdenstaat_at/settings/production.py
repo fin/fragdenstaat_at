@@ -182,5 +182,5 @@ class FragDenStaat(FragDenStaatBase):
 
 sentry_sdk.init(
     dsn=env('DJANGO_SENTRY_DSN'),
-    integrations=[DjangoIntegration()]
+    integrations=[DjangoIntegration(), CeleryIntegration()]
 )

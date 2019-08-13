@@ -1,3 +1,16 @@
+# monkeypatch as mentioned here
+
+from cms import views as cms_views
+from django.urls import LocaleRegexURLResolver, get_resolver
+def _patch_lang_pfx():
+    for url_pattern in get_resolver(None).url_patterns:
+        if isinstance(url_pattern, LocaleRegexURLResolver):
+            return url_pattern.prefix_default_language
+    return False
+# Swap out the faulty method from cms.views
+cms_views.is_language_prefix_patterns_used = _patch_lang_pfx
+
+
 from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
@@ -55,6 +68,9 @@ urlpatterns += i18n_patterns(
     *froide_urlpatterns,
     *jurisdiction_urls,
     *admin_urls,
-    url(r'^', include('cms.urls')),
     prefix_default_language=False
 )
+
+urlpatterns += [
+    url(r'^', include('cms.urls')),
+]

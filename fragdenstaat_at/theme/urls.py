@@ -1,17 +1,3 @@
-# monkeypatch as mentioned here: https://github.com/divio/django-cms/issues/6448
-
-from cms import views as cms_views
-from django.urls import get_resolver
-from django.core.urlresolvers import LocaleRegexURLResolver
-def _patch_lang_pfx():
-    for url_pattern in get_resolver(None).url_patterns:
-        if isinstance(url_pattern, LocaleRegexURLResolver):
-            return url_pattern.prefix_default_language
-    return False
-# Swap out the faulty method from cms.views
-cms_views.is_language_prefix_patterns_used = _patch_lang_pfx
-
-
 from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns

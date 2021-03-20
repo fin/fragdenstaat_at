@@ -59,7 +59,7 @@ html5lib==0.999999999
 icalendar==4.0.3
 idna==2.8
 itypes==1.1.0
-jinja2==2.10.1
+jinja2==2.11.3
 jsonfield==2.0.2
 kombu==4.4.0
 lxml==4.3.2

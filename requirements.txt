@@ -87,7 +87,7 @@ reportlab==3.5.13
 requests==2.21.0
 unidecode==1.0.23
 uritemplate==3.0.0
-urllib3==1.24.2
+urllib3==1.26.5
 urlobject==2.4.3
 vine==1.2.0
 wand==0.5.1

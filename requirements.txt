@@ -63,7 +63,7 @@ jinja2==2.10.1
 jsonfield==2.0.2
 kombu==4.4.0
 lxml==4.3.2
-markdown2==2.3.7
+markdown2==2.4.0
 markdown==3.0.1
 markupsafe==1.1.1
 maxminddb==1.4.1

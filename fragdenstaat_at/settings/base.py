@@ -17,17 +17,15 @@ def env(key, default=None):
 THEME_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 
-
 class FragDenStaatBase(German, Base):
     ROOT_URLCONF = "fragdenstaat_at.theme.urls"
     ASGI_APPLICATION = "fragdenstaat_at.routing.application"
 
     LANGUAGES = (
         ("de-at", _("Austrian")),
-    #    ('de', _('German')),
+        # ('de', _('German')),
     )
     LANGUAGE_CODE = 'de-at'
-
 
     @property
     def INSTALLED_APPS(self):
@@ -123,7 +121,6 @@ class FragDenStaatBase(German, Base):
             os.path.join(THEME_ROOT, "locale"),
         ] + locales
 
-
     # Newsletter
     # NEWSLETTER_RICHTEXT_WIDGET = "djangocms_text_ckeditor.widgets.TextEditorWidget"
     # DEFAULT_NEWSLETTER = "fragdenstaat"
@@ -149,7 +146,7 @@ class FragDenStaatBase(German, Base):
     # CMS
     CMS_PERMISSION = True
     CMS_RAW_ID_USERS = 50
-    
+
     CMS_LANGUAGES = {
         # Customize this
         'default': {
@@ -167,7 +164,7 @@ class FragDenStaatBase(German, Base):
                 'fallbacks': ['de'],
             }
         ],
-        #2: [
+        # 2: [
         #    {
         #        'public': True,
         #        'code': 'de',
@@ -176,9 +173,8 @@ class FragDenStaatBase(German, Base):
         #        'redirect_on_fallback': False,
         #        'fallbacks': ['de-at'],
         #    }
-        #],
+        # ],
     }
-
 
     CMS_TOOLBAR_ANONYMOUS_ON = False
     CMS_TEMPLATES = [
@@ -190,6 +186,7 @@ class FragDenStaatBase(German, Base):
         ("cms/help_base.html", "Help base template"),
         ("cms/static_placeholders.html", "Static Placeholder Overview"),
     ]
+
     # DONATION_LOGIC_PLUGINS = [
     #     "IsDonorPlugin",
     #     "IsNotDonorPlugin",
@@ -200,6 +197,7 @@ class FragDenStaatBase(German, Base):
     #     "ConcactAllowedDonor",
     #     "ConcactNotAllowedDonor",
     # ]
+
     CMS_PLACEHOLDER_CONF = {
         "email_body": {
             "plugins": [
@@ -225,7 +223,6 @@ class FragDenStaatBase(German, Base):
 
     DJANGOCMS_PICTURE_NESTING = True
 
-
     # Set to False until this is fixed
     # https://github.com/divio/django-cms/issues/5725
     CMS_PAGE_CACHE = False
@@ -234,8 +231,7 @@ class FragDenStaatBase(German, Base):
         "iframe",
         "embed",
     )
-    
-    
+
     TEXT_ADDITIONAL_ATTRIBUTES = (
         "scrolling",
         "frameborder",
@@ -246,7 +242,6 @@ class FragDenStaatBase(German, Base):
         "style",
     )
     TEXT_ADDITIONAL_PROTOCOLS = ("bank",)
-
 
     CKEDITOR_SETTINGS = {
         "language": "{{ language }}",
@@ -407,7 +402,7 @@ class FragDenStaatBase(German, Base):
     FROIDE_CSRF_MIDDLEWARE = (
         "fragdenstaat_at.theme.ilf_middleware.CsrfViewIlfMiddleware"
     )
-    
+
     MIDDLEWARE = [
         "django.middleware.security.SecurityMiddleware",
         "froide.helper.middleware.XForwardedForMiddleware",
@@ -450,14 +445,13 @@ class FragDenStaatBase(German, Base):
         "admin": "admin",
     }
 
-
     ALLOWED_HOSTS = ("*",)
     ALLOWED_REDIRECT_HOSTS = ("*",)
 
     DEFAULT_FROM_EMAIL = "FragDenStaat.at <info@fragdenstaat.at>"
     EMAIL_SUBJECT_PREFIX = "[AdminFragDenStaat] "
 
-    #EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+    # EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 
     EMAIL_BACKEND = "fragdenstaat_at.theme.email_backend.CustomCeleryEmailBackend"
     CELERY_EMAIL_BACKEND = "froide.foirequest.smtp.EmailBackend"
@@ -468,7 +462,6 @@ class FragDenStaatBase(German, Base):
         "store_errors_even_if_ignored": True,
     }
 
-
     if "DJANGO_CELERY_BROKER_URL" in os.environ:
         CELERY_BROKER_URL = env("DJANGO_CELERY_BROKER_URL")
 
@@ -476,7 +469,6 @@ class FragDenStaatBase(German, Base):
     if "BROKER_1_PORT" in os.environ:
         CELERY_BROKER_PORT = os.environ["BROKER_1_PORT"].replace("tcp://", "")
         BROKER_URL = "amqp://guest:**@%s/" % CELERY_BROKER_PORT
-
 
     @property
     def FROIDE_CONFIG(self):
@@ -496,7 +488,7 @@ class FragDenStaatBase(German, Base):
                 dsn=True,
                 message_handlers={
                     "email": "froide.foirequest.message_handlers.EmailMessageHandler",
-                    #'fax': 'froide_fax.fax.FaxMessageHandler'
+                    # 'fax': 'froide_fax.fax.FaxMessageHandler'
                 },
                 delivery_reporter="froide.foirequest.delivery.PostfixDeliveryReporter",
                 text_analyzer="fragdenstaat_at.theme.search.get_text_analyzer",
@@ -527,7 +519,7 @@ class FragDenStaatBase(German, Base):
                     rec(r"Sehr geehrte(.*)"),
                     rec(r"^\s*Sehr (geehrte[sr]?\s+(?!Damen und Herren).+)"),
                     rec(r"^(?:Von|An|Cc|To|From): (.*)"),
-                    rec(u"Sehr geehrt(er? (?:Herr|Frau)(?: ?Dr\.?)?(?: ?Prof\.?)? .*)"),
+                    rec(r"Sehr geehrt(er? (?:Herr|Frau)(?: ?Dr\.?)?(?: ?Prof\.?)? .*)"),
                 ],
                 custom_replacements=[
                     rec(r"[Bb][Gg]-[Nn][Rr]\.?\s*\:?\s*([a-zA-Z0-9\s/]+)"),
@@ -537,7 +529,7 @@ class FragDenStaatBase(German, Base):
                     rec(r"(https://send.firefox.com/download/.*)"),
                 ],
                 closings=[
-                   rec(
+                    rec(
                         r"\b([Mm]it *)?(den *)?(freun\w+|vielen|besten)? *Gr(ü|u|\?)(ß|ss|\?)(en?)?,?"
                     ),
                     rec(r"\bHochachtungsvoll,?"),
@@ -577,4 +569,4 @@ class FragDenStaatBase(German, Base):
 
     SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
     SENTRY_JS_URL = ""
-    FDS_OGIMAGE_URL = "" #https://ogimage.frag-den-staat.de/api/{hash}?path={path}"
+    FDS_OGIMAGE_URL = ""  # https://ogimage.frag-den-staat.de/api/{hash}?path={path}"

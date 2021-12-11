@@ -15,6 +15,7 @@ from filingcabinet.views import (
 from froide.helper.utils import get_redirect_url
 
 from froide.foirequest.models import FoiRequest
+from froide.publicbody.models import PublicBody
 
 from .models import (
     PageAnnotationCMSPlugin,
@@ -38,8 +39,7 @@ from .models import (
     CardImageCMSPlugin,
     CardIconCMSPlugin,
 )
-#from .contact import ContactForm
-
+# from .contact import ContactForm
 
 
 @plugin_pool.register_plugin
@@ -132,10 +132,6 @@ class HomepageHowPlugin(CMSPluginBase):
     render_template = "snippets/homepage_how.html"
 
 
-
-
-
-
 @plugin_pool.register_plugin
 class PageAnnotationPlugin(CMSPluginBase):
     model = PageAnnotationCMSPlugin
@@ -171,7 +167,6 @@ class DocumentPagesPlugin(CMSPluginBase):
         return context
 
 
-
 @plugin_pool.register_plugin
 class DocumentEmbedPlugin(CMSPluginBase):
     model = DocumentEmbedCMSPlugin
@@ -198,6 +193,7 @@ class DocumentEmbedPlugin(CMSPluginBase):
         context.update(ctx)
         context["instance"] = instance
         return context
+
 
 @plugin_pool.register_plugin
 class DocumentCollectionEmbedPlugin(CMSPluginBase):
@@ -256,6 +252,7 @@ class PrimaryLinkPlugin(CMSPluginBase):
         context = super().render(context, instance, placeholder)
         context["object"] = instance
         return context
+
 
 @plugin_pool.register_plugin
 class ContinueLinkPlugin(CMSPluginBase):

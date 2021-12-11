@@ -55,7 +55,7 @@ class Command(BaseCommand):
         mapping = LayerMapping(GeoRegion, ds, {'geom': 'POLYGON'})
         layer = ds[0]
         parent = GeoRegion.objects.get(kind='municipality', name=parent)
-        for i, feature in enumerate(layer):
+        for _i, feature in enumerate(layer):
             name = feature[name_col].as_string()
             identifier = feature[ident_col].as_string()[:2]
             kind = 'borough'
@@ -236,7 +236,7 @@ class Command(BaseCommand):
                     print(small_obj, "0", big)
                 else:
                     big_one = [x for x in big_objs if
-                                small_obj.region_identifier.startswith(
+                               small_obj.region_identifier.startswith(
                                     x.region_identifier)]
                     if len(big_one) == 1:
                         small_obj.part_of = big_one[0]

@@ -42,7 +42,6 @@ class WebpackDevStaticFilesStorage(StaticFilesStorage):
         return super(WebpackDevStaticFilesStorage, self).url(name)
 
 
-
 class Dev(FragDenStaatBase):
     GEOIP_PATH = None
 

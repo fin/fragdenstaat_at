@@ -30,7 +30,6 @@ def wrapping_get_language_from_path(*args, **kwargs):
     return result
 
 
-
 trans_real.get_language_from_path = wrapping_get_language_from_path
 
 # Monkey patch reference to no longer existing .min.js files
@@ -40,7 +39,6 @@ parler_admin._language_prepopulated_media = parler_admin._language_media + Media
         "admin/js/prepopulate.js",
     )
 )
-
 
 
 def detect_troll_pre_request_creation(request, **kwargs):

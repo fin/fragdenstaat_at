@@ -26,7 +26,6 @@ from froide.publicbody.models import (
 from froide.document.models import Document, DocumentCollection
 
 
-
 @extension_pool.register
 class FdsPageExtension(PageExtension):
     search_index = models.BooleanField(default=True)
@@ -76,6 +75,7 @@ class DocumentPortalEmbedCMSPlugin(CMSPlugin):
 
     def __str__(self):
         return "Portal Embed %s" % (self.portal,)
+
 
 class DocumentPagesCMSPlugin(CMSPlugin):
     title = models.CharField(max_length=255, blank=True)

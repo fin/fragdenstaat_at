@@ -6,7 +6,7 @@ from channels.auth import AuthMiddlewareStack
 from channels.security.websocket import AllowedHostsOriginValidator
 
 from fragdenstaat_at.fds_cms.consumers import CMSPluginEditConsumer
-#hfrom froide_campaign.consumers import CampaignLiveConsumer
+# from froide_campaign.consumers import CampaignLiveConsumer
 
 from froide.routing import websocket_urls as froide_ws_urls
 

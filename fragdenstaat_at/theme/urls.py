@@ -111,7 +111,7 @@ urlpatterns += i18n_patterns(
     *jurisdiction_urls,
     *admin_urls,
     path("", include("fragdenstaat_at.fds_ogimage.urls")),
-#    path(pgettext_lazy("url part", "campaign/"), include(campaign_urls)),
+    #    path(pgettext_lazy("url part", "campaign/"), include(campaign_urls)),
     path("", include("cms.urls")),
     prefix_default_language=False
 )

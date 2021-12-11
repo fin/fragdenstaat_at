@@ -25,7 +25,6 @@ class FragDenStaat(FragDenStaatBase):
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
 
-
     CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = True
@@ -33,7 +32,6 @@ class FragDenStaat(FragDenStaatBase):
     SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
     LANGUAGE_COOKIE_SECURE = True
     LANGUAGE_COOKIE_SAMESITE = "Lax"
-
 
     DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB
     DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
@@ -214,6 +212,7 @@ class FragDenStaat(FragDenStaatBase):
         P["ALLOWED_REDIRECT_URI_SCHEMES"] = ["https", "fragdenstaat"]
         return P
 
+
 class FragDenStaatDebug(FragDenStaat):
     LOGGING = dict(FragDenStaat.LOGGING)
     LOGGING["disable_existing_loggers"] = False
@@ -223,6 +222,7 @@ class FragDenStaatDebug(FragDenStaat):
         "class": "logging.FileHandler",
         "level": "INFO",
     }
+
 
 sentry_logging = LoggingIntegration(
     level=logging.INFO,  # Capture info and above as breadcrumbs

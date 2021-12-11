@@ -2,9 +2,9 @@
 set -ex
 
 MAIN=fragdenstaat_at
-REPOS=("froide" "froide-campaign" "froide-legalaction" "froide-food" "froide-payment" "froide-crowdfunding" "froide-fax" "froide-exam" "django-filingcabinet")
-FRONTEND_DIR=("froide" "froide_food" "froide_exam" "froide_campaign" "froide_payment" "froide_legalaction" "filingcabinet")
-FRONTEND=("froide" "froide_food" "froide_exam" "froide_campaign" "froide_payment" "froide_legalaction" "@okfde/filingcabinet")
+REPOS=("froide" "django-filingcabinet" ) #"froide-campaign" "froide-legalaction" "froide-food" "froide-payment" "froide-crowdfunding" "froide-fax" "froide-exam" )
+FRONTEND_DIR=("froide" "filingcabinet") #"froide_food" "froide_exam" "froide_campaign" "froide_payment" "froide_legalaction" 
+FRONTEND=("froide" "@okfde/filingcabinet")  #"froide_food" "froide_exam" "froide_campaign" "froide_payment" "froide_legalaction" 
 
 ask() {
     # https://djm.me/ask
@@ -65,7 +65,7 @@ source fds-env/bin/activate
 echo "Cloning / installing $MAIN"
 
 if [ ! -d $MAIN ]; then
-  git clone git@github.com:okfde/$MAIN.git
+  git clone git@github.com:fin/$MAIN.git
 else
   pushd $MAIN
     git pull origin master

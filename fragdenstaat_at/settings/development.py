@@ -12,7 +12,6 @@ CHECK_WEBPACK = {"timestamp": None, "result": False}
 CHECK_WEBPACK_SECONDS = timedelta(seconds=5)
 
 
-
 def use_webpack_dev_server():
     now = datetime.now()
     if (

@@ -1,0 +1,77 @@
+celery
+channels
+coreapi
+dj-database-url
+django-admin-sortable2==1.0
+django-cache-url
+django-celery-email
+django-celery-beat
+django-cms<=3.10.0
+django-configurations
+django-contractor
+django-contrib-comments
+django-crossdomainmedia
+django-filer
+django-filingcabinet
+django-filter
+django-floppyforms
+django-json-widget
+django-leaflet
+django-logentry-admin
+django-oauth-toolkit
+django-parler
+django-storages
+django-sekizai>=2.0
+django-taggit
+django-taggit-autosuggest
+django-treebeard==4.5.1
+Django>=3.2,<3.3
+djangocms-bootstrap4
+djangocms-icon
+djangocms-picture
+djangocms-text-ckeditor
+djangocms-transfer
+djangocms-video
+djangorestframework
+djangorestframework-csv
+djangorestframework-jsonp
+elasticsearch<8.0.0,>=7.0.0
+elasticsearch-dsl>=7.0.0<8.0.0
+geoip2
+icalendar
+jsonschema
+markdown
+num2words
+openpyxl
+pandas
+phonenumbers
+psycopg2-binary
+pyisemail
+pypdf2
+python-magic
+python-mimeparse
+python-slugify
+pytz
+reportlab
+requests
+sentry-sdk
+stripe
+sortabletable
+Wand
+WeasyPrint
+websockets
+xlrd
+
+-e git+https://github.com/okfde/django-amenities.git@master#egg=django-amenities
+-e git+https://github.com/okfde/froide.git@main#egg=froide
+#-e git+https://github.com/okfde/froide-campaign.git@master#egg=froide-campaign
+#-e git+https://github.com/okfde/froide-food.git@master#egg=froide-food
+#-e git+https://github.com/okfde/froide-fax.git@master#egg=froide-fax
+#-e git+https://github.com/okfde/froide-legalaction.git@master#egg=froide-legalaction
+#-e git+https://github.com/okfde/froide-exam.git@master#egg=froide-exam
+-e git+https://github.com/okfde/django-filingcabinet.git@master#egg=django-filingcabinet
+-e git+https://github.com/okfde/django-amenities.git@master#egg=django-amenities
+#-e git+https://github.com/okfde/froide-payment.git@master#egg=froide-payment
+#-e git+https://github.com/okfde/froide-crowdfunding.git@master#egg=froide-crowdfunding
+-e git+https://github.com/stefanw/django-contractor.git@main#egg=django-contractor
+#-e git+https://github.com/OpenLegalTech/django-legal-advice-builder.git@main#egg=django_legal_advice_builder

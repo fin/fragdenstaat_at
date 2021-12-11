@@ -382,21 +382,21 @@ class SetPasswordFormPlugin(CMSPluginBase):
     render_template = "account/includes/set_password_now.html"
 
 
-@plugin_pool.register_plugin
-class PublicBodyFeedbackPlugin(CMSPluginBase):
-    module = _("Contact")
-    name = _("Contact Form")
-    text_enabled = True
-    render_template = "fds_cms/feedback.html"
+# @plugin_pool.register_plugin
+# class PublicBodyFeedbackPlugin(CMSPluginBase):
+#     module = _("Contact")
+#     name = _("Contact Form")
+#     text_enabled = True
+#     render_template = "fds_cms/feedback.html"
 
-    def render(self, context, instance, placeholder):
-        """
-        Update the context with plugin's data
-        """
+#     def render(self, context, instance, placeholder):
+#         """
+#         Update the context with plugin's data
+#         """
 
-        context = super().render(context, instance, placeholder)
-        context["form"] = ContactForm()
-        return context
+#         context = super().render(context, instance, placeholder)
+#         context["form"] = ContactForm()
+#         return context
 
 
 @plugin_pool.register_plugin

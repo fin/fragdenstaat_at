@@ -211,7 +211,7 @@ class Command(BaseCommand):
         ]
         for small, big in matches:
             for small_obj in GeoRegion.objects.filter(kind=small,
-                                                          part_of__isnull=True):
+                                                      part_of__isnull=True):
                 print('Trying', small_obj)
                 try:
                     big_objs = GeoRegion.objects.filter(

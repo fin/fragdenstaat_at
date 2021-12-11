@@ -1,7 +1,5 @@
 from datetime import timedelta
-from urllib.parse import urlencode
 
-from django.shortcuts import redirect
 from django.core.cache import cache
 from django.utils import timezone
 from django.core.mail import mail_managers

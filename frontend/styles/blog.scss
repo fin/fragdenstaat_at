@@ -1,0 +1,482 @@
+.blog-header-container {
+  @extend .container;
+}
+
+.navbar-blog {
+  background-color: $blue;
+  backdrop-filter: blur(10px);
+  z-index: 1;
+}
+
+@include media-breakpoint-down(sm) {
+  .navbar-blog .navbar-brand {
+    font-size: 1rem;
+  }
+}
+
+/*================================
+=           List-Item           =
+================================*/
+
+h4.blog-list-heading {
+  margin-top: 0 !important;
+
+  a,
+  a:active,
+  a:visited {
+    border-color: $black;
+    text-decoration: none !important;
+    color: $gray-800;
+  }
+
+  a:focus,
+  a:hover,
+  a:active:focus,
+  a:active:hover,
+  a:visited:focus,
+  a:visited:hover {
+    border-bottom: 1px solid rgba(30, 32, 35, 0.3);
+    text-decoration: none;
+  }
+}
+
+.blog-lead {
+  color: $gray-600;
+  font-weight: 400;
+  margin-top: 1.25rem;
+
+  > p {
+    margin-bottom: 0;
+  }
+}
+
+.blog-teaser-large {
+  margin: 1rem 0 3rem 0;
+}
+
+.blog-teaser-top {
+  max-width: none;
+  position: relative;
+  padding: 0 0rem;
+  min-height: 400px;
+}
+
+@include media-breakpoint-up(md) {
+  .blog-teaser-text {
+    background-color: #fff;
+    bottom: 2.5em;
+    left: 2.5em;
+    padding: 1.5em;
+    position: absolute;
+    width: 80%;
+    max-height: 400px;
+    overflow: hidden;
+    box-shadow: 0px 2px 5px 0px #ccc;
+  }
+}
+
+@include media-breakpoint-up(lg) {
+  .blog-teaser-text {
+    width: 60%;
+  }
+  .blog-lead {
+    display: inherit;
+  }
+}
+
+.blog-visual {
+  opacity: 1;
+  transition: opacity 0.5s;
+
+  img {
+    width: 100%;
+  }
+}
+
+.post-item .blog-visual img {
+  object-fit: cover;
+  height: 12rem;
+}
+
+.blog-visual:hover {
+  opacity: 0.8;
+}
+
+.has-arrow::after {
+  margin-left: 5px;
+  content: "\2192";
+  display: inline-block;
+  font-family: $font-family-sans-serif;
+  line-height: 1;
+}
+
+.teaser-arrow {
+  height: 15px;
+  margin-top: 10px;
+  font-size: 1.5rem;
+  position: relative;
+}
+
+.teaser-arrow:after {
+  margin-left: 0;
+  position: absolute;
+  left: 0;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  -ms-transition: all 0.5s ease;
+  -o-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+}
+
+/*================================
+=          Post-Detail          =
+================================*/
+
+.blog-header {
+  margin: 4rem 0 1rem 0;
+
+  .blog-lead {
+    p {
+      color: $black;
+      font-size: 1.3rem;
+      font-weight: 400;
+      line-height: 1.5;
+      text-align: left;
+    }
+  }
+}
+
+.blog-header__date {
+  color: $gray-600;
+  font-size: 0.9rem;
+}
+
+.blog-header__tags,
+.blog-header__categories {
+  @extend .list-inline;
+  display: inline;
+  font-size: 0.9rem;
+
+  li {
+    @extend .list-inline-item;
+
+    a {
+      @extend .text-muted;
+    }
+  }
+}
+
+.blog-header__tags {
+  float: right;
+
+  a::before {
+    content: "#";
+  }
+}
+
+.blog-header__title {
+  margin: 1rem 0 1rem 0 !important;
+}
+
+.blog-header__figure {
+  text-align: center;
+}
+
+.blog-content {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  > h2,
+  > h3,
+  > h4 {
+    font-family: $font-family-serif;
+    color: #26282b;
+  }
+
+  > p,
+  > ul,
+  > ol,
+  > div.text-container,
+  > blockquote {
+    font-family: $font-family-serif;
+    color: #26282b;
+    font-size: 1.225rem;
+    font-weight: 400;
+    line-height: 1.65;
+    text-align: left;
+  }
+
+  > p,
+  > h2,
+  > h3,
+  > h4,
+  > ul,
+  > ol,
+  > div.text-container {
+    @include make-col(12);
+    margin: 1rem auto 0.5rem;
+    padding: 0 15px;
+    width: 100%;
+  }
+
+  @include media-breakpoint-up(sm) {
+    > p,
+    > h2,
+    > h3,
+    > h4,
+    > ul,
+    > ol,
+    > div.text-container {
+      @include make-col(10);
+      margin-left: 15%;
+      margin-right: 15%;
+    }
+  }
+
+  @include media-breakpoint-up(md) {
+    > p,
+    > h2,
+    > h3,
+    > h4,
+    > ul,
+    > ol,
+    > div.text-container {
+      @include make-col(8);
+      margin-left: 15%;
+      margin-right: 15%;
+    }
+  }
+
+  @include media-breakpoint-up(xl) {
+    > p,
+    > h2,
+    > h3,
+    > h4,
+    > ul,
+    > ol,
+    > div.text-container {
+      @include make-col(6);
+      margin-left: 25%;
+      margin-right: 25%;
+    }
+  }
+
+  > h3:not(:first-child) {
+    margin-top: 4rem !important;
+  }
+
+  > h3 {
+    color: $black;
+    font-family: $font-family-sans-serif;
+  }
+
+  a,
+  a:active,
+  a:visited {
+    border-bottom: 1px solid rgba(30, 32, 35, 0.3);
+    color: #4c545b;
+    text-decoration: none;
+    transition: all ease 0.3s;
+  }
+
+  a:focus,
+  a:hover,
+  a:active:focus,
+  a:active:hover,
+  a:visited:focus,
+  a:visited:hover {
+    border-bottom: 1px solid rgba(30, 32, 35, 0.9);
+    text-decoration: none !important;
+    color: $gray-800;
+  }
+
+  > blockquote {
+    @include make-col(12);
+    margin: 1rem auto 0.5rem;
+    padding: 1rem 2rem;
+    width: 100%;
+    background-color: $gray-100;
+
+    > p {
+      border-left: 4px solid $gray-400;
+      padding: 0.5rem 0 0.5rem 1rem;
+      font-size: 1.3rem;
+      margin: 0;
+    }
+  }
+  @include media-breakpoint-up(md) {
+    > blockquote {
+      @include make-col(10);
+      margin-left: 15%;
+      margin-right: 15%;
+    }
+  }
+  @include media-breakpoint-up(lg) {
+    > blockquote {
+      @include make-col(8);
+      margin-left: 25%;
+      margin-right: 25%;
+    }
+  }
+}
+
+.author-section {
+  background-color: $gray-100;
+  margin: 4rem 0;
+  padding: 1rem;
+}
+
+.author-title {
+  margin-top: 1.5rem;
+}
+
+.picture-description {
+  font-size: 0.85rem;
+  color: $gray-800;
+}
+
+.picture-credits {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: $gray-500;
+
+  a,
+  a:active,
+  a:visited {
+    border-bottom: 1px solid rgba(30, 32, 35, 0.3);
+    color: $gray-500;
+    text-decoration: none;
+    transition: all ease 0.3s;
+  }
+
+  a:focus,
+  a:hover,
+  a:active:focus,
+  a:active:hover,
+  a:visited:focus,
+  a:visited:hover {
+    border-color: $black;
+    text-decoration: none !important;
+    color: $gray-800;
+  }
+}
+
+.img-circle {
+  border-radius: 50%;
+  width: 100%;
+}
+
+/*================================
+=          NEXT READS           =
+================================*/
+
+.next-reads {
+  h3 {
+    a,
+    a:active,
+    a:visited {
+      border-color: $black;
+      text-decoration: none !important;
+      color: $gray-800;
+    }
+
+    a:focus,
+    a:hover,
+    a:active:focus,
+    a:active:hover,
+    a:visited:focus,
+    a:visited:hover {
+      border-bottom: 1px solid rgba(30, 32, 35, 0.3);
+      text-decoration: none;
+    }
+  }
+}
+
+.next-reads__text {
+  vertical-align: middle;
+}
+
+.cl-effect-10 {
+  position: relative;
+  z-index: 1;
+}
+
+.cl-effect-10 a {
+  text-decoration: none !important;
+}
+
+.cl-effect-10 a:after {
+  color: $primary;
+  content: attr(data-hover);
+  transition: margin 0.3s;
+  margin-left: 0;
+  text-decoration: none !important;
+}
+
+.cl-effect-10 a:hover:after,
+.cl-effect-10 a:focus:after {
+  margin-left: 1rem;
+  text-decoration: none !important;
+}
+
+/*================================
+=           TIMELINE            =
+================================*/
+
+.timeline {
+  margin: 1rem 0;
+  padding: 0;
+  font-family: $font-family-sans-serif;
+
+  p {
+    font-family: $font-family-sans-serif;
+    margin-bottom: 4rem;
+  }
+}
+
+.timeline > li > *:last-child {
+  margin-bottom: 1.25rem;
+}
+
+.timeline > li {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 4px solid $primary;
+  padding-left: 30px;
+  margin-left: 15px;
+  padding-bottom: 1rem;
+
+  h5 {
+    position: relative;
+    top: -0.4rem;
+    margin: 0;
+    font-family: $font-family-sans-serif;
+  }
+}
+
+.timeline > li:last-child {
+  border-left: 4px solid transparent;
+}
+
+.timeline > li:before {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  left: -0.65rem;
+  border-radius: 50%;
+  border: 0.25rem solid $primary;
+  background: #fff;
+}
+
+/* CKEditor hacks */
+.textarea.cke_source {
+  resize: auto !important;
+}

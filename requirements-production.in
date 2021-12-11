@@ -1,0 +1,9 @@
+-r requirements.in
+camelot-py[cv]
+pdflib
+tornado>=4.2.0,<6.0.0
+gunicorn
+python-memcached
+channels_redis
+uvicorn
+sentry-sdk

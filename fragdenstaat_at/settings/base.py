@@ -46,13 +46,13 @@ class FragDenStaatBase(German, Base):
                 "mptt",
                 "logentry_admin",
                 "localflavor",
-                #"fragdenstaat_at.fds_blog",
+                # "fragdenstaat_at.fds_blog",
                 "adminsortable2",
                 # Customisations
-                #"fragdenstaat_de.fds_newsletter",
+                # "fragdenstaat_de.fds_newsletter",
                 "fragdenstaat_at.fds_cms.apps.FdsCmsConfig",
-                #"fragdenstaat_de.fds_donation.apps.FdsDonationConfig",
-                #"fragdenstaat_de.fds_mailing.apps.FdsMailingConfig",
+                # "fragdenstaat_de.fds_donation.apps.FdsDonationConfig",
+                # "fragdenstaat_de.fds_mailing.apps.FdsMailingConfig",
                 "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",
                 # Additional CMS plugins
                 "djangocms_text_ckeditor",
@@ -84,15 +84,15 @@ class FragDenStaatBase(German, Base):
                 "django.contrib.redirects",
                 "markdown_deux",
                 "django_prices",
-                #"froide_campaign.apps.FroideCampaignConfig",
-                #"froide_legalaction.apps.FroideLegalActionConfig",
-                #"froide_payment.apps.FroidePaymentConfig",
-                #"froide_crowdfunding.apps.FroideCrowdfundingConfig",
-                #"froide_food.apps.FroideFoodConfig",
-                #"django_amenities.apps.AmenitiesConfig",
-                #"froide_fax.apps.FroideFaxConfig",
-                #"froide_exam",
-#                "legal_advice_builder.apps.LegalAdviceBuilderConfig",
+                # "froide_campaign.apps.FroideCampaignConfig",
+                # "froide_legalaction.apps.FroideLegalActionConfig",
+                # "froide_payment.apps.FroidePaymentConfig",
+                # "froide_crowdfunding.apps.FroideCrowdfundingConfig",
+                # "froide_food.apps.FroideFoodConfig",
+                # "django_amenities.apps.AmenitiesConfig",
+                # "froide_fax.apps.FroideFaxConfig",
+                # "froide_exam",
+                # "legal_advice_builder.apps.LegalAdviceBuilderConfig",
                 "tinymce",
             ]
         )
@@ -138,9 +138,9 @@ class FragDenStaatBase(German, Base):
         1: (
             {'code': 'de-at'},
         ),
-        #2: (
+        # 2: (
         #    {'code': 'de'},
-        #),
+        # ),
         'default': {
             'hide_untranslated': False,   # the default; let .active_translations() return fallbacks too.
         }

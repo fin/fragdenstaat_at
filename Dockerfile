@@ -1,21 +1,29 @@
-FROM fragdenstaat_at-baseimage
+FROM python:3.5
 
-COPY froide /code/code/froide
-RUN pip uninstall -y froide && pip install -e /code/code/froide/
+ENV PYTHONUNBUFFERED 1
+ENV DJANGO_SETTINGS_MODULE fragdenstaat_at.settings.development
+ENV DJANGO_CONFIGURATION Dev
+ENV NODE_ENV development
 
-COPY yarn.lock /code/code/
-COPY package.json /code/code/
-COPY tsconfig.json /code/code/
+RUN apt-get update -y && apt-get install -y build-essential binutils libproj-dev libpq-dev gdal-bin libgeos-dev libgeos-c1v5 python-gdal
 
+RUN curl -sL https://deb.nodesource.com/setup_9.x | bash - && apt-get update -y && apt-get install -y nodejs
 
-RUN cd /code/code/froide && npm install -g yarn && yarn install && yarn link
-RUN cd /code/code/ && yarn install
-RUN cd /code/code/ && yarn link froide
+COPY requirements-dev.txt /code/
+COPY requirements.txt /code/
+RUN pip install -r /code/requirements-dev.txt
+COPY froide /code/froide
+RUN pip uninstall -y froide && pip install -e /code/froide/
 
+COPY yarn.lock /code/
+COPY package.json /code/
 
-COPY .babelrc /code/code/
-COPY manage.py /code/code/
-COPY webpack.config.js /code/code/
-COPY Procfile.dev /code/code/
+RUN cd /code/ && npm install -g yarn && yarn install
 
-WORKDIR /code/code
+COPY .babelrc /code/
+COPY manage.py /code/
+COPY webpack.config.js /code/
+COPY Procfile.dev /code/
+
+WORKDIR /code/
+EXPOSE 8000

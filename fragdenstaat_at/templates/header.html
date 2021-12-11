@@ -1,0 +1,228 @@
+{% load i18n %}
+{% load static %}
+{% load content_helper %}
+
+{% load cms_tags %}
+{% load account_tags %}
+
+{% if request.user.is_authenticated %}
+  {% get_menu_items as menu_items %}
+{% endif %}
+
+<header id="header" class="header container d-flex justify-content-between align-items-center pt-4 pt-md-5 pb-2">
+
+  {% block nav_brand %}
+  <div class="header__branding">
+    {% page_url "home" as home_url %}
+    <a href="{{ home_url|default:'/' }}">
+      {% block nav_brand_image %}<img src="{% static 'img/header_logo.svg' %}" class="header__logo" alt="">{% endblock %}
+      <span class="sr-only sr-only-focusable">{% block nav_brand_name %}{{ SITE_NAME }}{% endblock %}</span>
+    </a>
+  </div>
+  {% endblock %}
+
+  <!-- Mobile menu -->
+  <div class="drawer-menu d-flex d-md-none">
+
+    <!-- Spenden button -->
+    <a title="{% blocktrans %}Donate{% endblocktrans %}" class="d-flex d-md-none align-items-center text-danger text-decoration-none mr-1" href="/spenden/?pk_campaign=site-header&pk_keyword={{ request.path | urlencode }}">
+      <i class="fa fa-heart d-md-none d-lg-inline-block mr-1" aria-hidden="true"></i>
+    </a>
+
+    <!-- Toggle button -->
+    <button type="button" class="drawer-menu__toggle">
+      <i class="fa fa-bars" aria-hidden="true"></i>
+    </button>
+
+    <!-- Menu wrapper -->
+    <nav class="drawer-menu__wrapper drawer-menu__wrapper--inital">
+
+      <!-- User menu -->
+      {% if request.user.is_authenticated %}
+      <ul class="list-unstyled mb-0">
+        <li class="py-3 px-3 bg-blue-800 text-white">
+          <span class="d-block text-truncate">{{request.user.get_full_name}}</span>
+          <small class="d-block text-truncate">{{request.user.email}}</small>
+        </li>
+        {% for menu_item in menu_items.before_request %}
+          <li>
+            <a class="drawer-menu__link drawer-menu__link--blue" href="{{ menu_item.url }}">
+              {{ menu_item.label }}
+            </a>
+          </li>
+        {% endfor %}
+
+        {% for menu_item in menu_items.before_settings %}
+          <li>
+            <a class="drawer-menu__link drawer-menu__link--blue" href="{{ menu_item.url }}">
+              {{ menu_item.label }}
+            </a>
+          </li>
+        {% endfor %}
+
+        {% for menu_item in menu_items.after_settings %}
+          <li>
+            <a class="drawer-menu__link drawer-menu__link--blue" href="{{ menu_item.url }}">
+              {{ menu_item.label }}
+            </a>
+          </li>
+        {% endfor %}
+        <li>
+          <form action="{% url 'account-logout' %}" method="post" class="form-inline">
+            {% csrf_token %}
+            <button type="submit" class="drawer-menu__link drawer-menu__link--blue border-0">
+              <i class="fa fa-sign-out" aria-hidden="true"></i>
+              <span>{% blocktrans %}Log out{% endblocktrans %}</span>
+            </button>
+          </form>
+        </li>
+      </ul>
+      {% endif %}
+
+      <!-- Page Menu -->
+      <ul class="list-unstyled mb-0 {% if not request.user.is_authenticated %}mt-3{% endif %}">
+        <!-- Anfragen drawer-menu__dropdown -->
+        <li>
+          <a class="drawer-menu__link drawer-menu__link--white drawer-menu__dropdown-trigger" href="{% url 'foirequest-list' %}">
+            <span>{% blocktrans %}Requests{% endblocktrans %}</span>
+            <i class="fa fa-caret-down" aria-hidden="true"></i>
+          </a>
+
+          <ul class="list-unstyled mb-0 drawer-menu__dropdown-content">
+            <li>
+              <a class="drawer-menu__link drawer-menu__link--white" href="{% url 'foirequest-list' %}">
+                {% blocktrans %}See requests{% endblocktrans %}
+              </a>
+            </li>
+            <li>
+              <a class="drawer-menu__link drawer-menu__link--white" href="{% url 'foirequest-make_request' %}">
+                {% blocktrans %}Make request{% endblocktrans %}
+              </a>
+            </li>
+            <li>
+              <a class="drawer-menu__link drawer-menu__link--white" href="/hilfe/einsteiger-guide/">
+                {% blocktrans %}Beginner's guide{% endblocktrans %}
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          {% page_url "campaigns" as campaigns_url %}
+          <a class="drawer-menu__link drawer-menu__link--white" href="{{ campaigns_url|default:'/kampagnen/' }}">
+            {% blocktrans %}Campaigns{% endblocktrans %}
+          </a>
+        </li>
+        <li>
+          {% page_url "blog" as blog_url %}
+          <a class="drawer-menu__link drawer-menu__link--white" href="{{ blog_url|default:'/blog/' }}">
+            {% blocktrans %}Investigations{% endblocktrans %}
+          </a>
+        </li>
+        {% if not request.user.is_authenticated %}
+        <li>
+          <a class="drawer-menu__link drawer-menu__link--white" href="{% url 'account-login' %}?next={{ request.path|urlencode }}">
+            <i class="fa fa-sign-in" aria-hidden="true"></i>
+            <span>{% blocktrans %}Sign in{% endblocktrans %}</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+
+      <!-- Spenden CTA -->
+      <p class="py-3 px-3">
+        {% trans "You like our work? Support us with a donation!" %}<br>
+        {% page_url "donate" as donate_url %}
+        <a class="btn btn-outline-primary mt-2" href="{{ donate_url|default:'/spenden/' }}?pk_campaign=site-header&pk_keyword={{ request.path | urlencode }}">
+          {% blocktrans %}Donate now{% endblocktrans %}
+        </a>
+      </p>
+      
+    </nav>
+    <div class="drawer-menu__backdrop"></div>
+  </div>
+  <!-- Mobile menu END -->
+
+  <!-- Desktop/Tablet top-menu -->
+  <nav class="top-menu d-none d-sm-none d-md-flex justify-content-between flex-lg-fill ml-md-4 ml-lg-6">
+    <!-- left top-menu -->
+
+    {% block nav %}
+    <ul class="top-menu__list">
+      <li class="top-menu__listitem dropdown mr-md-3 mr-lg-4">
+        <!-- Anfragen top-menu__dropdown -->
+        <button type="button" class="top-menu__link dropdown-toggle" id="anfragenDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {% blocktrans %}Requests{% endblocktrans %}
+        </button>
+        <div class="dropdown-menu top-menu--drop-left" aria-labelledby="anfragenDropdownMenu">
+          <a class="dropdown-item top-menu__link" href="{% url 'foirequest-list' %}">
+            {% blocktrans %}See requests{% endblocktrans %}
+          </a>
+          <a class="dropdown-item top-menu__link" href="{% url 'foirequest-make_request' %}">
+            {% blocktrans %}Make requests{% endblocktrans %}
+          </a>
+          <a class="dropdown-item top-menu__link" href="/hilfe/einsteiger-guide/">
+            {% blocktrans %}Beginner's guide{% endblocktrans %}
+          </a>
+        </div>
+      </li>
+      <li class="top-menu__listitem mr-md-3 mr-lg-4">
+        <a class="top-menu__link" href="{{ campaigns_url|default:'/kampagnen/' }}">
+          {% blocktrans %}Campaigns{% endblocktrans %}
+        </a>
+      </li>
+      <li class="top-menu__listitem mr-md-3 mr-lg-0">
+        <a class="top-menu__link" href="{{ blog_url|default:'/blog/' }}">
+          {% blocktrans %}Investigations{% endblocktrans %}
+        </a>
+      </li>
+    </ul>
+    {% endblock %}
+
+    <!-- right top-menu -->
+    <ul class="top-menu__list ml-auto">
+      {% block nav_donate %}
+      <li class="top-menu__listitem">
+        <a class="top-menu__link text-danger" href="{{ donate_url|default:'/spenden/' }}?pk_campaign=site-header&pk_keyword={{ request.path | urlencode }}">
+          <i class="fa fa-heart d-md-none d-lg-inline-block" aria-hidden="true"></i>
+          <span>{% blocktrans %}Donate{% endblocktrans %}</span>
+        </a>
+      </li>
+      {% endblock %}
+      {% block nav_account_login %}
+      <li class="top-menu__listitem dropdown ml-md-3 ml-lg-4">
+        {% if request.user.is_authenticated %}
+          <button type="button" class="top-menu__link dropdown-toggle" id="userDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-user" aria-hidden="true"></i>
+            <span>{{ request.user.first_name }}</span>
+          </button>
+          <div class="dropdown-menu top-menu--drop-right pt-0" aria-labelledby="userDropdownMenu">
+            <div class="top-menu__usermenu py-3 px-3 mb-1">
+              <span class="d-block text-truncate">{{ request.user.get_full_name }}</span>
+              <small class="d-block text-truncate">{{ request.user.email }}</small>
+            </div>
+
+            {% include "account/menu.html" with menu_items=menu_items %}
+
+            <div class="dropdown-divider my-1"></div>
+            <div class="dropdown-item top-menu__link">
+              <form action="{% url 'account-logout' %}" method="post" class="form-inline">
+                {% csrf_token %}
+                <button type="submit" class="top-menu__link w-100">
+                  {% blocktrans %}Log out{% endblocktrans %}
+                </button>
+              </form>
+            </div>
+          </div>
+        {% else %}
+          <a class="top-menu__link" href="{% url 'account-login' %}?next={{ request.path|urlencode }}">
+            <i class="fa fa-user" aria-hidden="true"></i>
+            <span>{% blocktrans %}Sign in{% endblocktrans %}</span>
+          </a>
+        {% endif %}
+      </li>
+      {% endblock %}
+    </ul>
+  </nav>
+  <!-- Desktop/Tablet top-menu END -->
+
+</header>

@@ -3,6 +3,7 @@
 *.mo
 *.pyc
 *.db
+.DS_Store
 local_settings.py
 build/
 fragdenstaat_at/theme/static/img/_*
@@ -15,6 +16,7 @@ fds-env/
 favicon-result.json
 node_modules/
 froide/
+data/
 *.map
 *hot-update.json
 *hot-update.js

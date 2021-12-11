@@ -1,0 +1,26 @@
+{% load i18n %}
+{% load thumbnail %}
+{% load static %}
+{% load markup %}
+
+<div class="slider-card bg-white md:shadow-yellow border-yellow text-blue-700 d-flex flex-column p-4 mx-auto">
+  {% if "campaign-card__done" in object.extra_classes %}
+    <img src="{% static 'img/campaign-check.svg' %}" alt="Kampagne abgeschlossen" class="slider-card__check-icon">
+  {% endif %}
+  <div class="bg-blue-10 d-flex h-6rem justify-content-center align-items-center">
+    {% if object.image %}
+        <img class="h-4rem" loading="lazy" src="{% thumbnail object.image 100x0 crop subject_location=object.image.subject_location %}" alt="{{ object.image.default_alt_text }}" />
+    {% endif %}
+  </div>
+  <h3 class="h4 mt-3 mb-3">{{ object.title }}</h3>
+  <div class="flex-grow-1">
+    {{ object.description | markdown }}
+  </div>
+  {% if object.link %}
+  <div>
+    <a href="{{ object.link }}" class="btn btn-outline-primary w-100">
+      {% if object.link_label %}{{ object.link_label }}{% else %}{% trans "Read more" %}{% endif %}
+    </a>
+  </div>
+  {% endif %}    
+</div>

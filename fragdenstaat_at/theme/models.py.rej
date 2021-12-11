@@ -1,0 +1,52 @@
+diff a/fragdenstaat_at/theme/models.py b/fragdenstaat_at/theme/models.py	(rejected hunks)
+@@ -50,32 +61,37 @@ def detect_troll_pre_request_creation(request, **kwargs):
+     count += 1
+ 
+     if user.is_blocked:
+-        kwargs['blocked'] = True
++        kwargs["blocked"] = True
+         return kwargs
+ 
+     now = timezone.now()
+     diff = now - user.date_joined
+-    if (diff < timedelta(days=1) and count > 10):
++    if diff < timedelta(days=1) and count > 10:
+         user.is_blocked = True
+         user.save()
+-        mail_managers(_('User auto blocked'), str(user.pk))
+-        kwargs['blocked'] = True
++        mail_managers(_("User auto blocked"), str(user.pk))
++        kwargs["blocked"] = True
+ 
+     return kwargs
+ 
+ 
+-registry.register('pre_request_creation', detect_troll_pre_request_creation)
++registry.register("pre_request_creation", detect_troll_pre_request_creation)
+ 
+ 
+ def inject_status_change(request, **kwargs):
+-    data = kwargs['data']
+-    foirequest = data['foirequest']
+-    form = data['form']
++    data = kwargs["data"]
++    foirequest = data["foirequest"]
++    if request.user != foirequest.user:
++        # Only show when request author takes action
++        return
++    form = data["form"]
+     data = form.cleaned_data
+-    if data['resolution'] in ('successful', 'partially_successful'):
++    if data["resolution"] in ("successful", "partially_successful"):
+         next_url = foirequest.get_absolute_url()
+-        params = urlencode({'pk_keyword': next_url, 'pk_campaign': 'request-successful'})
+-        return redirect('/spenden/erfolgreiche-anfrage/?' + params)
++        params = urlencode(
++            {"pk_keyword": next_url, "pk_campaign": "request-successful"}
++        )
++        return redirect("/spenden/erfolgreiche-anfrage/?" + params)
++
+ 
+-# Disable status change inject
+-# registry.register('post_status_set', inject_status_change)
++registry.register("post_status_set", inject_status_change)

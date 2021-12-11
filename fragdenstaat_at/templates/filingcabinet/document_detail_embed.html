@@ -1,0 +1,8 @@
+{% extends "filingcabinet/document_detail_embed.html" %}
+
+{% load static %}
+
+{% block body_tag %}
+{{ block.super }}
+{% include "filingcabinet/_fds_banner.html" %}
+{% endblock %}

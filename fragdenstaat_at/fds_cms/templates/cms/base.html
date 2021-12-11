@@ -11,8 +11,14 @@
 
 
 {% block body_tag %}
+  {% if request.user.is_authenticated and request.session.impostor %}
+    {% include "account/includes/impostor.html" %}
+  {% endif %}
+
   {% block top_block %}
-    {% static_placeholder "dropdown_banner" %}
+    <div class="top-banner">
+      {% static_placeholder "top_banner" %}
+    </div>
   {% endblock %}
 
   {% block navbar %}
@@ -44,6 +50,11 @@
 
 {% block scripts %}
   {% addtoblock "js" %}<script async src="{% static 'js/main.js' %}"></script>{% endaddtoblock %}
+
+  {% if cms_toolbar.edit_mode_active %}
+    {% addtoblock "js" %}<script async src="{% static 'js/fds_cms.js' %}"></script>{% endaddtoblock %}
+  {% endif %}
+
   {{ block.super }}
 {% endblock %}
 

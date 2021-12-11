@@ -1,0 +1,41 @@
+{% extends "footer.html" %}
+
+{% load static i18n %}
+{% load cms_tags %}
+{% load content_helper %}
+
+{% block footer %}
+<div class="row">
+  <div class="col-md-5 col-lg-6 d-flex flex-column align-items-center mb-3">
+    <p class="footer__credits">
+      FragDenStaat.at ist ein Projekt des <a href="https://www.informationsfreiheit.at">Forum Informationsfreiheit</a>
+      mit freundlicher Unterstützung von <a href="https://okfn.de">Open Knowledge Foundation Deutschland e.V.</a>
+    </p>
+    <div class="text-center">
+      <a href="https://www.informationsfreiheit.at" class="orglogo m-1">
+        <img src="{% static "img/foi_logo.png" %}" alt="Forum Informationsfreiheit" />
+      </a>
+      <a href="https://www.okfn.de" class="orglogo m-1">
+        <img src="{% static "img/okfde.svg" %}" alt="Open Knowledge Foundation" />
+      </a>
+
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-4 d-flex flex-column align-items-center mb-3">
+    <p class="footer__credits">
+      Danke an <a href="https://www.nessus.at">Nessus</a>/<a href="https://www.easyname.at/hosting">Easyname</a> für das Sponsoring der Server-Infrastruktur.
+    </p>
+    <a href="https://www.easyname.at" class="orglogo">
+      <img src="{% static "img/nessus_easyname_logo.png" %}" alt="Nessus/Easyname" />
+    </a>
+  </div>
+
+  <div class="col-md-3 col-lg-2 mb-3">
+    <ul class="footer__menu small">
+      <li><a href="{% content_url 'about' %}">Impressum</a></li>
+      <li><a href="{% content_url 'terms' %}">Nutzungsbedingungen</a></li>
+      <li><a href="{% content_url 'privacy' %}">Datenschutzerklärung</a></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

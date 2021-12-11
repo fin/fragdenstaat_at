@@ -35,6 +35,12 @@
   }
 }
 
+.md\:shadow-gray {
+  @include media-breakpoint-up(md) {
+    box-shadow: $box-shadow-gray;
+  }
+}
+
 @mixin border($color) {
   border: 2px solid $color;
 }
@@ -84,6 +90,18 @@
 @each $value in (10, 20) {
   .z-index-#{$value} {
     z-index: $value !important;
+  }
+}
+
+.tight-margin {
+  h1, h2, h3, h4, h5, h6, p {
+    &:first-of-type {
+      margin-top: 0;
+    }
+    
+    &:last-of-type {
+      margin-bottom: 0;
+    }
   }
 }
 

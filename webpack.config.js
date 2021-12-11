@@ -255,7 +255,7 @@ const config = {
         },
         common: {
           test: /[\\/]node_modules[\\/]/,
-          chunks(chunk) {
+          chunks (chunk) {
             return CHUNK_LIST.indexOf(chunk.name) !== -1
           },
           name: 'common',

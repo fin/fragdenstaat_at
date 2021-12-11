@@ -75,7 +75,7 @@ class Command(BaseCommand):
             self.update_stats(path)
 
     def update_stats(self, path):
-        for name, filename, kind, level in self.layers:
+        for name, filename, kind, _level in self.layers:
             self.stdout.write("\n%s\n" % name)
             ds = self.get_ds(path, filename)
             layer = ds[0]

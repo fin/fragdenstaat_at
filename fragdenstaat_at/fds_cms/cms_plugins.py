@@ -32,6 +32,11 @@ from .models import (
     CollapsibleCMSPlugin,
     SliderCMSPlugin,
     ModalCMSPlugin,
+    CardCMSPlugin,
+    CardInnerCMSPlugin,
+    CardHeaderCMSPlugin,
+    CardImageCMSPlugin,
+    CardIconCMSPlugin,
 )
 #from .contact import ContactForm
 
@@ -541,5 +546,157 @@ class ModalPlugin(CMSPluginBase):
             ]
         )
         instance.dialog_attributes["class"] = dialog_classes
+
+        return super().render(context, instance, placeholder)
+
+
+@plugin_pool.register_plugin
+class CardPlugin(CMSPluginBase):
+    model = CardCMSPlugin
+    module = _("Card")
+    name = _("Card")
+    render_template = "fds_cms/card/card.html"
+    allow_children = True
+    child_classes = [
+        "CardHeaderPlugin",
+        "CardInnerPlugin",
+        "CardImagePlugin",
+        "CardIconPlugin",
+    ]
+    cache = True
+
+    def render(self, context, instance, placeholder):
+        classes = []
+
+        if instance.border != "none":
+            classes.append(f"border-{instance.border}")
+
+        if instance.shadow == "always":
+            classes.append(f"shadow-{instance.border}")
+        elif instance.shadow == "auto":
+            classes.append(f"md:shadow-{instance.border}")
+
+        classes += instance.extra_classes.split(" ")
+
+        children = []
+        for plugin in instance.child_plugin_instances:
+            # images, icons
+            if plugin.plugin_type in ("CardImagePlugin", "CardIconPlugin"):
+                children.insert(0, plugin)
+
+                if plugin.plugin_type == "CardImagePlugin":
+                    classes.append("box-card-has-image")
+                    if plugin.overlap == "left":
+                        classes.append("d-md-flex")
+                else:
+                    classes.append("box-card-has-icon")
+            # text, etc.
+            else:
+                children.append(plugin)
+
+        context["children"] = children
+        context["classes"] = " ".join(set(classes))
+
+        return super().render(context, instance, placeholder)
+
+    def padding(self, instance):
+        if instance.spacing == "lg":
+            return "p-3 p-md-4 p-lg-5"
+        elif instance.spacing == "md":
+            return "p-3 p-md-4"
+        return "p-3"
+
+    def color(self, instance):
+        if instance.border == "blue":
+            return "bg-blue-20"
+        elif instance.border == "gray":
+            return "bg-gray-300"
+        elif instance.border == "yellow":
+            return "bg-yellow-200"
+
+
+@plugin_pool.register_plugin
+class CardInnerPlugin(CMSPluginBase):
+    model = CardInnerCMSPlugin
+    module = _("Card")
+    name = _("Card Inner")
+    render_template = "fds_cms/card/card_inner.html"
+    allow_children = True
+    parent_classes = ["CardPlugin"]
+    cache = True
+
+    def render(self, context, instance, placeholder):
+        classes = []
+
+        parent_model, parent_instance = instance.parent.get_plugin_instance()
+        classes.append(parent_instance.padding(parent_model))
+
+        if instance.background:
+            classes.append(f"bg-{instance.background}")
+
+        classes += instance.extra_classes.split(" ")
+        context["classes"] = " ".join(classes)
+
+        return super().render(context, instance, placeholder)
+
+
+@plugin_pool.register_plugin
+class CardHeaderPlugin(CMSPluginBase):
+    model = CardHeaderCMSPlugin
+    module = _("Card")
+    name = _("Card Header")
+    render_template = "fds_cms/card/card_header.html"
+    allow_children = False
+    parent_classes = ["CardPlugin"]
+    cache = True
+
+    def render(self, context, instance, placeholder):
+        classes = []
+
+        parent_model, parent_instance = instance.parent.get_plugin_instance()
+        classes.append(parent_instance.padding(parent_model))
+
+        classes += instance.extra_classes.split(" ")
+
+        classes.append(parent_instance.color(parent_model))
+
+        context["classes"] = " ".join(classes)
+
+        return super().render(context, instance, placeholder)
+
+
+@plugin_pool.register_plugin
+class CardImagePlugin(CMSPluginBase):
+    model = CardImageCMSPlugin
+    module = _("Card")
+    name = _("Card Image")
+    render_template = "fds_cms/card/card_image.html"
+    allow_children = False
+    parent_classes = ["CardPlugin"]
+    cache = True
+
+
+@plugin_pool.register_plugin
+class CardIconPlugin(CMSPluginBase):
+    model = CardIconCMSPlugin
+    module = _("Card")
+    name = _("Card Icon")
+    render_template = "fds_cms/card/card_icon.html"
+    allow_children = False
+    parent_classes = ["CardPlugin"]
+    cache = True
+
+    def render(self, context, instance, placeholder):
+        classes = []
+
+        parent_model, parent_instance = instance.parent.get_plugin_instance()
+        classes.append(parent_instance.color(parent_model))
+
+        if instance.overlap == "right":
+            classes.append("overlap-right")
+
+        classes += instance.extra_classes.split(" ")
+
+        context["classes"] = " ".join(classes)
 
         return super().render(context, instance, placeholder)

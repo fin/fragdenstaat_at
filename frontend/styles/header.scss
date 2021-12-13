@@ -2,12 +2,29 @@
   &__branding {
     position: relative;
     top: -.45rem;
+
+    &__link {
+      color: inherit;
+      
+      &:hover {
+        text-decoration: inherit;
+        color: $blue-600;
+      }
+    }
+
+    .navbar-brand-name {
+      position: relative;
+      top: calc(.45rem + 1px);
+      margin-bottom: -2px;
+    }
   }
+    
     &__logo {
       height: 2.5rem;
     }
     @include media-breakpoint-up(md) {
       &__branding { top: -0.5rem }
+      .navbar-brand-name { top: calc(0.5rem + 1px); }
       &__logo { height: 2.75rem; }
     }
 }

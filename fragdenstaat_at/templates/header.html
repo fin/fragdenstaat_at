@@ -14,8 +14,9 @@
   {% block nav_brand %}
   <div class="header__branding">
     {% page_url "home" as home_url %}
-    <a href="{{ home_url|default:'/' }}">
-      {% block nav_brand_image %}<img src="{% static 'img/header_logo.svg' %}" class="header__logo" alt="">{% endblock %}
+    <a href="{{ home_url|default:'/' }}" class="header__branding__link">
+      {% block nav_brand_image %}<img src="{% static 'img/logo/logo.svg' %}" class="header__logo" alt=""> 
+      <span class="navbar-brand-name">{{ SITE_NAME }}</span>{% endblock %}
       <span class="sr-only sr-only-focusable">{% block nav_brand_name %}{{ SITE_NAME }}{% endblock %}</span>
     </a>
   </div>
@@ -24,10 +25,6 @@
   <!-- Mobile menu -->
   <div class="drawer-menu d-flex d-md-none">
 
-    <!-- Spenden button -->
-    <a title="{% blocktrans %}Donate{% endblocktrans %}" class="d-flex d-md-none align-items-center text-danger text-decoration-none mr-1" href="/spenden/?pk_campaign=site-header&pk_keyword={{ request.path | urlencode }}">
-      <i class="fa fa-heart d-md-none d-lg-inline-block mr-1" aria-hidden="true"></i>
-    </a>
 
     <!-- Toggle button -->
     <button type="button" class="drawer-menu__toggle">
@@ -106,16 +103,15 @@
             </li>
           </ul>
         </li>
+
         <li>
-          {% page_url "campaigns" as campaigns_url %}
-          <a class="drawer-menu__link drawer-menu__link--white" href="{{ campaigns_url|default:'/kampagnen/' }}">
-            {% blocktrans %}Campaigns{% endblocktrans %}
+          <a class="drawer-menu__link drawer-menu__link--white" href="/info/ueber/">
+            <span>{% blocktrans %}About{% endblocktrans %}</span>
           </a>
         </li>
         <li>
-          {% page_url "blog" as blog_url %}
-          <a class="drawer-menu__link drawer-menu__link--white" href="{{ blog_url|default:'/blog/' }}">
-            {% blocktrans %}Investigations{% endblocktrans %}
+          <a class="drawer-menu__link drawer-menu__link--white" href="/hilfe">
+            <span>{% blocktrans %}Help{% endblocktrans %}</span>
           </a>
         </li>
         {% if not request.user.is_authenticated %}
@@ -128,14 +124,6 @@
         {% endif %}
       </ul>
 
-      <!-- Spenden CTA -->
-      <p class="py-3 px-3">
-        {% trans "You like our work? Support us with a donation!" %}<br>
-        {% page_url "donate" as donate_url %}
-        <a class="btn btn-outline-primary mt-2" href="{{ donate_url|default:'/spenden/' }}?pk_campaign=site-header&pk_keyword={{ request.path | urlencode }}">
-          {% blocktrans %}Donate now{% endblocktrans %}
-        </a>
-      </p>
       
     </nav>
     <div class="drawer-menu__backdrop"></div>
@@ -165,14 +153,10 @@
           </a>
         </div>
       </li>
+
       <li class="top-menu__listitem mr-md-3 mr-lg-4">
-        <a class="top-menu__link" href="{{ campaigns_url|default:'/kampagnen/' }}">
-          {% blocktrans %}Campaigns{% endblocktrans %}
-        </a>
-      </li>
-      <li class="top-menu__listitem mr-md-3 mr-lg-0">
-        <a class="top-menu__link" href="{{ blog_url|default:'/blog/' }}">
-          {% blocktrans %}Investigations{% endblocktrans %}
+        <a class="top-menu__link" href="/info/ueber/">
+          <span>{% blocktrans %}About{% endblocktrans %}</span>
         </a>
       </li>
     </ul>
@@ -182,9 +166,8 @@
     <ul class="top-menu__list ml-auto">
       {% block nav_donate %}
       <li class="top-menu__listitem">
-        <a class="top-menu__link text-danger" href="{{ donate_url|default:'/spenden/' }}?pk_campaign=site-header&pk_keyword={{ request.path | urlencode }}">
-          <i class="fa fa-heart d-md-none d-lg-inline-block" aria-hidden="true"></i>
-          <span>{% blocktrans %}Donate{% endblocktrans %}</span>
+        <a class="top-menu__link" href="/hilfe">
+          <span>{% blocktrans %}Help{% endblocktrans %}</span>
         </a>
       </li>
       {% endblock %}

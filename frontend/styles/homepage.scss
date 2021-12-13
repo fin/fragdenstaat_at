@@ -12,8 +12,19 @@
   }
 }
 
+.heroine-unit {
+  background-size: auto;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  form {
+    background: rgba(255,255,255,0.75);
+    padding: 0.8em;
+  }
+} 
+
 .homepage-steps {
   position: relative;
+
   &__wrap {
     display: flex;
     flex-direction: column;

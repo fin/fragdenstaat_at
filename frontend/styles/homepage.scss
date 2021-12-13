@@ -62,6 +62,8 @@
   align-items: center;
   margin-bottom: $spacer * 1.5;
 
+  text-decoration: none !important;
+
   &:last-child {
     margin-bottom: 0;
     background-color: white; // hide dashed line

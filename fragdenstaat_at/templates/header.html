@@ -96,11 +96,11 @@
                 {% blocktrans %}Make request{% endblocktrans %}
               </a>
             </li>
-            <li>
+            {% comment %}<li>
               <a class="drawer-menu__link drawer-menu__link--white" href="/hilfe/einsteiger-guide/">
                 {% blocktrans %}Beginner's guide{% endblocktrans %}
               </a>
-            </li>
+            </li> {% endcomment %}
           </ul>
         </li>
 
@@ -148,9 +148,10 @@
           <a class="dropdown-item top-menu__link" href="{% url 'foirequest-make_request' %}">
             {% blocktrans %}Make requests{% endblocktrans %}
           </a>
-          <a class="dropdown-item top-menu__link" href="/hilfe/einsteiger-guide/">
+          {% comment %}<a class="dropdown-item top-menu__link" href="/hilfe/einsteiger-guide/">
             {% blocktrans %}Beginner's guide{% endblocktrans %}
           </a>
+          {% endcomment %}
         </div>
       </li>
 

@@ -25,7 +25,7 @@ class FragDenStaatBase(German, Base):
         ("de-at", _("Austrian")),
         # ('de', _('German')),
     )
-    LANGUAGE_CODE = 'de-at'
+    LANGUAGE_CODE = "de-at"
 
     @property
     def INSTALLED_APPS(self):
@@ -132,15 +132,13 @@ class FragDenStaatBase(German, Base):
     ARTICLE_DETAIL_TEMPLATES = []
 
     PARLER_LANGUAGES = {
-        1: (
-            {'code': 'de-at'},
-        ),
+        1: ({"code": "de-at"},),
         # 2: (
         #    {'code': 'de'},
         # ),
-        'default': {
-            'hide_untranslated': False,   # the default; let .active_translations() return fallbacks too.
-        }
+        "default": {
+            "hide_untranslated": False,  # the default; let .active_translations() return fallbacks too.
+        },
     }
 
     # CMS
@@ -149,19 +147,19 @@ class FragDenStaatBase(German, Base):
 
     CMS_LANGUAGES = {
         # Customize this
-        'default': {
-            'public': True,
-            'hide_untranslated': False,
-            'redirect_on_fallback': False,
+        "default": {
+            "public": True,
+            "hide_untranslated": False,
+            "redirect_on_fallback": False,
         },
         1: [
             {
-                'public': True,
-                'code': 'de-at',
-                'hide_untranslated': False,
-                'name': _('Austrian'),
-                'redirect_on_fallback': False,
-                'fallbacks': ['de'],
+                "public": True,
+                "code": "de-at",
+                "hide_untranslated": False,
+                "name": _("Austrian"),
+                "redirect_on_fallback": False,
+                "fallbacks": ["de"],
             }
         ],
         # 2: [
@@ -386,7 +384,7 @@ class FragDenStaatBase(German, Base):
         "easy_thumbnails.processors.filters",
     )
     THUMBNAIL_PRESERVE_EXTENSIONS = ("png",)
-    META_SITE_PROTOCOL = 'http'
+    META_SITE_PROTOCOL = "http"
     META_USE_SITES = True
 
     @property
@@ -429,7 +427,7 @@ class FragDenStaatBase(German, Base):
         }
     }
 
-    ELASTICSEARCH_INDEX_PREFIX = 'fragdenstaat_at'
+    ELASTICSEARCH_INDEX_PREFIX = "fragdenstaat_at"
     ELASTICSEARCH_DSL = {
         "default": {"hosts": "localhost:9200"},
     }
@@ -482,7 +480,7 @@ class FragDenStaatBase(German, Base):
                 public_body_officials_email_public=False,
                 default_law=1,
                 doc_conversion_binary="/usr/bin/libreoffice",
-                dryrun=env('FROIDE_DRY_RUN', False),
+                dryrun=env("FROIDE_DRY_RUN", False),
                 read_receipt=True,
                 delivery_receipt=True,
                 dsn=True,
@@ -514,7 +512,9 @@ class FragDenStaatBase(German, Base):
                     rec(r"Sehr geehrte Damen und Herren,?"),
                     rec(r"^\s*Name des Absenders\s+(.*)"),
                     rec(r"Hallo\s+(.*)"),
-                    rec(r"Sehr geehrt(er? (?:Herr|Frau|Fr\.|Hr\.)?(?: ?Dr\.?)?(?: ?Prof\.?)? .*)"),
+                    rec(
+                        r"Sehr geehrt(er? (?:Herr|Frau|Fr\.|Hr\.)?(?: ?Dr\.?)?(?: ?Prof\.?)? .*)"
+                    ),
                     rec(r"Sehr (?:Herr|Frau|Fr\.|Hr\.) (.*)"),
                     rec(r"Sehr geehrte(.*)"),
                     rec(r"^\s*Sehr (geehrte[sr]?\s+(?!Damen und Herren).+)"),
@@ -550,7 +550,7 @@ class FragDenStaatBase(German, Base):
                 ),
                 content_urls={
                     "terms": "/info/nutzungsbedingungen/",
-                    "privacy": "/info/datenschutzerklaerung/",
+                    "privacy": "/info/datenschutz/",
                     "about": "/info/ueber/",
                     "help": "/hilfe/",
                 },

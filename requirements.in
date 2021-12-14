@@ -12,6 +12,7 @@ django-contractor
 django-contrib-comments
 django-crossdomainmedia
 django-filer
+django-localflavor
 django-filingcabinet
 django-filter
 django-floppyforms

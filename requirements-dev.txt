@@ -720,5 +720,7 @@ yarl==1.6.3
 zope.interface==5.4.0
     # via twisted
 
+django-localflavor
+
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

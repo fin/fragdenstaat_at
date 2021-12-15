@@ -26,6 +26,7 @@ class FragDenStaatBase(German, Base):
         # ('de', _('German')),
     )
     LANGUAGE_CODE = "de-at"
+    TESSERACT_LANGUAGE = "de"
 
     @property
     def INSTALLED_APPS(self):

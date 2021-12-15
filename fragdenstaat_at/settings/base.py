@@ -556,9 +556,9 @@ class FragDenStaatBase(German, Base):
                 },
                 bounce_enabled=True,
                 bounce_max_age=60 * 60 * 24 * 14,  # 14 days
-                bounce_format="bounce+{token}@fragdenstaat.de",
+                bounce_format="bounce+{token}@fragdenstaat.at",
                 unsubscribe_enabled=True,
-                unsubscribe_format="unsub+{token}@fragdenstaat.de",
+                unsubscribe_format="unsub+{token}@fragdenstaat.at",
                 auto_reply_subject_regex=rec(
                     "^(Auto-?Reply|Out of office|Out of the office|Abwesenheitsnotiz|Automatische Antwort|automatische Empfangsbestätigung)"
                 ),

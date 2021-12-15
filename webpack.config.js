@@ -61,7 +61,7 @@ const BUILD_FILE_REGEX = new RegExp('.*/(' + ENTRY_LIST.join('|') + ')$')
 const config = {
   entry: ENTRY,
   output: {
-    path: path.resolve(__dirname, 'fragdenstaat_de/theme/static/js'),
+    path: path.resolve(__dirname, 'fragdenstaat_at/theme/static/js'),
     publicPath: process.env.NODE_ENV === 'production' ? ASSET_PATH : (
       process.env.WEBPACK_DEV_SERVER ? 'http://localhost:8080/static/js/' : '/static/js/'
     ),
@@ -83,7 +83,7 @@ const config = {
   },
   resolve: {
     modules: [
-      'fragdenstaat_de/theme/static',
+      'fragdenstaat_at/theme/static',
       path.resolve(__dirname, 'node_modules'), // Resolve all dependencies first in fds node_modules
       './node_modules'
     ],

@@ -1,18 +1,14 @@
 {% autoescape off %}-- 
 
-FragDenStaat.de
+FragDenStaat.at
 {% if unsubscribe_url %}
 Abbestellen: {{ unsubscribe_url }}
 
 {% endif %}
-Wir befreien Informationen! Unterstützen Sie uns mit Ihrer Spende:  https://fragdenstaat.de/email/spenden/
-
 
 Impressum
 
-{{ site_name }} ist ein Projekt der Open Knowledge Foundation Deutschland e.V.
-Singerstr. 109, 10179 Berlin
-info@fragdenstaat.de
-Datenschutzerklärung: https://fragdenstaat.de/datenschutzerklaerung/
+{{ site_name }} ist ein Projekt des Forum Informationsfreiheit
+Datenschutzerklärung: https://fragdenstaat.at/info/datenschutz/
 
 {% endautoescape %}

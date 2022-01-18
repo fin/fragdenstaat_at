@@ -1,0 +1,13 @@
+{% load i18n %}
+<p>Hallo {{ name }},</p>
+
+<p>Um Ihre Anmeldung bei {{ site_name }} abzuschließen müssen wir uns vergewissern, dass Sie unsere E-Mails erhalten.<br/>
+Bitte bestätigen Sie mit Klick auf folgenden Link, dass Sie sich bei {{ site_name }} anmelden wollen:</p>
+
+<p><a href="{{ action_url }}">E-Mail bestätigen</a></p>
+
+<p>{% blocktrans %}Cheers,<br/>
+{{ site_name }}{% endblocktrans %}
+</p>
+
+{% include "emails/footer.html" %}

@@ -1,0 +1,11 @@
+{% load i18n %}{% autoescape off %}Hallo {{ name }},
+
+Um Ihre Anmeldung bei {{ site_name }} abzuschließen müssen wir uns vergewissern, dass Sie unsere E-Mails erhalten.
+Bitte bestätigen Sie mit Klick auf folgenden Link, dass Sie sich bei {{ site_name }} anmelden wollen:
+
+{{ action_url }}
+
+{% blocktrans with site_name=SITE_NAME %}Cheers,
+{{ site_name }}{% endblocktrans %}
+{% endautoescape %}
+{% include "emails/footer.txt" %}

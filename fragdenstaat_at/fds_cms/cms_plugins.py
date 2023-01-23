@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from djangocms_bootstrap4.helpers import concat_classes
+from froide.publicbody.models import PublicBody
 
 from froide.foirequest.models import FoiRequest
 from froide.helper.utils import get_redirect_url
@@ -316,6 +317,60 @@ class SetPasswordFormPlugin(CMSPluginBase):
 
 
 @plugin_pool.register_plugin
+class HomepageHeroPlugin(CMSPluginBase):
+    module = _("Homepage")
+    name = _("Homepage Hero")
+    render_template = "snippets/homepage_hero.html"
+
+    def render(self, context, instance, placeholder):
+        context = super(HomepageHeroPlugin, self)\
+            .render(context, instance, placeholder)
+        context.update({
+            'foicount': FoiRequest.objects.get_send_foi_requests().count(),
+            'pbcount': PublicBody.objects.get_list().count()
+        })
+        return context
+
+@plugin_pool.register_plugin
+class HomepageHowPlugin(CMSPluginBase):
+    module = _("Homepage")
+    name = _("Homepage How")
+    render_template = "snippets/homepage_how.html"
+
+@plugin_pool.register_plugin
+class RowPlugin(CMSPluginBase):
+    module = _("Structure")
+    name = _("Row")
+    render_template = "cms/plugins/row.html"
+    allow_children = True
+
+class ColumnPlugin(CMSPluginBase):
+    module = _("Structure")
+    allow_children = True
+
+
+# Generate Column Plugin classes and register them
+COLUMNS = [
+    (3, _('Three')),
+    (4, _('Four')),
+    (6, _('Six')),
+    (8, _('Eight')),
+    (9, _('Nine')),
+    (12, _('Twelve')),
+]
+for col_count, col_name in COLUMNS:
+    plugin_pool.register_plugin(
+        type(
+            'Column%sPlugin' % col_count,
+            (ColumnPlugin,),
+            {
+                'name': _("Column " + str(col_name)),
+                'render_template': "cms/plugins/col_%d.html" % col_count,
+            }
+        )
+    )
+
+@plugin_pool.register_plugin
 class VegaChartPlugin(CMSPluginBase):
     """
     Plugin for including the latest entries filtered
@@ -366,6 +421,30 @@ class SVGImagePlugin(CMSPluginBase):
         return context
 
 
+
+@plugin_pool.register_plugin
+class ContainerPlugin(CMSPluginBase):
+    module = _("Structure")
+    name = _("Container")
+    render_template = "cms/plugins/container.html"
+    allow_children = True
+
+
+@plugin_pool.register_plugin
+class ContainerFluidPlugin(CMSPluginBase):
+    module = _("Structure")
+    name = _("Container Fluid")
+    render_template = "cms/plugins/container_fluid.html"
+    allow_children = True
+
+
+@plugin_pool.register_plugin
+class ContainerGreyPlugin(CMSPluginBase):
+    module = _("Structure")
+    name = _("Container Grey")
+    render_template = "cms/plugins/container_grey.html"
+    allow_children = True
+
 @plugin_pool.register_plugin
 class DesignContainerPlugin(CMSPluginBase):
     model = DesignContainerCMSPlugin
@@ -383,6 +462,14 @@ class DesignContainerPlugin(CMSPluginBase):
         context = super().render(context, instance, placeholder)
         context["object"] = instance
         return context
+
+
+CONTAINER_PLUGINS = [
+    "ContainerPlugin",
+    "ContainerFluidPlugin",
+    "ContainerGreyPlugin",
+    "DesignContainerPlugin",  # TODO: remove this one
+]
 
 
 @plugin_pool.register_plugin
@@ -686,3 +773,17 @@ class BorderedSectionPlugin(CMSPluginBase):
         elif instance.spacing == "md":
             return "p-3 p-md-4"
         return "p-3"
+
+
+@plugin_pool.register_plugin
+class SubMenuPlugin(CMSPluginBase):
+    module = _("Menu")
+    name = _("Sub Menu")
+    render_template = "cms/plugins/submenu.html"
+
+
+@plugin_pool.register_plugin
+class PageSubMenuPlugin(CMSPluginBase):
+    module = _("Menu")
+    name = _("Page Sub Menu")
+    render_template = "cms/plugins/page_submenu.html"

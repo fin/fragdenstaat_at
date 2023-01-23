@@ -1,4 +1,4 @@
-import { slideUp } from 'froide/frontend/javascript/lib/misc'
+/* import { slideUp } from 'froide/frontend/javascript/lib/misc' */
 
 interface IDonationBannerStore {
   timestamp: number
@@ -32,7 +32,7 @@ function showTopBanner(): void {
     localStorage.setItem(itemName, data)
 
     if (hasAnimation) {
-      slideUp(el)
+      /* slideUp(el) */
       el.addEventListener('transitionend', removeBanner)
       setTimeout(removeBanner, 1000)
     } else {

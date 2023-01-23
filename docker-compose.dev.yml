@@ -6,7 +6,7 @@ services:
     volumes:
       - pg-data:/var/lib/postgresql/
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5436:5432"
     environment:
       POSTGRES_USER: fragdenstaat_at
       POSTGRES_DB: fragdenstaat_at

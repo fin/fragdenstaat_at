@@ -6,41 +6,59 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
-      with:
-        python-version: 3.x
-    - uses: actions/cache@v1
-      with:
-        key: v0-${{ runner.os }}-pip-lint-${{ hashFiles('setup.py') }}
-        path: ~/.cache/pip
-        restore-keys: |
-          v0-${{ runner.os }}-pip-lint-
-          v0-${{ runner.os }}-pip-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8
-    - name: Run flake8
-      run: flake8 fragdenstaat_at --statistics
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.10'
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'yarn'
+      - uses: actions/cache@v1
+        with:
+          key: v0-${{ runner.os }}-pip-lint-${{ hashFiles('setup.py') }}
+          path: ~/.cache/pip
+          restore-keys: |
+            v0-${{ runner.os }}-pip-lint-
+            v0-${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort flake8-bugbear
+          yarn install
+      - name: Run flake8
+        run: flake8 fragdenstaat_at --statistics
+      - name: Run black
+        run: black --check fragdenstaat_at
+      - name: Run isort
+        run: isort --check fragdenstaat_at
+
+      - name: Run eslint
+        run: yarn lint
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9"]
+        python-version: ['3.8', '3.10']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install system-level dependencies
-        run: sudo apt-get update && sudo apt-get install libxml2-dev libxslt1-dev python-dev libgdal-dev gdal-bin libmagic-dev libmagickwand-dev
+        run: sudo apt-get update && sudo apt-get install libxml2-dev libxslt1-dev python3-dev libgdal-dev gdal-bin libmagic-dev libmagickwand-dev gettext
       - name: Install dependencies
         run: |
-            python -m pip install --upgrade pip pip-tools
-            pip-sync requirements-dev.txt
-            pip install -e .
+          python -m pip install --upgrade pip pip-tools
+          pip-sync requirements-dev.txt
+          playwright install --with-deps chromium
+          pip install -e .
+          bash devsetup.sh frontend
+      - name: Build frontend
+        run: yarn run build
+      - name: Compile translations
+        run: python manage.py compilemessages
       - name: Run flake8 and tests
         run: make testci
         env:
@@ -53,11 +71,11 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fragdenstaat_at
         ports:
-        - 5432:5432
+          - 5432:5432
         # needed because the postgres container does not provide a healthcheck
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
         options: -e "discovery.type=single-node" --expose 9200 --health-cmd "curl localhost:9200/_cluster/health" --health-interval 10s --health-timeout 5s --health-retries 10
         ports:
-          - "9200:9200"
+          - '9200:9200'

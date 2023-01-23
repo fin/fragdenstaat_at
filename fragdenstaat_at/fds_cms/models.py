@@ -1,29 +1,21 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+from django.urls import NoReverseMatch
 from django.utils.translation import gettext_lazy as _
 
-from cms.models.pluginmodel import CMSPlugin
-from cms.models.fields import PageField
 from cms.extensions import PageExtension
 from cms.extensions.extension_pool import extension_pool
-
-from filer.fields.image import FilerImageField
+from cms.models.fields import PageField
+from cms.models.pluginmodel import CMSPlugin
+from djangocms_bootstrap4.fields import AttributesField, TagTypeField
 from filer.fields.file import FilerFileField
-
+from filer.fields.image import FilerImageField
+from filingcabinet.models import DocumentPortal, PageAnnotation
 from taggit.models import Tag
 
-from djangocms_bootstrap4.fields import (
-    AttributesField,
-    TagTypeField,
-)
-
-from filingcabinet.models import DocumentPortal, PageAnnotation
-
-from froide.foirequest.models import FoiRequest, FoiProject
-from froide.publicbody.models import (
-    Jurisdiction, Category, Classification, PublicBody
-)
 from froide.document.models import Document, DocumentCollection
+from froide.foirequest.models import FoiProject, FoiRequest
+from froide.publicbody.models import Category, Classification, Jurisdiction, PublicBody
 
 
 @extension_pool.register
@@ -164,7 +156,10 @@ class PrimaryLinkCMSPlugin(CMSPlugin):
         if self.url:
             link = self.url
         elif self.page_link_id:
-            link = self.page_link.get_absolute_url()
+            try:
+                link = self.page_link.get_absolute_url()
+            except NoReverseMatch:
+                link = ""
         else:
             link = ""
         if self.anchor:
@@ -247,8 +242,27 @@ class FoiRequestListCMSPlugin(CMSPlugin):
         self.tags.set(old_instance.tags.all())
 
 
+class OneClickFoiRequestCMSPlugin(CMSPlugin):
+    TEMPLATES = [
+        ("", _("Default template")),
+    ]
+
+    foirequest = models.ForeignKey(
+        FoiRequest, related_name="+", on_delete=models.CASCADE
+    )
+    redirect_url = models.CharField(default="", max_length=255, blank=True)
+    reference = models.CharField(default="", max_length=255, blank=True)
+
+    template = models.CharField(
+        _("Template"), choices=TEMPLATES, default="", max_length=50, blank=True
+    )
+
+    def __str__(self):
+        return _("One click form for {}").format(self.foirequest)
+
+
 class VegaChartCMSPlugin(CMSPlugin):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
 
     vega_json = models.TextField(
@@ -309,19 +323,12 @@ class DesignContainerCMSPlugin(CMSPlugin):
         ("", _("Default template")),
         ("cms/plugins/designs/speech_bubble.html", _("Speech bubble")),
     ]
-    STYLES = [
-        ("", _("Default")),
-        ("heavy", _("Heavy")),
-    ]
 
     template = models.CharField(
         _("Template"), choices=TEMPLATES, default="", max_length=50, blank=True
     )
     background = models.CharField(
         _("Background"), choices=BACKGROUND, default="", max_length=50, blank=True
-    )
-    style = models.CharField(
-        _("Style"), choices=STYLES, default="", max_length=50, blank=True
     )
     extra_classes = models.CharField(max_length=255, blank=True)
     container = models.BooleanField(default=True)
@@ -366,25 +373,6 @@ class ModalCMSPlugin(CMSPlugin):
         return self.identifier
 
 
-class OneClickFoiRequestCMSPlugin(CMSPlugin):
-    TEMPLATES = [
-        ("", _("Default template")),
-    ]
-
-    foirequest = models.ForeignKey(
-        FoiRequest, related_name="+", on_delete=models.CASCADE
-    )
-    redirect_url = models.CharField(default="", max_length=255, blank=True)
-    reference = models.CharField(default="", max_length=255, blank=True)
-
-    template = models.CharField(
-        _("Template"), choices=TEMPLATES, default="", max_length=50, blank=True
-    )
-
-    def __str__(self):
-        return _("One click form for {}").format(self.foirequest)
-
-
 class CardCMSPlugin(CMSPlugin):
     border = models.CharField(
         _("Border"),
@@ -400,27 +388,51 @@ class CardCMSPlugin(CMSPlugin):
     shadow = models.CharField(
         _("Shadow"),
         max_length=10,
-        default="auto",
+        default="no",
         choices=(("no", _("No")), ("auto", _("Auto")), ("always", _("Always"))),
     )
     spacing = models.CharField(
         _("Spacing"),
         max_length=3,
-        default="lg",
+        default="md",
         choices=(
             ("sm", _("Small")),
             ("md", _("Medium")),
             ("lg", _("Large")),
         ),
     )
-    extra_classes = models.CharField(max_length=255, blank=True)
-
-
-class CardInnerCMSPlugin(CMSPlugin):
     background = models.CharField(
         _("Background"), choices=BACKGROUND, default="", max_length=50, blank=True
     )
-    extra_classes = models.CharField(max_length=255, blank=True)
+
+    url = models.CharField(
+        _("link"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("if present card will be clickable"),
+    )
+    page_link = PageField(
+        null=True,
+        blank=True,
+        help_text=_("if present card will be clickable"),
+        verbose_name=_("page link"),
+    )
+
+    attributes = AttributesField()
+
+    def link(self):
+        if self.url:
+            return self.url
+        elif self.page_link_id:
+            try:
+                return self.page_link.get_absolute_url()
+            except NoReverseMatch:
+                return
+
+
+class CardInnerCMSPlugin(CMSPlugin):
+    attributes = AttributesField()
 
 
 class CardHeaderCMSPlugin(CMSPlugin):
@@ -433,7 +445,17 @@ class CardHeaderCMSPlugin(CMSPlugin):
             """Enter an icon name from the <a href="https://fontawesome.com/v4.7.0/icons/" target="_blank">FontAwesome 4 icon set</a>"""
         ),
     )
-    extra_classes = models.CharField(max_length=255, blank=True)
+    background_image = FilerImageField(
+        null=True,
+        blank=True,
+        default=None,
+        verbose_name=_("Background image"),
+        on_delete=models.SET_NULL,
+    )
+    attributes = AttributesField()
+
+    def __str__(self):
+        return self.title
 
 
 class CardImageCMSPlugin(CMSPlugin):
@@ -444,16 +466,45 @@ class CardImageCMSPlugin(CMSPlugin):
         on_delete=models.SET_NULL,
         verbose_name=_("image"),
     )
+    url = models.CharField(
+        _("link"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("if present image will be clickable"),
+    )
+    page_link = PageField(
+        null=True,
+        blank=True,
+        help_text=_("if present image will be clickable"),
+        verbose_name=_("page link"),
+    )
     overlap = models.CharField(
         _("Overlap"),
-        choices=(
-            ("left", _("Left")),
-            ("right", _("Right")),
-        ),
+        choices=(("left", _("Left")), ("right", _("Right")), ("center", _("Center"))),
         max_length=10,
         default="right",
     )
-    extra_classes = models.CharField(max_length=255, blank=True)
+    size = models.CharField(
+        _("Size"),
+        choices=(
+            ("sm", _("Small")),
+            ("lg", _("Large")),
+            ("lg-wide", _("Large (wide)")),
+        ),
+        max_length=10,
+        default="lg",
+    )
+    attributes = AttributesField()
+
+    def link(self):
+        if self.url:
+            return self.url
+        elif self.page_link_id:
+            try:
+                return self.page_link.get_absolute_url()
+            except NoReverseMatch:
+                return
 
 
 class CardIconCMSPlugin(CMSPlugin):
@@ -464,13 +515,105 @@ class CardIconCMSPlugin(CMSPlugin):
             """Enter an icon name from the <a href="https://fontawesome.com/v4.7.0/icons/" target="_blank">FontAwesome 4 icon set</a>"""
         ),
     )
-    overlap = models.CharField(
-        _("Overlap"),
-        choices=(
-            ("left", _("Left")),
-            ("right", _("Right")),
+    attributes = AttributesField()
+
+    def __str__(self):
+        return self.icon
+
+
+class CardLinkCMSPlugin(CMSPlugin):
+    title = models.CharField(max_length=255, blank=True)
+    url = models.CharField(_("link"), max_length=255, blank=True)
+    page_link = PageField(blank=True, null=True)
+    arrow = models.BooleanField(default=False)
+    icon = models.CharField(
+        _("Icon"),
+        max_length=50,
+        blank=True,
+        help_text=_(
+            """Enter an icon name from the <a href="https://fontawesome.com/v4.7.0/icons/" target="_blank">FontAwesome 4 icon set</a>"""
         ),
-        max_length=10,
-        default="right",
     )
-    extra_classes = models.CharField(max_length=255, blank=True)
+    attributes = AttributesField()
+
+    def link(self):
+        if self.url:
+            return self.url
+        elif self.page_link_id:
+            try:
+                return self.page_link.get_absolute_url()
+            except NoReverseMatch:
+                return
+
+    def __str__(self):
+        return self.title
+
+
+class RevealMoreCMSPlugin(CMSPlugin):
+    cutoff = models.PositiveIntegerField(_("Cutoff after"), default=1)
+    unit = models.CharField(
+        _("Unit"),
+        max_length=10,
+        choices=(
+            ("rows", _("grid rows")),
+            ("rem", _("Line heights")),
+            ("%", _("percent")),
+        ),
+    )
+    color = models.CharField(_("Overlay color"), max_length=50, choices=BACKGROUND)
+    reveal_text = models.CharField(_("Reveal text"), max_length=50, blank=True)
+    attributes = AttributesField()
+
+    def text(self):
+        return self.reveal_text or str(_("Show more..."))
+
+    def __str__(self):
+        return self.text()
+
+
+class BorderedSectionCMSPlugin(CMSPlugin):
+    title = models.CharField(max_length=255, blank=True)
+    border = models.CharField(
+        _("Border"),
+        max_length=50,
+        default="gray",
+        choices=(
+            ("blue", _("Blue")),
+            ("gray", _("Gray")),
+            ("yellow", _("Yellow")),
+        ),
+    )
+    spacing = models.CharField(
+        _("Spacing"),
+        max_length=3,
+        default="md",
+        choices=(
+            ("sm", _("Small")),
+            ("md", _("Medium")),
+            ("lg", _("Large")),
+        ),
+    )
+    heading = models.CharField(
+        _("Heading level"),
+        max_length=5,
+        default="h3",
+        choices=(
+            ("h1", _("Headline 1")),
+            ("h2", _("Headline 2")),
+            ("h3", _("Headline 3")),
+            ("h4", _("Headline 4")),
+            ("h5", _("Headline 5")),
+            ("h6", _("Headline 6")),
+        ),
+    )
+    attributes = AttributesField()
+
+    def __str__(self):
+        return self.title
+
+
+class DropdownBannerCMSPlugin(CMSPlugin):
+    animation = models.BooleanField(_("Slide banner with animation"), default=True)
+    dark = models.BooleanField(
+        _("Banner is dark-themed, button should therefore be light"), default=False
+    )

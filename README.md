@@ -21,6 +21,11 @@ You need to have installed:
 - yarn
 - GDAL for Django's GeoDjango
 - freetype and imagemagick
+- postgresql bindings
+- poppler
+- qpdf
+- pango
+- libgeoip
 - libmagic
 
 All of these dependencies should be installable via package managers (e.g. `brew` on macOS).
@@ -29,7 +34,7 @@ To make the setup easier the following script (`devsetup.sh`) creates a virtual 
 
 ```
 cd project-dir
-curl https://raw.githubusercontent.com/okfde/fragdenstaat_de/master/devsetup.sh | bash
+curl https://raw.githubusercontent.com/okfde/fragdenstaat_de/main/devsetup.sh | bash
 ```
 
 To update your setup later:
@@ -62,14 +67,14 @@ To initialise the database:
 source fds-env/bin/activate
 cd fragdenstaat_de
 # Create database structure
-python manage.py migrate
+python manage.py migrate --skip-checks
 ```
 
 To get started with some data:
 
 ```
 # Load initial data (e.g. CMS)
-python manage.py loaddata <fixture file>
++python manage.py loaddata tests/fixtures/cms.json
 # Create a superuser
 python manage.py createsuperuser
 # Create and populate search index
@@ -106,10 +111,28 @@ yarn run serve
 
 ### Upgrade dependencies
 
+Currently `pip-compile` only works for `pip-tools==6.3.0` and `pip==21.2.4`.
+
 ```
 pip-compile -U requirements.in
 pip-compile -U requirements-dev.in
 pip-compile -U requirements-production.in
+```
+
+
+
+### Main app dependencies
+
+The `fragdenstaat_at` project depends on `froide`, multiple `froide`-related apps.
+
+```mermaid
+flowchart LR
+    fragdenstaat_at[[fragdenstaat_at]]-->froide
+    fragdenstaat_at-->froideapp[froide-*]
+    froideapp-->froide
+    froide-->filingcabinet[[django-filingcabinet]]
+    fragdenstaat_at-->cms([django-cms])
+
 ```
 
 

@@ -17,24 +17,24 @@
     <a href="{{ home_url|default:'/' }}" class="header__branding__link">
       {% block nav_brand_image %}<img src="{% static 'img/logo/logo.svg' %}" class="header__logo" alt=""> 
       <span class="navbar-brand-name">{{ SITE_NAME }}</span>{% endblock %}
-      <span class="sr-only sr-only-focusable">{% block nav_brand_name %}{{ SITE_NAME }}{% endblock %}</span>
+      <span class="visually-hidden visually-hidden-focusable">{% block nav_brand_name %}{{ SITE_NAME }}{% endblock %}</span>
     </a>
   </div>
   {% endblock %}
 
-  <!-- Mobile menu -->
+  {# Mobile menu #}
   <div class="drawer-menu d-flex d-md-none">
 
 
-    <!-- Toggle button -->
-    <button type="button" class="drawer-menu__toggle">
+    {# Toggle button #}
+    <button type="button" class="drawer-menu__toggle" aria-label="{% translate 'Menu' %}">
       <i class="fa fa-bars" aria-hidden="true"></i>
     </button>
 
-    <!-- Menu wrapper -->
+    {# Menu wrapper #}
     <nav class="drawer-menu__wrapper drawer-menu__wrapper--inital">
 
-      <!-- User menu -->
+      {# User menu #}
       {% if request.user.is_authenticated %}
       <ul class="list-unstyled mb-0">
         <li class="py-3 px-3 bg-blue-800 text-white">
@@ -65,7 +65,7 @@
           </li>
         {% endfor %}
         <li>
-          <form action="{% url 'account-logout' %}" method="post" class="form-inline">
+          <form action="{% url 'account-logout' %}" method="post">
             {% csrf_token %}
             <button type="submit" class="drawer-menu__link drawer-menu__link--blue border-0">
               <i class="fa fa-sign-out" aria-hidden="true"></i>
@@ -76,9 +76,9 @@
       </ul>
       {% endif %}
 
-      <!-- Page Menu -->
+      {# Page Menu #}
       <ul class="list-unstyled mb-0 {% if not request.user.is_authenticated %}mt-3{% endif %}">
-        <!-- Anfragen drawer-menu__dropdown -->
+        {# Anfragen drawer-menu__dropdown #}
         <li>
           <a class="drawer-menu__link drawer-menu__link--white drawer-menu__dropdown-trigger" href="{% url 'foirequest-list' %}">
             <span>{% blocktrans %}Requests{% endblocktrans %}</span>
@@ -96,11 +96,14 @@
                 {% blocktrans %}Make request{% endblocktrans %}
               </a>
             </li>
-            {% comment %}<li>
-              <a class="drawer-menu__link drawer-menu__link--white" href="/hilfe/einsteiger-guide/">
-                {% blocktrans %}Beginner's guide{% endblocktrans %}
-              </a>
-            </li> {% endcomment %}
+            {% page_url "beginnersguide" as beginners_url %}
+            {% if beginners_url %}
+              <li>
+                <a class="drawer-menu__link drawer-menu__link--white" href="{{ beginners_url }}">
+                  {% blocktrans %}Beginner's guide{% endblocktrans %}
+                </a>
+              </li>
+            {% endif %}
           </ul>
         </li>
 
@@ -128,17 +131,17 @@
     </nav>
     <div class="drawer-menu__backdrop"></div>
   </div>
-  <!-- Mobile menu END -->
+  {# Mobile menu END #}
 
-  <!-- Desktop/Tablet top-menu -->
-  <nav class="top-menu d-none d-sm-none d-md-flex justify-content-between flex-lg-fill ml-md-4 ml-lg-6">
-    <!-- left top-menu -->
+  {# Desktop/Tablet top-menu #}
+  <nav class="top-menu navbar d-none d-sm-none d-md-flex justify-content-between flex-lg-fill ms-md-4 ms-lg-6">
+    {# left top-menu #}
 
     {% block nav %}
     <ul class="top-menu__list">
-      <li class="top-menu__listitem dropdown mr-md-3 mr-lg-4">
-        <!-- Anfragen top-menu__dropdown -->
-        <button type="button" class="top-menu__link dropdown-toggle" id="anfragenDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <li class="top-menu__listitem dropdown me-md-3 me-lg-4">
+        {# Anfragen top-menu__dropdown #}
+        <button type="button" class="top-menu__link dropdown-toggle" id="anfragenDropdownMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           {% blocktrans %}Requests{% endblocktrans %}
         </button>
         <div class="dropdown-menu top-menu--drop-left" aria-labelledby="anfragenDropdownMenu">
@@ -148,14 +151,15 @@
           <a class="dropdown-item top-menu__link" href="{% url 'foirequest-make_request' %}">
             {% blocktrans %}Make requests{% endblocktrans %}
           </a>
-          {% comment %}<a class="dropdown-item top-menu__link" href="/hilfe/einsteiger-guide/">
-            {% blocktrans %}Beginner's guide{% endblocktrans %}
-          </a>
-          {% endcomment %}
+          {% if beginners_url %}
+            <a class="dropdown-item top-menu__link" href="{{ beginners_url }}">
+              {% blocktrans %}Beginner's guide{% endblocktrans %}
+            </a>
+          {% endif %}
         </div>
       </li>
 
-      <li class="top-menu__listitem mr-md-3 mr-lg-4">
+      <li class="top-menu__listitem me-md-3 me-lg-4">
         <a class="top-menu__link" href="/info/ueber/">
           <span>{% blocktrans %}About{% endblocktrans %}</span>
         </a>
@@ -163,8 +167,8 @@
     </ul>
     {% endblock %}
 
-    <!-- right top-menu -->
-    <ul class="top-menu__list ml-auto">
+    {# right top-menu #}
+    <ul class="top-menu__list ms-auto">
       {% block nav_donate %}
       <li class="top-menu__listitem">
         <a class="top-menu__link" href="/hilfe">
@@ -173,9 +177,9 @@
       </li>
       {% endblock %}
       {% block nav_account_login %}
-      <li class="top-menu__listitem dropdown ml-md-3 ml-lg-4">
+      <li class="top-menu__listitem dropdown ms-md-3 ms-lg-4">
         {% if request.user.is_authenticated %}
-          <button type="button" class="top-menu__link dropdown-toggle" id="userDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <button type="button" class="top-menu__link dropdown-toggle" id="userDropdownMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <i class="fa fa-user" aria-hidden="true"></i>
             <span>{{ request.user.first_name }}</span>
           </button>
@@ -189,7 +193,7 @@
 
             <div class="dropdown-divider my-1"></div>
             <div class="dropdown-item top-menu__link">
-              <form action="{% url 'account-logout' %}" method="post" class="form-inline">
+              <form action="{% url 'account-logout' %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="top-menu__link w-100">
                   {% blocktrans %}Log out{% endblocktrans %}
@@ -207,6 +211,6 @@
       {% endblock %}
     </ul>
   </nav>
-  <!-- Desktop/Tablet top-menu END -->
+  {# Desktop/Tablet top-menu END #}
 
 </header>

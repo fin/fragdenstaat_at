@@ -15,35 +15,33 @@
           <span class="d-sm-none">{% translate "Support area" %}</span>
         </a>
         <div class="d-flex">
-          <form class="form-inline ml-2 d-block d-md-inline" role="search" method="get" action="{% page_url 'help-search' %}">
+          <form class="ms-2 d-block d-md-inline" role="search" method="get" action="{% page_url 'help-search' %}">
             <div class="input-group d-none d-md-flex">
               {% if form %}
                 {{ form.q }}
               {% else %}
                 <input class="form-control" type="text" name="q" placeholder="{% translate 'Search' %}" aria-label="{% translate 'Search' %}">
               {% endif %}
-              <div class="input-group-append">
-                <button class="btn btn-outline-light" type="submit">
-                  <i class="fa fa-search" aria-hidden="true"></i>
-                  <span class="sr-only">{% translate "Search" %}</span>
-                </button>
-              </div>
+              <button class="btn btn-outline-light" type="submit">
+                <i class="fa fa-search" aria-hidden="true"></i>
+                <span class="visually-hidden">{% translate "Search" %}</span>
+            </button>
             </div>
             <button class="btn btn-outline-light d-block d-md-none" type="submit">
               <i class="fa fa-search" aria-hidden="true"></i>
-              <span class="sr-only">{% translate "Search" %}</span>
+              <span class="visually-hidden">{% translate "Search" %}</span>
             </button>
           </form>
         </div>
       </div>
     </nav>
-    <nav aria-label="breadcrumb" class="breadcrumb-container">
+    <nav aria-label="breadcrumb" class="bg-gray-100">
       <div class="container">
         <ol class="breadcrumb">
           <li class="breadcrumb-item">
             <a href="{{ help_url }}">{% translate "Support" %}</a>
           </li>
-          {% show_breadcrumb 2 "cms/breadcrumbs.html" %}
+          {% show_breadcrumb 1 "cms/breadcrumbs.html" %}
           {% block extra_breadcrumbs %}{% endblock %}
         </ol>
       </div>
@@ -62,11 +60,7 @@
             </a>
           </h5>
           <ul class="list-unstyled">
-            {% if help_url == request.path %}
-              {% show_menu_below_id "help" 0 0 0 2 %}
-            {% else %}
-              {% show_menu_below_id "help" 0 100 0 2 %}
-            {% endif %}
+            {% show_menu 1 100 0 1 %}
           </ul>
         </nav>
       </div>

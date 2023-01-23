@@ -3,26 +3,24 @@ Adapted from
 https://github.com/divio/aldryn-search/blob/master/aldryn_search/search_indexes.py
 """
 
-from django.db.models import Q
-from django.utils import timezone
 from django.conf import settings
+from django.db.models import Q
+from django.utils import timezone, translation
 from django.utils.html import strip_tags
 
+from cms.models import Title
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
-
-from cms.models import Title
 from sekizai.context import SekizaiContext
 
 from froide.helper.search import (
     get_index,
-    get_text_analyzer,
     get_search_analyzer,
     get_search_quote_analyzer,
+    get_text_analyzer,
 )
 
-from .utils import render_placeholder, clean_join, get_request
-
+from .utils import clean_join, get_request, render_placeholder
 
 index = get_index("cmspage")
 
@@ -53,6 +51,7 @@ class CMSDocument(Document):
         search_quote_analyzer=search_quote_analyzer,
         index_options="offsets",
     )
+    language = fields.KeywordField()
 
     special_signals = True
 
@@ -70,7 +69,6 @@ class CMSDocument(Document):
                 Q(page__publication_end_date__gte=now)
                 | Q(page__publication_end_date__isnull=True),
                 Q(redirect__exact="") | Q(redirect__isnull=True),
-                language=settings.LANGUAGE_CODE,
             )
             .select_related("page")
         )
@@ -79,19 +77,24 @@ class CMSDocument(Document):
         return queryset.distinct()
 
     def prepare_content(self, obj):
-        current_language = settings.LANGUAGE_CODE
-        request = get_request(current_language)
-        content = self.get_search_data(obj, current_language, request)
+        current_language = obj.language
+        request = get_request(obj.language)
+        with translation.override(obj.language):
+            content = self.get_search_data(obj, current_language, request)
         return content
 
     def prepare_description(self, obj):
         return obj.meta_description or ""
 
     def prepare_url(self, obj):
-        return obj.page.get_absolute_url()
+        with translation.override(obj.language):
+            return obj.page.get_absolute_url(language=obj.language)
 
     def prepare_title(self, obj):
         return obj.title
+
+    def prepare_language(self, obj):
+        return obj.language
 
     def get_page_placeholders(self, page):
         """

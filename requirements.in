@@ -1,78 +1,91 @@
-celery
+celery>=5.2.2
+cryptography
+pyopenssl>=22.0.0
 channels
 coreapi
 dj-database-url
-django-admin-sortable2==1.0
-django-cache-url
+django-admin-sortable2
+django-celery-beat>=2.4.0
 django-celery-email
-django-celery-beat
-django-cms<=3.10.0
+django-cms>=3.11
 django-configurations
 django-contractor
 django-contrib-comments
 django-crossdomainmedia
 django-filer
-django-localflavor
 django-filingcabinet
 django-filter
 django-floppyforms
 django-json-widget
 django-leaflet
 django-logentry-admin
-django-oauth-toolkit
+django-mfa3
+django-oauth-toolkit<2.0.0
 django-parler
-django-storages
 django-sekizai>=2.0
+django-storages
 django-taggit
-django-taggit-autosuggest
-django-treebeard==4.5.1
-Django>=3.2,<3.3
-djangocms-bootstrap4
+django-treebeard
+Django>=4.1,<4.2
+djangocms-frontend>=1.0.1
+djangocms-link>=3.1.0
+# Remove when no longer imported
+djangocms-bootstrap4>=3
 djangocms-icon
 djangocms-picture
-djangocms-text-ckeditor
-djangocms-transfer
+djangocms-text-ckeditor>=5.1
 djangocms-video
 djangorestframework
 djangorestframework-csv
 djangorestframework-jsonp
-elasticsearch<8.0.0,>=7.0.0
 elasticsearch-dsl>=7.0.0<8.0.0
+elasticsearch<8.0.0,>=7.0.0
 geoip2
+html-text
 icalendar
 jsonschema
+lxml>=4.6.5
 markdown
 num2words
+numpy>=1.21
 openpyxl
 pandas
+pgpy>=0.6.0
 phonenumbers
+Pillow>=9.0.0
 psycopg2-binary
+# pygtail>=0.14.0
+-e git+https://github.com/okfde/pygtail.git@3be17b00f55781caba62d589bcf8aceb0805a58c#egg=pygtail
 pyisemail
 pypdf2
 python-magic
 python-mimeparse
 python-slugify
-pytz
 reportlab
 requests
 sentry-sdk
-#stripe
-sortabletable
+stripe
+torch
+torchvision
+unidecode
 Wand
 WeasyPrint
+webp
 websockets
 xlrd
 
--e git+https://github.com/okfde/django-amenities.git@master#egg=django-amenities
--e git+https://github.com/fin/froide.git@main#egg=froide
-#-e git+https://github.com/okfde/froide-campaign.git@master#egg=froide-campaign
-#-e git+https://github.com/okfde/froide-food.git@master#egg=froide-food
-#-e git+https://github.com/okfde/froide-fax.git@master#egg=froide-fax
-#-e git+https://github.com/okfde/froide-legalaction.git@master#egg=froide-legalaction
-#-e git+https://github.com/okfde/froide-exam.git@master#egg=froide-exam
--e git+https://github.com/okfde/django-filingcabinet.git@master#egg=django-filingcabinet
--e git+https://github.com/okfde/django-amenities.git@master#egg=django-amenities
-#-e git+https://github.com/okfde/froide-payment.git@master#egg=froide-payment
-#-e git+https://github.com/okfde/froide-crowdfunding.git@master#egg=froide-crowdfunding
+-e git+https://github.com/okfde/django-amenities.git@main#egg=django-amenities
+-e git+https://github.com/okfde/froide.git@main#egg=froide
+-e git+https://github.com/okfde/froide-campaign.git@main#egg=froide-campaign
+-e git+https://github.com/okfde/froide-food.git@main#egg=froide-food
+-e git+https://github.com/okfde/froide-fax.git@main#egg=froide-fax
+-e git+https://github.com/okfde/froide-legalaction.git@main#egg=froide-legalaction
+-e git+https://github.com/okfde/froide-exam.git@main#egg=froide-exam
+-e git+https://github.com/okfde/django-filingcabinet.git@main#egg=django-filingcabinet
+-e git+https://github.com/okfde/froide-payment.git@main#egg=froide-payment
+-e git+https://github.com/okfde/froide-crowdfunding.git@main#egg=froide-crowdfunding
+-e git+https://github.com/okfde/froide-govplan.git@main#egg=froide-govplan
 -e git+https://github.com/stefanw/django-contractor.git@main#egg=django-contractor
--e git+https://github.com/OpenLegalTech/django-legal-advice-builder.git@main#egg=django_legal_advice_builder
+-e git+https://github.com/stefanw/djangocms-sortabletable.git@main#egg=sortabletable
+-e git+https://github.com/fragdenstaat/django-legal-advice-builder.git@main#egg=django_legal_advice_builder
+-e git+https://github.com/okfde/fcdocs-annotate.git@main#egg=fcdocs_annotate

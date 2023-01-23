@@ -1,7 +1,12 @@
 import os
 import re
 
+# from datetime import timedelta
+from pathlib import Path
+
 from django.utils.translation import gettext_lazy as _
+
+from configurations import values
 
 from froide.settings import Base, German
 
@@ -14,7 +19,7 @@ def env(key, default=None):
     return os.environ.get(key, default)
 
 
-THEME_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+THEME_ROOT = Path(__file__).resolve().parent.parent
 
 
 class FragDenStaatBase(German, Base):
@@ -39,7 +44,7 @@ class FragDenStaatBase(German, Base):
                 "cms",
                 "menus",
                 "sekizai",
-                "easy_thumbnails",
+                # easy thumbnails comes from froide
                 "easy_thumbnails.optimize",
                 "filer",
                 "mptt",
@@ -53,45 +58,45 @@ class FragDenStaatBase(German, Base):
                 # "fragdenstaat_de.fds_donation.apps.FdsDonationConfig",
                 # "fragdenstaat_de.fds_mailing.apps.FdsMailingConfig",
                 "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",
+                # "fragdenstaat_at.fds_fximport.apps.FdsFxImportConfig",
                 # Additional CMS plugins
                 "djangocms_text_ckeditor",
                 "djangocms_picture",
                 "djangocms_video",
                 "djangocms_icon",
-                "djangocms_link",
-                "djangocms_bootstrap4",
-                "djangocms_bootstrap4.contrib.bootstrap4_alerts",
-                "djangocms_bootstrap4.contrib.bootstrap4_badge",
-                "djangocms_bootstrap4.contrib.bootstrap4_card",
-                "djangocms_bootstrap4.contrib.bootstrap4_carousel",
-                "djangocms_bootstrap4.contrib.bootstrap4_collapse",
-                "djangocms_bootstrap4.contrib.bootstrap4_content",
-                "djangocms_bootstrap4.contrib.bootstrap4_grid",
-                "djangocms_bootstrap4.contrib.bootstrap4_jumbotron",
-                "djangocms_bootstrap4.contrib.bootstrap4_link",
-                "djangocms_bootstrap4.contrib.bootstrap4_listgroup",
-                "djangocms_bootstrap4.contrib.bootstrap4_media",
-                # This unregisters the normal picture plugin, disabling
-                # 'djangocms_bootstrap4.contrib.bootstrap4_picture',
-                "djangocms_bootstrap4.contrib.bootstrap4_tabs",
-                "djangocms_bootstrap4.contrib.bootstrap4_utilities",
+                "djangocms_frontend",
+                "djangocms_frontend.contrib.accordion",
+                "djangocms_frontend.contrib.alert",
+                "djangocms_frontend.contrib.badge",
+                "djangocms_frontend.contrib.card",
+                "djangocms_frontend.contrib.carousel",
+                "djangocms_frontend.contrib.collapse",
+                "djangocms_frontend.contrib.content",
+                "djangocms_frontend.contrib.grid",
+                "djangocms_frontend.contrib.image",
+                "djangocms_frontend.contrib.jumbotron",
+                "djangocms_frontend.contrib.link",
+                "djangocms_frontend.contrib.listgroup",
+                "djangocms_frontend.contrib.media",
+                "djangocms_frontend.contrib.tabs",
+                "djangocms_frontend.contrib.utilities",
                 # Additional CMS plugins
                 "sortabletable",
-                "djangocms_transfer",
                 "contractor",
                 "djcelery_email",
                 "django.contrib.redirects",
-                "markdown_deux",
                 "django_prices",
                 # "froide_campaign.apps.FroideCampaignConfig",
                 # "froide_legalaction.apps.FroideLegalActionConfig",
-                # "froide_payment.apps.FroidePaymentConfig",
+                "froide_payment.apps.FroidePaymentConfig",
                 # "froide_crowdfunding.apps.FroideCrowdfundingConfig",
                 # "froide_food.apps.FroideFoodConfig",
                 # "django_amenities.apps.AmenitiesConfig",
                 # "froide_fax.apps.FroideFaxConfig",
                 # "froide_exam",
+                # "froide_govplan.apps.FroideGovPlanConfig",
                 # "legal_advice_builder.apps.LegalAdviceBuilderConfig",
+                "fcdocs_annotate.annotation.apps.AnnotationConfig",
                 "tinymce",
             ]
         )
@@ -103,7 +108,7 @@ class FragDenStaatBase(German, Base):
         if "DIRS" not in TEMP[0]:
             TEMP[0]["DIRS"] = []
         TEMP[0]["DIRS"] = [
-            os.path.join(THEME_ROOT, "templates"),
+            THEME_ROOT / "templates",
         ] + list(TEMP[0]["DIRS"])
         cps = TEMP[0]["OPTIONS"]["context_processors"]
         cps.extend(
@@ -122,6 +127,36 @@ class FragDenStaatBase(German, Base):
             os.path.join(THEME_ROOT, "locale"),
         ] + locales
 
+    STATIC_ROOT = values.Value(THEME_ROOT.parent / "public")
+    FRONTEND_BUILD_DIR = THEME_ROOT.parent / "build"
+
+    @property
+    def STATICFILES_DIRS(self):
+        return [THEME_ROOT / "static"] + list(super().STATICFILES_DIRS)
+
+    # def three_days_ago_but_not_sundays(date):
+    #     """
+    #     return tuple of gte and lt dates
+    #     """
+    #     weekday = date.weekday()
+    #     if weekday == 6:
+    #         # empty filter on Sunday
+    #         return (date, date)
+    #     elif weekday == 5:
+    #         # on Saturday, send Wednesday and Thursday subscribers
+    #         return (date - timedelta(days=3), date - timedelta(days=1))
+    #     # Otherwise send three days ago subscribers
+    #     return (date - timedelta(days=3), date - timedelta(days=2))
+
+    # NEWSLETTER_WELCOME_MAILINTENT = {DEFAULT_NEWSLETTER: "fds_newsletter/email/welcome"}
+    # NEWSLETTER_ONBOARDING_SCHEDULE = [
+    #     {
+    #         "newsletter": DEFAULT_NEWSLETTER,
+    #         "mail_intent": "fds_newsletter/email/intro",
+    #         "date": three_days_ago_but_not_sundays,
+    #     }
+    # ]
+
     # Newsletter
     # NEWSLETTER_RICHTEXT_WIDGET = "djangocms_text_ckeditor.widgets.TextEditorWidget"
     # DEFAULT_NEWSLETTER = "fragdenstaat"
@@ -138,7 +173,8 @@ class FragDenStaatBase(German, Base):
         #    {'code': 'de'},
         # ),
         "default": {
-            "hide_untranslated": False,  # the default; let .active_translations() return fallbacks too.
+            # the default; let .active_translations() return fallbacks too.
+            "hide_untranslated": False,
         },
     }
 
@@ -151,7 +187,9 @@ class FragDenStaatBase(German, Base):
         "default": {
             "public": True,
             "hide_untranslated": False,
+            # "hide_untranslated": True,
             "redirect_on_fallback": False,
+            # "fallbacks": [],
         },
         1: [
             {
@@ -181,9 +219,11 @@ class FragDenStaatBase(German, Base):
         ("cms/page.html", "Page template"),
         ("cms/page_headerless.html", "Page without header"),
         ("cms/page_reduced.html", "Page reduced"),
+        ("cms/page_breadcrumb.html", "Page with breadcrumbs"),
         ("cms/blog_base.html", "Blog base template"),
         ("cms/help_base.html", "Help base template"),
-        ("cms/static_placeholders.html", "Static Placeholder Overview"),
+        # ("cms/static_placeholders.html", "Static Placeholder Overview"),
+        # ("froide_govplan/base.html", "Govplan base template"),
     ]
 
     # DONATION_LOGIC_PLUGINS = [
@@ -272,7 +312,7 @@ class FragDenStaatBase(German, Base):
                 "Outdent",
                 "Indent",
                 "-",
-                "Blockquote",
+                "figureblockquote",
                 "-",
                 "Link",
                 "Unlink",
@@ -283,7 +323,7 @@ class FragDenStaatBase(German, Base):
             ["ShowBlocks", "Source"],
         ],
         "toolbarCanCollapse": False,
-        "extraPlugins": "autocorrect",
+        "extraPlugins": "autocorrect,figureblockquote",
         "autocorrect_replacementTable": {
             "...": "…",
         },
@@ -296,6 +336,22 @@ class FragDenStaatBase(German, Base):
     }
 
     DJANGOCMS_PICTURE_TEMPLATES = [("hero", _("Hero")), ("email", _("Email"))]
+
+    TINYMCE_DEFAULT_CONFIG = {
+        "theme": "silver",
+        "height": 500,
+        "menubar": False,
+        "plugins": (
+            "autolink,lists,link,charmap,print,preview,anchor,"
+            "searchreplace,visualblocks,code,fullscreen,paste,"
+            "code,wordcount"
+        ),
+        "toolbar": (
+            "undo redo | h3 h4 h5 | "
+            "bold italic | link | bullist numlist blockquote | "
+            "removeformat visualblocks code"
+        ),
+    }
 
     FILER_ENABLE_PERMISSIONS = True
 
@@ -384,7 +440,10 @@ class FragDenStaatBase(German, Base):
         "filer.thumbnail_processors.scale_and_crop_with_subject_location",
         "easy_thumbnails.processors.filters",
     )
-    THUMBNAIL_PRESERVE_EXTENSIONS = ("png",)
+    THUMBNAIL_PRESERVE_EXTENSIONS = (
+        "png",
+        "svg",
+    )
     META_SITE_PROTOCOL = "http"
     META_USE_SITES = True
 
@@ -398,9 +457,13 @@ class FragDenStaatBase(German, Base):
     #     'cleanup_on_startup': False
     # }
 
-    FROIDE_CSRF_MIDDLEWARE = (
-        "fragdenstaat_at.theme.ilf_middleware.CsrfViewIlfMiddleware"
-    )
+    GDAL_LIBRARY_PATH = os.environ.get("GDAL_LIBRARY_PATH")
+    GEOS_LIBRARY_PATH = os.environ.get("GEOS_LIBRARY_PATH")
+
+    # FROIDE_CSRF_MIDDLEWARE = (
+    #     "fragdenstaat_at.theme.ilf_middleware.CsrfViewIlfMiddleware"
+    # )
+    FROIDE_CSRF_MIDDLEWARE = "django.middleware.csrf.CsrfViewMiddleware"
 
     MIDDLEWARE = [
         "django.middleware.security.SecurityMiddleware",
@@ -411,7 +474,7 @@ class FragDenStaatBase(German, Base):
         FROIDE_CSRF_MIDDLEWARE,
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
-        "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        "fragdenstaat_at.theme.middleware.XFrameOptionsCSPMiddleware",
         "django.contrib.flatpages.middleware.FlatpageFallbackMiddleware",
         "fragdenstaat_at.theme.redirects.PathRedirectFallbackMiddleware",
         "froide.account.middleware.AcceptNewTermsMiddleware",
@@ -439,6 +502,28 @@ class FragDenStaatBase(German, Base):
     SITE_NAME = "FragDenStaat.at"
     SITE_EMAIL = "info@fragdenstaat.at"
     SITE_URL = "http://localhost:8000"
+    # SITE_LOGO TODO
+
+    DEFAULT_CURRENCY = "EUR"
+    DEFAULT_DECIMAL_PLACES = 2
+    PAYMENT_HOST = "localhost:8000"
+    PAYMENT_USES_SSL = False
+    PAYMENT_MODEL = "froide_payment.Payment"
+    PAYMENT_CHECK_THRESHOLD = int(env("PAYMENT_CHECK_THRESHOLD", "1000"))
+    PAYMENT_VARIANTS = {
+        "lastschrift": ("froide_payment.provider.LastschriftProvider", {}),
+        "banktransfer": ("froide_payment.provider.BanktransferProvider", {}),
+        "default": ("payments.dummy.DummyProvider", {}),
+    }
+
+    DONATION_PROJECTS = [
+        ("FOI", "Forum Informationsfreiheit"),  # First project becomes default project
+        #  ("CFG", "Code for Germany"),
+        #  ("JH", "Jugend hackt"),
+        #  ("GM", "Gemeinkosten"),
+    ]
+    DONATION_BACKUP_URL = env("DONATION_BACKUP_URL")
+    DONATION_BACKUP_CREDENTIALS = env("DONATION_BACKUP_CREDENTIALS")
 
     SECRET_URLS = {
         "admin": "admin",
@@ -496,7 +581,12 @@ class FragDenStaatBase(German, Base):
                 dryrun_domain="test.fragdenstaat.at",
                 allow_pseudonym=True,
                 api_activated=True,
-                search_engine_query="http://www.google.de/search?as_q=%(query)s&as_epq=&as_oq=&as_eq=&hl=en&lr=&cr=&as_ft=i&as_filetype=&as_qdr=all&as_occt=any&as_dt=i&as_sitesearch=%(domain)s&as_rights=&safe=images",
+                search_engine_query=(
+                    "http://www.google.at/search?as_q=%(query)s&as_epq=&as_oq=&as_eq=&"
+                    "hl=en&lr=&cr=&as_ft=i&as_filetype=&as_qdr=all&as_occt=any&"
+                    "as_dt=i&as_sitesearch=%(domain)s&as_rights=&safe=images"
+                ),
+                suspicious_asn_provider_list=env("SUSPICIOUS_ASN", "").split("|"),
                 show_public_body_employee_name=False,
                 request_throttle=[
                     (5, 5 * 60),  # X requests in X seconds
@@ -521,6 +611,11 @@ class FragDenStaatBase(German, Base):
                     rec(r"^\s*Sehr (geehrte[sr]?\s+(?!Damen und Herren).+)"),
                     rec(r"^(?:Von|An|Cc|To|From): (.*)"),
                     rec(r"Sehr geehrt(er? (?:Herr|Frau)(?: ?Dr\.?)?(?: ?Prof\.?)? .*)"),
+                    rec(r"^\s*Grü(?:ß|ss)\s+Gott\s+((?:Herr|Frau|Fr\.|Hr\.)\s+.*)"),
+                    rec(r"^\s*Sehr ((?:Herr|Frau|Fr\.|Hr\.)\s+.*)"),
+                    rec(r"^\s*Sehr (geehrte[\*:_]?[sr]?\s+(?!Damen und Herren).+)"),
+                    rec(r"^\s*(?:Von|An|Cc|To|From): (.*)"),
+                    rec(r"^\s*Guten\s+Tag\s+(.+)"),
                 ],
                 custom_replacements=[
                     rec(r"[Bb][Gg]-[Nn][Rr]\.?\s*\:?\s*([a-zA-Z0-9\s/]+)"),
@@ -529,9 +624,43 @@ class FragDenStaatBase(German, Base):
                     rec(r"(https://wetransfer.com/downloads/.*)"),
                     rec(r"(https://send.firefox.com/download/.*)"),
                 ],
+                moderation_triggers=[
+                    {
+                        "name": "nonfoi",
+                        "label": _("Non-FOI"),
+                        "icon": "fa-ban",
+                        "applied_if_actions_applied": [0],
+                        "actions": [
+                            ("froide.foirequest.moderation.MarkNonFOI",),
+                            (
+                                "froide.foirequest.moderation.SendUserEmail",
+                                "foirequest/emails/non_foi",
+                            ),
+                        ],
+                    },
+                    {
+                        "name": "warn_user",
+                        "label": _("Give warning"),
+                        "icon": "fa-minus-circle",
+                        "applied_if_actions_applied": [0, 1],
+                        "actions": [
+                            ("froide.foirequest.moderation.Depublish",),
+                            ("froide.foirequest.moderation.ApplyUserTag", "watchlist"),
+                            (
+                                "froide.foirequest.moderation.SendUserEmail",
+                                "moderation/warn_user",
+                            ),
+                            (
+                                "froide.foirequest.moderation.AddUserNote",
+                                "{timestamp}: {moderator} send warning ({foirequest})",
+                            ),
+                        ],
+                    },
+                ],
                 closings=[
                     rec(
-                        r"\b([Mm]it *)?(den *)?(freun\w+|vielen|besten)? *Gr(ü|u|\?)(ß|ss|\?)(en?)?,?"
+                        r"\b([Mm]it *)?(den *)?(freun\w+|vielen|besten)? "
+                        r"*Gr(ü|u|\?)(ß|ss|\?)(?!\s+Gott)(en?)?,?"
                     ),
                     rec(r"\bHochachtungsvoll,?"),
                     rec(r"\bi\. ?A\."),
@@ -548,10 +677,16 @@ class FragDenStaatBase(German, Base):
                 ],
                 recipient_blocklist_regex=rec(
                     r".*\.de-mail\.de$|^z@bundesnachrichtendienst.de|^pad.donotreply@frontex.europa.eu|^noreply@.*|^empfangsbestaetigung@bahn.de$|.*\.local$"
+                    r".*\.de-mail\.de$|^z@bundesnachrichtendienst\.de|"
+                    r"^pad\.donotreply@frontex\.europa\.eu|"
+                    r"^noreply@.*|^empfangsbestaetigung@bahn\.de$|.*\.local$|^postmaster@.*|"
+                    r"^askema\.noreply@ema\.europa\.eu$|^.*@nomail\.ec\.europa\.eu$|"
+                    r"^eingangsbestaetigung@jobcenter-ge\.de$"
                 ),
                 content_urls={
                     "terms": "/info/nutzungsbedingungen/",
                     "privacy": "/info/datenschutz/",
+                    # "pseudonym": "/hilfe/datenschutz-und-privatsphare/pseudonyme-nutzung/",
                     "about": "/info/ueber/",
                     "help": "/hilfe/",
                 },
@@ -561,9 +696,19 @@ class FragDenStaatBase(German, Base):
                 unsubscribe_enabled=True,
                 unsubscribe_format="unsub+{token}@fragdenstaat.at",
                 auto_reply_subject_regex=rec(
-                    "^(Auto-?Reply|Out of office|Out of the office|Abwesenheitsnotiz|Automatische Antwort|automatische Empfangsbestätigung)"
+                    r"^(Auto-?Reply|Out of office|Out of the office|Abwesenheitsnotiz|"
+                    r"Automatische Antwort|automatische Empfangsbestätigung)"
                 ),
                 auto_reply_email_regex=rec("^auto(reply|responder|antwort)@"),
+                non_meaningful_subject_regex=[
+                    r"^(ifg[- ])?anfrage$",
+                    r"^dokumente?$",
+                    r"^infos?$",
+                    r"^information(en)?$",
+                    r"^e-?mails?$",
+                    r"^kommunikation$",
+                ],
+                address_regex=r"\d{4,5}",
             )
         )
         return config
@@ -571,3 +716,9 @@ class FragDenStaatBase(German, Base):
     SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
     SENTRY_JS_URL = ""
     FDS_OGIMAGE_URL = ""  # https://ogimage.frag-den-staat.de/api/{hash}?path={path}"
+
+    # FRONTEX_CAPTCHA_MODEL_PATH = os.environ.get("FRONTEX_CAPTCHA_MODEL_PATH", None)
+
+    DJANGOCMS_ICON_SETS = [
+        ("fontawesome4", "fa", "Font Awesome 4", "4.7.0"),
+    ]

@@ -1,0 +1,34 @@
+.filter__field {
+  ul {
+    list-style-type: none;
+    padding-left: 0;
+
+    li {
+      margin-top: 0.1rem;
+      margin-bottom: 0.1rem;
+    }
+
+    .selected {
+      font-weight: bold;
+    }
+  }
+
+  input,
+  select {
+    width: 100%;
+  }
+
+  .list-filter {
+    position: relative;
+
+    ul {
+      height: 300px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+
+      li {
+        border-bottom: 1px solid white;
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 from cms.models import Title
 
-from froide.helper.search.views import BaseSearchView
 from froide.helper.search.filters import BaseSearchFilterSet
+from froide.helper.search.views import BaseSearchView
 
 from .documents import CMSDocument
 
@@ -22,4 +22,5 @@ class CMSPageSearch(BaseSearchView):
     def get_base_search(self):
         qs = super().get_base_search()
         url_prefix = self.request.path.rsplit("/", 2)[0] + "/"
-        return qs.filter("prefix", **{"url.raw": {"value": url_prefix}})
+        qs = qs.filter("prefix", **{"url.raw": {"value": url_prefix}})
+        return qs.filter("term", language=self.request.LANGUAGE_CODE)

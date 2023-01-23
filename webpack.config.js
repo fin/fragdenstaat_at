@@ -56,7 +56,7 @@ for (let key in ENTRY) {
 }
 CHUNK_LIST = CHUNK_LIST.join('|')
 
-const BUILD_FILE_REGEX = new RegExp('.*/(' + ENTRY_LIST.join('|') + ')$')
+// const BUILD_FILE_REGEX = new RegExp('.*/(' + ENTRY_LIST.join('|') + ')$')
 
 const config = {
   entry: ENTRY,
@@ -193,7 +193,7 @@ const config = {
         test: /(\.(woff2?|eot|ttf|otf)|font\.svg)(\?.*)?$/,
         type: 'asset/resource',
         generator: {
-          filename: '../fonts/[name][ext]'
+          filename: '../fonts/[name].[ext]'
         }
       },
       {
@@ -205,7 +205,7 @@ const config = {
           }
         },
         generator: {
-          filename: '../img/[name][ext]'
+          filename: '../img/[name].[ext]'
         }
       }
     ]
@@ -229,11 +229,9 @@ const config = {
       filename: '../css/[name].css'
       // publicPath: '../../'
     }),
-    new CopyWebpackPlugin({
-      patterns: [
-        { from: 'node_modules/pdfjs-dist/build/pdf.worker.min.js' }
-      ]
-    }),
+    new CopyWebpackPlugin({patterns: [
+      {from: 'node_modules/pdfjs-dist/build/pdf.worker.min.js'}
+    ]}),
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: `"${process.env.NODE_ENV}"`

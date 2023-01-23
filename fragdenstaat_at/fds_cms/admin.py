@@ -1,14 +1,12 @@
 from django.contrib import admin
 from django.shortcuts import redirect, render
-from django.conf.urls import url
+from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.urls import reverse
 
-from cms.extensions import PageExtensionAdmin
 from cms.admin.static_placeholder import StaticPlaceholderAdmin
+from cms.extensions import PageExtensionAdmin
 from cms.models.static_placeholder import StaticPlaceholder
-
 
 from .models import FdsPageExtension
 
@@ -21,14 +19,18 @@ admin.site.register(FdsPageExtension, FdsPageExtensionAdmin)
 
 
 class CustomStaticPlaceholderAdmin(StaticPlaceholderAdmin):
-    list_display = ("code", "edit_link")
+    list_display = (
+        "code",
+        "edit_link",
+        "dirty",
+    )
     actions = ["publish"]
 
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
-            url(
-                r"^(?P<pk>\d+)/edit-placeholder/$",
+            path(
+                "<int:pk>/edit-placeholder/",
                 self.admin_site.admin_view(self.edit_placeholder),
                 name="fds_cms-staticplaceholder-edit_placeholder",
             ),
@@ -37,7 +39,7 @@ class CustomStaticPlaceholderAdmin(StaticPlaceholderAdmin):
 
     def edit_link(self, obj):
         return format_html(
-            '<a href="{}">{}</a>',
+            '<a href="{}" target="_blank">{}</a>',
             reverse(
                 "admin:fds_cms-staticplaceholder-edit_placeholder",
                 kwargs={"pk": obj.pk},
@@ -54,7 +56,7 @@ class CustomStaticPlaceholderAdmin(StaticPlaceholderAdmin):
         return render(
             request,
             "fds_cms/admin/static_placeholder.html",
-            {"placeholder": static_placeholder},
+            {"placeholder": static_placeholder, "force_cms_render": True},
         )
 
     def publish(self, request, queryset):

@@ -2,7 +2,7 @@ import os
 
 from configurations import values
 
-from .base import FragDenStaatBase, THEME_ROOT
+from .base import THEME_ROOT, FragDenStaatBase
 
 
 class Test(FragDenStaatBase):
@@ -17,7 +17,12 @@ class Test(FragDenStaatBase):
     ]
 
     MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
-    CACHES = values.CacheURLValue("locmem://")
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake",
+        }
+    }
 
     TEST_SELENIUM_DRIVER = values.Value("chrome")
     ROOT_URLCONF = "tests.urls"

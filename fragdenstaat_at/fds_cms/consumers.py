@@ -1,8 +1,7 @@
-from websockets.exceptions import ConnectionClosedOK
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from websockets.exceptions import ConnectionClosedOK
 
 from froide.helper.presence import get_presence_manager
-
 
 PRESENCE_ROOM = "fds_cms.editplugin.{}"
 
@@ -45,6 +44,10 @@ class CMSPluginEditConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         if content["type"] == "heartbeat":
             await self.pm.touch(self.scope["user"])
+            return
+        if content["type"] == "left":
+            await self.pm.remove(self.scope["user"])
+            await self.update_userlist(action="left")
             return
 
     async def userlist(self, event):

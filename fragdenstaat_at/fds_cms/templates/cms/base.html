@@ -3,12 +3,9 @@
 {% load cms_tags %}
 {% load static %}
 {% load sekizai_tags %}
+{% load frontendbuild %}
 
-{% block css %}
-  {% addtoblock "css" %}<link href="{% static 'css/main.css' %}" rel="stylesheet">{% endaddtoblock %}
-  {{ block.super }}
-{% endblock %}
-
+{% block body_extra_attributes %} data-staticurl="{{ STATIC_URL }}"{% if request.user.is_staff %} data-sentry="{{ SENTRY_JS_URL}}"{% endif %}{% endblock %}
 
 {% block body_tag %}
   {% if request.user.is_authenticated and request.session.impostor %}
@@ -16,7 +13,7 @@
   {% endif %}
 
   {% block top_block %}
-    <div class="top-banner">
+    <div class="top-banner" style="display: none;">
       {% static_placeholder "top_banner" %}
     </div>
   {% endblock %}
@@ -43,16 +40,21 @@
   {% endblock %}
 
   {% block footer_container %}
-    {% include "footer.html" %}
+    <footer class="footer" id="footer">
+      <div class="container">
+        {% static_placeholder "footer" %}
+      </div>
+    </footer>
   {% endblock %}
 
 {% endblock body_tag %}
 
 {% block scripts %}
-  {% addtoblock "js" %}<script async src="{% static 'js/main.js' %}"></script>{% endaddtoblock %}
+  {% renderfrontendhmr %}
+  {% include "_frontend.html" with entry_point="main.js" %}
 
   {% if cms_toolbar.edit_mode_active %}
-    {% addtoblock "js" %}<script async src="{% static 'js/fds_cms.js' %}"></script>{% endaddtoblock %}
+    {% include "_frontend.html" with entry_point="fds_cms.js" %}
   {% endif %}
 
   {{ block.super }}

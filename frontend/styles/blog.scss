@@ -40,6 +40,13 @@ h4.blog-list-heading {
   }
 }
 
+.blog-list-heading__kicker {
+  color: $gray-600;
+  font-size: 0.9rem;
+  min-height: 1.5em;
+  line-height: 1.5;
+}
+
 .blog-lead {
   color: $gray-600;
   font-weight: 400;
@@ -79,6 +86,7 @@ h4.blog-list-heading {
   .blog-teaser-text {
     width: 60%;
   }
+
   .blog-lead {
     display: inherit;
   }
@@ -104,7 +112,7 @@ h4.blog-list-heading {
 
 .has-arrow::after {
   margin-left: 5px;
-  content: "\2192";
+  content: '\2192';
   display: inline-block;
   font-family: $font-family-sans-serif;
   line-height: 1;
@@ -146,9 +154,13 @@ h4.blog-list-heading {
   }
 }
 
-.blog-header__date {
+.blog-header__meta {
   color: $gray-600;
-  font-size: 0.9rem;
+  font-size: 1rem;
+
+  & a {
+    color: $gray-600;
+  }
 }
 
 .blog-header__tags,
@@ -167,10 +179,8 @@ h4.blog-list-heading {
 }
 
 .blog-header__tags {
-  float: right;
-
   a::before {
-    content: "#";
+    content: '#';
   }
 }
 
@@ -201,7 +211,9 @@ h4.blog-list-heading {
   > ul,
   > ol,
   > div.text-container,
-  > blockquote {
+  > blockquote,
+  > .blockquote-figure,
+  > details {
     font-family: $font-family-serif;
     color: #26282b;
     font-size: 1.225rem;
@@ -223,6 +235,20 @@ h4.blog-list-heading {
     width: 100%;
   }
 
+  > details,
+  > div.infotextbox {
+    background-color: var(--bs-blue-100);
+
+    @include make-col(12);
+    margin: 1rem auto 0rem;
+    padding: 1rem 1rem 0;
+    width: 100%;
+
+    > summary {
+      padding-bottom: 1rem;
+    }
+  }
+
   @include media-breakpoint-up(sm) {
     > p,
     > h2,
@@ -230,7 +256,8 @@ h4.blog-list-heading {
     > h4,
     > ul,
     > ol,
-    > div.text-container {
+    > div.text-container,
+    > details {
       @include make-col(10);
       margin-left: 15%;
       margin-right: 15%;
@@ -244,7 +271,8 @@ h4.blog-list-heading {
     > h4,
     > ul,
     > ol,
-    > div.text-container {
+    > div.text-container,
+    > details {
       @include make-col(8);
       margin-left: 15%;
       margin-right: 15%;
@@ -258,7 +286,8 @@ h4.blog-list-heading {
     > h4,
     > ul,
     > ol,
-    > div.text-container {
+    > div.text-container,
+    > details {
       @include make-col(6);
       margin-left: 25%;
       margin-right: 25%;
@@ -294,29 +323,39 @@ h4.blog-list-heading {
     color: $gray-800;
   }
 
-  > blockquote {
+  > blockquote,
+  > .blockquote-figure {
     @include make-col(12);
     margin: 1rem auto 0.5rem;
     padding: 1rem 2rem;
     width: 100%;
     background-color: $gray-100;
 
-    > p {
+    > p,
+    > blockquote > p {
       border-left: 4px solid $gray-400;
       padding: 0.5rem 0 0.5rem 1rem;
       font-size: 1.3rem;
       margin: 0;
     }
   }
+
+  > .blockquote-figure {
+    padding: 1rem 2rem 0;
+  }
+
   @include media-breakpoint-up(md) {
-    > blockquote {
+    > blockquote,
+    > .blockquote-figure {
       @include make-col(10);
       margin-left: 15%;
       margin-right: 15%;
     }
   }
+
   @include media-breakpoint-up(lg) {
-    > blockquote {
+    > blockquote,
+    > .blockquote-figure {
       @include make-col(8);
       margin-left: 25%;
       margin-right: 25%;
@@ -326,7 +365,7 @@ h4.blog-list-heading {
 
 .author-section {
   background-color: $gray-100;
-  margin: 4rem 0;
+  margin: 3rem 0;
   padding: 1rem;
 }
 
@@ -465,7 +504,7 @@ h4.blog-list-heading {
 }
 
 .timeline > li:before {
-  content: "";
+  content: '';
   display: block;
   position: absolute;
   width: 1rem;

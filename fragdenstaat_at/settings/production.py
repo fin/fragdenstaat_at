@@ -1,12 +1,10 @@
-import os
 import logging
-
-import django_cache_url
+import os
 
 import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
-from sentry_sdk.integrations.celery import CeleryIntegration
 
 from .base import FragDenStaatBase, env
 
@@ -25,12 +23,12 @@ class FragDenStaat(FragDenStaatBase):
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
 
-    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE", "1") == "1"
     CSRF_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE", "1") == "1"
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
-    LANGUAGE_COOKIE_SECURE = True
+    LANGUAGE_COOKIE_SECURE = env("LANGUAGE_COOKIE_SECURE", "1") == "1"
     LANGUAGE_COOKIE_SAMESITE = "Lax"
 
     DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB
@@ -52,8 +50,77 @@ class FragDenStaat(FragDenStaatBase):
         "testserver",
     ]
     ALLOWED_REDIRECT_HOSTS = ALLOWED_HOSTS + ["fragdenstaat.at"]
+    CSRF_TRUSTED_ORIGINS = [x for x in env("CSRF_TRUSTED_ORIGINS", "").split(",") if x]
 
-    CACHES = {"default": django_cache_url.config()}
+    PAYMENT_HOST = "fragdenstaat.at"
+    PAYMENT_USES_SSL = True
+    PAYMENT_VARIANTS = {
+        "creditcard": (
+            "froide_payment.provider.StripeIntentProvider",
+            {
+                "public_key": env("STRIPE_PUBLIC_KEY"),
+                "secret_key": env("STRIPE_PRIVATE_KEY"),
+                "signing_secret": env("STRIPE_WEBHOOK_CC_SIGNING_KEY"),
+            },
+        ),
+        "sepa": (
+            "froide_payment.provider.StripeSEPAProvider",
+            {
+                "public_key": env("STRIPE_PUBLIC_KEY"),
+                "secret_key": env("STRIPE_PRIVATE_KEY"),
+                "signing_secret": env("STRIPE_WEBHOOK_SEPA_SIGNING_KEY"),
+            },
+        ),
+        "paypal": (
+            "froide_payment.provider.PaypalProvider",
+            {
+                "client_id": env("PAYPAL_CLIENT_ID"),
+                "secret": env("PAYPAL_CLIENT_SECRET"),
+                "endpoint": env("PAYPAL_API_URL"),
+                "capture": True,
+                "webhook_id": env("PAYPAL_WEBHOOK_ID"),
+            },
+        ),
+        # "sofort": (
+        #     "froide_payment.provider.StripeSofortProvider",
+        #     {
+        #         # Test API keys
+        #         "public_key": env("STRIPE_PUBLIC_KEY"),
+        #         "secret_key": env("STRIPE_PRIVATE_KEY"),
+        #         # separate Webhook signing secret
+        #         "signing_secret": env("STRIPE_WEBHOOK_SOFORT_SIGNING_KEY"),
+        #     },
+        # ),
+        "lastschrift": ("froide_payment.provider.LastschriftProvider", {}),
+        "banktransfer": ("froide_payment.provider.BanktransferProvider", {}),
+    }
+
+    CACHE_KEY_PREFIX = env("CACHE_KEY_PREFIX", "fragdenstaat")
+    CACHE_LOCAL_MEMORY = int(env("CACHE_LOCAL_MEMORY", "0"))
+    if CACHE_LOCAL_MEMORY:
+        CACHES = {
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "KEY_PREFIX": CACHE_KEY_PREFIX,
+                "TIMEOUT": "3600",
+            }
+        }
+    else:
+        CACHES = {
+            "default": {
+                "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+                "LOCATION": env("MEMCACHED_LOCATION", "127.0.0.1:11211"),
+                "KEY_PREFIX": CACHE_KEY_PREFIX,
+                "TIMEOUT": "3600",
+                "OPTIONS": {
+                    "no_delay": True,
+                    "ignore_exc": True,
+                    "default_noreply": True,
+                    "max_pool_size": 4,
+                    "use_pooling": True,
+                },
+            }
+        }
 
     DATABASES = {
         "default": {
@@ -134,35 +201,34 @@ class FragDenStaat(FragDenStaatBase):
 
     LOGGING = {
         "loggers": {
-            "": {"handlers": ["normal"], "level": "WARNING"},
-            "froide": {"level": "INFO", "propagate": True, "handlers": ["normal"]},
+            "": {"handlers": ["console"], "level": "WARNING"},
+            "froide": {"level": "INFO", "propagate": True, "handlers": ["console"]},
             "fragdenstaat_at": {
                 "level": "INFO",
                 "propagate": True,
-                "handlers": ["normal"],
+                "handlers": ["console"],
             },
             "froide_payment": {
                 "level": "INFO",
                 "propagate": True,
-                "handlers": ["normal"],
+                "handlers": ["console"],
             },
             "sentry.errors": {
-                "handlers": ["normal"],
+                "handlers": ["console"],
                 "propagate": False,
                 "level": "DEBUG",
             },
             "django.request": {
                 "level": "ERROR",
                 "propagate": True,
-                "handlers": ["normal"],
+                "handlers": ["console"],
             },
         },
         "disable_existing_loggers": True,
         "handlers": {
-            "normal": {
-                "filename": os.path.join(env("DJANGO_LOG_DIR"), "froide.log"),
-                "class": "logging.FileHandler",
-                "level": "INFO",
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
             },
         },
         "formatters": {
@@ -175,7 +241,7 @@ class FragDenStaat(FragDenStaatBase):
             "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
             "ignore_501": {"()": "fragdenstaat_at.theme.utils.Ignore501Errors"},
         },
-        "root": {"handlers": ["normal"], "level": "WARNING"},
+        "root": {"handlers": ["console"], "level": "WARNING"},
     }
     MANAGERS = (("FragDenStaat.at", "mail@fragdenstaat.at"),)
     MEDIA_ROOT = env("DJANGO_MEDIA_ROOT")
@@ -192,6 +258,7 @@ class FragDenStaat(FragDenStaatBase):
         "gif": "/usr/bin/optipng {filename}",
         "jpeg": "/usr/bin/jpegoptim {filename}",
     }
+    FILINGCABINET_ENABLE_WEBP = True
 
     _base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     SENTRY_JS_URL = env("DJANGO_SENTRY_PUBLIC_DSN")
@@ -216,12 +283,7 @@ class FragDenStaat(FragDenStaatBase):
 class FragDenStaatDebug(FragDenStaat):
     LOGGING = dict(FragDenStaat.LOGGING)
     LOGGING["disable_existing_loggers"] = False
-    LOGGING["loggers"][""] = {"handlers": ["normal"], "level": "DEBUG"}
-    LOGGING["handlers"]["normal"] = {
-        "filename": os.path.join(env("DJANGO_LOG_DIR"), "froide_debug.log"),
-        "class": "logging.FileHandler",
-        "level": "INFO",
-    }
+    LOGGING["loggers"][""] = {"handlers": ["console"], "level": "DEBUG"}
 
 
 sentry_logging = LoggingIntegration(

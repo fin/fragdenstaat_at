@@ -6,10 +6,10 @@ from django.utils.translation import gettext_lazy as _
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from djangocms_bootstrap4.helpers import concat_classes
-from froide.publicbody.models import PublicBody
 
 from froide.foirequest.models import FoiRequest
 from froide.helper.utils import get_redirect_url
+from froide.publicbody.models import PublicBody
 
 # from .contact import ContactForm
 from .models import (
@@ -323,19 +323,22 @@ class HomepageHeroPlugin(CMSPluginBase):
     render_template = "snippets/homepage_hero.html"
 
     def render(self, context, instance, placeholder):
-        context = super(HomepageHeroPlugin, self)\
-            .render(context, instance, placeholder)
-        context.update({
-            'foicount': FoiRequest.objects.get_send_foi_requests().count(),
-            'pbcount': PublicBody.objects.get_list().count()
-        })
+        context = super(HomepageHeroPlugin, self).render(context, instance, placeholder)
+        context.update(
+            {
+                "foicount": FoiRequest.objects.get_send_foi_requests().count(),
+                "pbcount": PublicBody.objects.get_list().count(),
+            }
+        )
         return context
+
 
 @plugin_pool.register_plugin
 class HomepageHowPlugin(CMSPluginBase):
     module = _("Homepage")
     name = _("Homepage How")
     render_template = "snippets/homepage_how.html"
+
 
 @plugin_pool.register_plugin
 class RowPlugin(CMSPluginBase):
@@ -344,6 +347,7 @@ class RowPlugin(CMSPluginBase):
     render_template = "cms/plugins/row.html"
     allow_children = True
 
+
 class ColumnPlugin(CMSPluginBase):
     module = _("Structure")
     allow_children = True
@@ -351,24 +355,25 @@ class ColumnPlugin(CMSPluginBase):
 
 # Generate Column Plugin classes and register them
 COLUMNS = [
-    (3, _('Three')),
-    (4, _('Four')),
-    (6, _('Six')),
-    (8, _('Eight')),
-    (9, _('Nine')),
-    (12, _('Twelve')),
+    (3, _("Three")),
+    (4, _("Four")),
+    (6, _("Six")),
+    (8, _("Eight")),
+    (9, _("Nine")),
+    (12, _("Twelve")),
 ]
 for col_count, col_name in COLUMNS:
     plugin_pool.register_plugin(
         type(
-            'Column%sPlugin' % col_count,
+            "Column%sPlugin" % col_count,
             (ColumnPlugin,),
             {
-                'name': _("Column " + str(col_name)),
-                'render_template': "cms/plugins/col_%d.html" % col_count,
-            }
+                "name": _("Column " + str(col_name)),
+                "render_template": "cms/plugins/col_%d.html" % col_count,
+            },
         )
     )
+
 
 @plugin_pool.register_plugin
 class VegaChartPlugin(CMSPluginBase):
@@ -421,7 +426,6 @@ class SVGImagePlugin(CMSPluginBase):
         return context
 
 
-
 @plugin_pool.register_plugin
 class ContainerPlugin(CMSPluginBase):
     module = _("Structure")
@@ -444,6 +448,7 @@ class ContainerGreyPlugin(CMSPluginBase):
     name = _("Container Grey")
     render_template = "cms/plugins/container_grey.html"
     allow_children = True
+
 
 @plugin_pool.register_plugin
 class DesignContainerPlugin(CMSPluginBase):

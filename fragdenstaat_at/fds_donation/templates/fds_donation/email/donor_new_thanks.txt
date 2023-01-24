@@ -1,0 +1,9 @@
+{% autoescape off %}{{ salutation }},
+
+vielen Dank für Ihre Spende!
+
+{% if payment.variant == 'banktransfer' %}{% include "fds_donation/includes/banktransfer.txt" %}{% endif %}
+
+Beste Grüße
+{{ site_name }}
+{% endautoescape off %}

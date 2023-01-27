@@ -1,9 +1,14 @@
 # FragDenStaat.de
 
-![FragDenStaat CI](https://github.com/okfde/fragdenstaat_de/workflows/FragDenStaat%20CI/badge.svg)
 
-[FragDenStaat.de](https://fragdenstaat.de) is the German instance of [Froide](https://github.com/okfde/froide) – a freedom of information portal software.
+This repository contains the theming for
+[FragDenStaat.at](https://fragdenstaat.at) - the Austrian instance of [Froide](https://github.com/okfde/froide).
 
+It's based on the [German version](https://github.com/okfde/fragdenstaat_de).
+
+
+
+![FragDenStaat CI](https://github.com/okfde/fragdenstaat_at/workflows/FragDenStaat%20CI/badge.svg)
 
 ## Development environment
 

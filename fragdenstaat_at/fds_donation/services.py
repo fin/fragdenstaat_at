@@ -8,14 +8,15 @@ from django.contrib import auth
 from django.db import models
 from django.utils import timezone
 
-from fragdenstaat_de.fds_newsletter.utils import subscribe_to_default_newsletter
-
 from froide.account.models import User
 from froide.account.services import AccountService
 from froide.helper.email_sending import mail_registry
 
 from .models import Donation, Donor
-from .utils import merge_donors, propose_donor_merge, subscribe_donor_newsletter
+from .utils import merge_donors, propose_donor_merge  # , subscribe_donor_newsletter
+
+# from fragdenstaat_at.fds_newsletter.utils import subscribe_to_default_newsletter
+
 
 logger = logging.getLogger(__name__)
 
@@ -159,9 +160,9 @@ def create_donor(data, user=None, subscription=None):
     if subscription:
         donor.subscriptions.add(subscription)
     logger.info("Donor created %s", donor.id)
-    if donor.email_confirmed and donor.contact_allowed:
-        subscribe_to_default_newsletter(donor.email, user=user)
-        subscribe_donor_newsletter(donor)
+    # if donor.email_confirmed and donor.contact_allowed:
+    #     subscribe_to_default_newsletter(donor.email, user=user)
+    #     subscribe_donor_newsletter(donor)
 
     return donor
 
@@ -359,14 +360,15 @@ def confirm_donor_email(donor, request=None):
     if donor.contact_allowed:
         # Subscribe to normal and donor newsletter
         # TODO: subscribe email address / if different from user?
-        subscribe_to_default_newsletter(
-            donor.email,
-            user=user,
-            name=donor.get_full_name(),
-            email_confirmed=True,
-            reference="donation",
-        )
-        subscribe_donor_newsletter(donor, email_confirmed=True)
+        # subscribe_to_default_newsletter(
+        #     donor.email,
+        #     user=user,
+        #     name=donor.get_full_name(),
+        #     email_confirmed=True,
+        #     reference="donation",
+        # )
+        # subscribe_donor_newsletter(donor, email_confirmed=True)
+        pass
     if new_user:
         connect_payments_to_user(donor)
 

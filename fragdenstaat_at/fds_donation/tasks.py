@@ -1,7 +1,7 @@
 from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
-from fragdenstaat_de.theme.notifications import send_notification
+from fragdenstaat_at.theme.notifications import send_notification
 
 from froide.celery import app as celery_app
 

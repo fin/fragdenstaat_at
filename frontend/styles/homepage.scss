@@ -1,3 +1,7 @@
+footer img.img-fluid {
+  max-width: 250px;
+}
+
 /*
 
   Hero area
@@ -11,6 +15,10 @@
   form {
     background: rgba(255,255,255,0.75);
     padding: 0.8em;
+  }
+
+  &.main-folders {
+    background-image: url(/static/img/folders.jpg);
   }
 } 
 
@@ -58,7 +66,7 @@
 
   &:last-child {
     margin-bottom: 0;
-    background-color: white; // hide dashed line
+    // background-color: white; // hide dashed line
   }
 
   &__text {

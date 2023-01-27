@@ -14,7 +14,8 @@ from django.utils.translation import pgettext
 
 from cms.models.pluginmodel import CMSPlugin
 from django_countries.fields import CountryField
-from fragdenstaat_de.fds_newsletter.models import Subscriber
+
+# from fragdenstaat_de.fds_newsletter.models import Subscriber
 from taggit.managers import TaggableManager
 from taggit.models import TagBase, TaggedItemBase
 
@@ -86,9 +87,9 @@ class Donor(models.Model):
     become_user = models.BooleanField(default=False)
     receipt = models.BooleanField(default=False)
 
-    subscriber = models.ForeignKey(
-        Subscriber, null=True, blank=True, on_delete=models.SET_NULL
-    )
+    # subscriber = models.ForeignKey(
+    #     Subscriber, null=True, blank=True, on_delete=models.SET_NULL
+    # )
 
     recurring_amount = models.DecimalField(
         max_digits=12, decimal_places=settings.DEFAULT_DECIMAL_PLACES, default=0

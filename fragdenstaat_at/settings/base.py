@@ -55,7 +55,7 @@ class FragDenStaatBase(German, Base):
                 # Customisations
                 # "fragdenstaat_de.fds_newsletter",
                 "fragdenstaat_at.fds_cms.apps.FdsCmsConfig",
-                # "fragdenstaat_de.fds_donation.apps.FdsDonationConfig",
+                "fragdenstaat_at.fds_donation.apps.FdsDonationConfig",
                 # "fragdenstaat_de.fds_mailing.apps.FdsMailingConfig",
                 "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",
                 # "fragdenstaat_at.fds_fximport.apps.FdsFxImportConfig",

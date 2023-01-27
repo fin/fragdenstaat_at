@@ -12,8 +12,8 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from filer.models.foldermodels import Folder
-from fragdenstaat_de.fds_donation.remote_filing import backup_donation_file
-from fragdenstaat_de.fds_donation.tasks import (
+from fragdenstaat_at.fds_donation.remote_filing import backup_donation_file
+from fragdenstaat_at.fds_donation.tasks import (
     backup_jzwb_pdf_task,
     send_jzwb_mailing_task,
 )

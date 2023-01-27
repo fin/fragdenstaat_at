@@ -138,19 +138,22 @@ def update_direct_debit(row):
 
 def import_banktransfers(xls_file, project):
     df = pd.read_excel(
-        xls_file, engine="xlrd" if xls_file.name.endswith(".xls") else "openpyxl"
+        xls_file,
+        engine="xlrd" if xls_file.name.endswith(".xls") else "openpyxl",
+        dtype={"Zahlungsreferenz": str},
     )
     df = df.rename(
         columns={
             "Betrag": "amount",
-            "Datum": "date_received",
-            "Wertstellung": "date",
-            "Name": "name",
-            "Verwendungszweck": "reference",
-            "Konto": "iban",
-            "Bank": "bic",
+            "Valutadatum": "date_received",
+            "Buchungsdatum": "date",
+            "Partnername": "name",
+            "Zahlungsreferenz": "reference",
+            "Partner IBAN": "iban",
+            "BIC/SWIFT": "bic",
         }
     )
+    df = df.dropna(subset=["reference"])
     df = df.dropna(subset=["date_received"])
     df["date_received"] = df["date_received"].dt.tz_localize(settings.TIME_ZONE)
     if "date" in df.columns:
@@ -162,6 +165,7 @@ def import_banktransfers(xls_file, project):
     for i, row in df.iterrows():
         if row["name"] in BLOCK_LIST:
             continue
+        print(row["reference"], type(row["reference"]))
         if DEBIT_PATTERN.search(row["reference"]):
             update_direct_debit(row)
             continue

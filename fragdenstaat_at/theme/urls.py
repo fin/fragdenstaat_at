@@ -101,8 +101,10 @@ urlpatterns = [
     #     meisterschaften_tippspiel,
     #     name="fragdenstaat-meisterschaften_tippspiel",
     # ),
-    # path('spenden/spende/',
-    #     include('fragdenstaat_de.fds_donation.urls', namespace='fds_donation')),
+    path(
+        "spenden/",
+        include("fragdenstaat_at.fds_donation.urls", namespace="fds_donation"),
+    ),
 ]
 
 urlpatterns += [

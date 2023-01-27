@@ -1,9 +1,10 @@
-from django.conf import settings
+# from django.conf import settings
 from django.db.models import Min
 
-from fragdenstaat_de.fds_newsletter.utils import subscribe_to_newsletter
-
 from .models import Donation, Donor, update_donation_numbers
+
+# from fragdenstaat_at.fds_newsletter.utils import subscribe_to_newsletter
+
 
 MERGE_DONOR_FIELDS = [
     "salutation",
@@ -28,16 +29,16 @@ MERGE_DONOR_FIELDS = [
 ]
 
 
-def subscribe_donor_newsletter(donor, email_confirmed=False):
-    result, subscriber = subscribe_to_newsletter(
-        settings.DONOR_NEWSLETTER,
-        donor.email,
-        user=donor.user,
-        name=donor.get_full_name(),
-        email_confirmed=email_confirmed,
-    )
-    donor.subscriber = subscriber
-    donor.save(update_fields=["subscriber"])
+# def subscribe_donor_newsletter(donor, email_confirmed=False):
+#     # result, subscriber = subscribe_to_newsletter(
+#     #     settings.DONOR_NEWSLETTER,
+#     #     donor.email,
+#     #     user=donor.user,
+#     #     name=donor.get_full_name(),
+#     #     email_confirmed=email_confirmed,
+#     # )
+#     donor.subscriber = subscriber
+#     donor.save(update_fields=["subscriber"])
 
 
 def propose_donor_merge(candidates, fields=None):

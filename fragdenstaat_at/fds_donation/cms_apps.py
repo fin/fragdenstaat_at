@@ -10,4 +10,4 @@ class FdsDonationApp(CMSApp):
     app_name = "fds_donation"
 
     def get_urls(self, page=None, language=None, **kwargs):
-        return ["fragdenstaat_de.fds_donation.urls"]
+        return ["fragdenstaat_at.fds_donation.urls"]

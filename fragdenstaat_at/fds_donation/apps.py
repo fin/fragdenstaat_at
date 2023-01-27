@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class FdsDonationConfig(AppConfig):
-    name = "fragdenstaat_de.fds_donation"
+    name = "fragdenstaat_at.fds_donation"
     verbose_name = _("FragDenStaat Donations")
 
     def ready(self):

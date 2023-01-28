@@ -8,8 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
-        #with:
-        #python-version: '3.8'
+        with:
+          python-version: '3.10'
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
@@ -38,9 +38,9 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-      #strategy:
-      #matrix:
-        #python-version: ['3.8']
+    strategy:
+      matrix:
+        python-version: ['3.10']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1

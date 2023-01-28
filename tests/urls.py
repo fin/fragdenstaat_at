@@ -1,4 +1,5 @@
-from django.conf.urls import include, path
+from django.conf.urls import include
+from django.urls import path
 
 from fragdenstaat_at.theme.urls import urlpatterns as base_urlpatterns
 

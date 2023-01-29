@@ -30,7 +30,7 @@ class Test(FragDenStaatBase):
     GEOIP_PATH = None
 
     DATABASES = values.DatabaseURLValue(
-        "postgis://fragdenstaat_at:fragdenstaat_at@localhost:5432/fragdenstaat_at"
+        "postgis://fragdenstaat_at:fragdenstaat_at@localhost:5436/fragdenstaat_at"
     )
     ELASTICSEARCH_INDEX_PREFIX = "fds_test"
     ELASTICSEARCH_DSL = {

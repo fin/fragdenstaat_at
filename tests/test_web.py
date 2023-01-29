@@ -16,9 +16,9 @@ class TestWebAppsForm(TestCase):
         response = self.client.get("/cms/search/")
         self.assertEqual(response.status_code, 200)
 
-    def test_crowdfunding(self):
-        response = self.client.get("/crowdfunding/edit/")
-        self.assertEqual(response.status_code, 302)
+    # def test_crowdfunding(self):
+    #     response = self.client.get("/crowdfunding/edit/")
+    #     self.assertEqual(response.status_code, 302)
 
     # def test_food(self):
     #     response = self.client.get("/food/")

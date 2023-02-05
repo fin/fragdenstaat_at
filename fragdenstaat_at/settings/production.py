@@ -12,9 +12,7 @@ from .base import FragDenStaatBase, env
 
 
 class MyStaticFilesStorage(storage.StaticFilesStorage):
-    def __init__(self, *args, **kwargs):
-        kwargs["manifest_strict"] = False
-        super().__init__(*args, **kwargs)
+    manifest_strict = False
 
 
 class FragDenStaat(FragDenStaatBase):

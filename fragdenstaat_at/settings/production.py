@@ -41,7 +41,7 @@ class FragDenStaat(FragDenStaatBase):
 
     DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB
     DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
-    STATICFILES_STORAGE = (MyStaticFilesStorage,)
+    STATICFILES_STORAGE = "fragdenstaat_at.settings.production.MyStaticFilesStorage"
     STATIC_URL = env("STATIC_URL", "https://static.frag.denstaat.at/static/")
     CONTRACTOR_URL = STATIC_URL.replace("/static/", "/assets/")
 

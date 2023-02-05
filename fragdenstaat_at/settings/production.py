@@ -1,12 +1,20 @@
 import logging
 import os
 
+from django.contrib.staticfiles import storage
+
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 from .base import FragDenStaatBase, env
+
+
+class MyStaticFilesStorage(storage.StaticFilesStorage):
+    def __init__(self, *args, **kwargs):
+        kwargs["manifest_strict"] = False
+        super().__init__(*args, **kwargs)
 
 
 class FragDenStaat(FragDenStaatBase):
@@ -33,9 +41,7 @@ class FragDenStaat(FragDenStaatBase):
 
     DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB
     DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
-    STATICFILES_STORAGE = (
-        "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
-    )
+    STATICFILES_STORAGE = (MyStaticFilesStorage,)
     STATIC_URL = env("STATIC_URL", "https://static.frag.denstaat.at/static/")
     CONTRACTOR_URL = STATIC_URL.replace("/static/", "/assets/")
 

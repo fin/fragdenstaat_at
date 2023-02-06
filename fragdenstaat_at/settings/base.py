@@ -57,7 +57,7 @@ class FragDenStaatBase(German, Base):
                 "fragdenstaat_at.fds_cms.apps.FdsCmsConfig",
                 "fragdenstaat_at.fds_donation.apps.FdsDonationConfig",
                 # "fragdenstaat_de.fds_mailing.apps.FdsMailingConfig",
-                "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",
+                # "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",
                 # "fragdenstaat_at.fds_fximport.apps.FdsFxImportConfig",
                 # Additional CMS plugins
                 "djangocms_text_ckeditor",

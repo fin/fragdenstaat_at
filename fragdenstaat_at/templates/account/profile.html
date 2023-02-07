@@ -1,12 +1,12 @@
 {% extends "account/profile.html" %}
 
-{% load fds_ogimage %}
+{% comment %}{% load fds_ogimage %}{% endcomment %}
 
 {% block meta %}
 {{ block.super }}
 
 {% url 'account-profile-og' slug=object.username as profile_path %}
-{% ogimage_url path=profile_path as og_image_url %}
+{% comment %}{% ogimage_url path=profile_path as og_image_url %}{% endcomment %}
 
 <meta property="og:title" content="{{ object.get_full_name }} – FragDenStaat-Profil" />
 <meta property="og:image" content="{{ og_image_url }}" />

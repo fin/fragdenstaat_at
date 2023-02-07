@@ -162,6 +162,17 @@ class FragDenStaat(FragDenStaatBase):
 
     CELERY_BROKER_URL = env("DJANGO_CELERY_BROKER_URL")
 
+    @property
+    def CELERY_BEAT_SCHEDULE(self):
+        from celery.schedules import crontab
+
+        TEMP = super(FragDenStaat, self).CELERY_BEAT_SCHEDULE
+        TEMP["check_mail_log"] = {
+            "task": "froidehelper.tasks.check_mail_log",
+            "schedule": crontab(),
+        }
+        return TEMP
+
     CUSTOM_AUTH_USER_MODEL_DB = "auth_user"
 
     DEFAULT_FROM_EMAIL = "FragDenStaat.at <info@fragdenstaat.at>"

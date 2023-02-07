@@ -168,7 +168,7 @@ class FragDenStaat(FragDenStaatBase):
 
         TEMP = super(FragDenStaat, self).CELERY_BEAT_SCHEDULE
         TEMP["check_mail_log"] = {
-            "task": "froidehelper.tasks.check_mail_log",
+            "task": "froide.helper.tasks.check_mail_log",
             "schedule": crontab(),
         }
         return TEMP

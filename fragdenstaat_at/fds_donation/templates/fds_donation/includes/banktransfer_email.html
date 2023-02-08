@@ -5,14 +5,13 @@
     <h3>Bitte überweisen Sie {{ order.total_gross }}&nbsp;EUR an</h3>
   {% endif %}
   <p>
-    <strong>Kontoinhaber:&nbsp;</strong>Open Knowledge Foundation Deutschland e.V.<br>
-    <strong>IBAN:&nbsp;</strong>DE36 4306 0967 1173 8932 00<br>
-    <strong>BIC:&nbsp;</strong>GENODEM1GLS<br>
+    <strong>Kontoinhaber:&nbsp;</strong>Forum Informationsfreiheit<br>
+    <strong>IBAN:&nbsp;</strong>AT69 2011 1824 3494 2000<br>
+    <strong>BIC:&nbsp;</strong>GIBAATWWXXX<br>
     <strong>Betrag:&nbsp;</strong>{{ order.total_gross }}&nbsp;EUR<br>
     {% if order.is_recurring %}
       <strong>Turnus:&nbsp;</strong> {{ order.subscription.plan.get_interval_description }}<br>
     {% endif %}
     <strong>Verwendungszweck:&nbsp;</strong>{{ order.remote_reference }}<br>
-    <strong>BLZ:&nbsp;</strong>430 609 67 (GLS Bank)
   </p>
 {% endif %}

@@ -122,7 +122,7 @@
     <title>Zahlungsbestätigung für {{ object.get_full_name }} {{ year }}</title>
     <meta name="author" content="{{ SITE_NAME }}">
   </head>
-
+{%comment %}
   <body>
       <section>
         <div class="box">
@@ -265,4 +265,5 @@
         {% endif %}
       </section>
   </body>
+{%endcomment %}
 </html>

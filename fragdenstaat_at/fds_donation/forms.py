@@ -216,9 +216,10 @@ class SimpleDonationForm(StartPaymentMixin, forms.Form):
         choices=[
             (_("General donation"), _("General donation")),
         ],
-        widget=BootstrapSelect(
-            attrs={"data-toggle": "nonrecurring"},
-        ),
+        # widget=BootstrapSelect(
+        #     attrs={"data-toggle": "nonrecurring"},
+        # ),
+        widget=forms.HiddenInput(),
     )
     reference = forms.CharField(required=False, widget=forms.HiddenInput())
     keyword = forms.CharField(required=False, widget=forms.HiddenInput())

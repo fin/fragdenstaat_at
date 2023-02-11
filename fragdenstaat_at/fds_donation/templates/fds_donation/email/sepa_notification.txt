@@ -2,7 +2,7 @@
 
 Ihre Spende für FragDenStaat.at wird demnächst per SEPA-Lastschriftmandat abgebucht.
 
-Die Lastschrift wird mit der Gläubigeridentifikationsnummer TODO abgebucht. Ihre Mandatsreferenz-Nr. ist {{ mandate_reference }}.
+Die Lastschrift wird mit der Gläubigeridentifikationsnummer AT54ZZZ00000060559 abgebucht. Ihre Mandatsreferenz-Nr. ist {{ mandate_reference }}.
 Die Abbuchung von {{ payment.total }} {{ payment.currency }} erfolgt regelmäßig {{ order.subscription.plan.get_interval_description }}, das nächste Mal in zwei Tagen.
 Die letzten vier Ziffern des von Ihnen angegebenen Kontos sind {{ last4 }}.
 

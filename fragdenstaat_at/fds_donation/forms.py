@@ -44,7 +44,7 @@ PAYMENT_METHOD_LIST = (
     "creditcard",
     # "sofort",
 )
-MIN_AMOUNT = 5
+MIN_AMOUNT = 2
 PAYMENT_METHOD_MAX_AMOUNT = {"sepa": decimal.Decimal(5000)}
 
 PAYMENT_METHODS = [
@@ -466,12 +466,12 @@ class DonorForm(get_basic_info_form(), forms.Form):
     )
 
     receipt = forms.TypedChoiceField(
-        widget=InlineBootstrapRadioSelect(
-            attrs={
-                "data-toggle": "radiocollapse",
-                "data-target": "address-fields",
-            }
-        ),
+        # widget=InlineBootstrapRadioSelect(
+        #     attrs={
+        #         "data-toggle": "radiocollapse",
+        #         "data-target": "address-fields",
+        #     }
+        # ),
         choices=(
             (0, _("No, thank you.")),
             (1, _("Yes, once a year via email.")),
@@ -481,6 +481,7 @@ class DonorForm(get_basic_info_form(), forms.Form):
         initial=0,
         label=_("Do you want a donation receipt?"),
         error_messages={"required": _("You have to decide.")},
+        widget=forms.HiddenInput(),
     )
 
     email = forms.EmailField(
@@ -532,7 +533,7 @@ class DonationForm(SpamProtectionMixin, SimpleDonationForm, DonorForm):
             self.fields["address"].initial = parsed.get("address", "")
             self.fields["postcode"].initial = parsed.get("postcode", "")
             self.fields["city"].initial = parsed.get("city", "")
-            self.fields["country"].initial = "DE"
+            self.fields["country"].initial = "AT"
             self.fields.pop("account")
         else:
             self.fields["account"].choices = (

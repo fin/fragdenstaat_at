@@ -67,7 +67,8 @@ $backdrops: (
   'gray': 'gray-200',
   'gray-100': 'gray-100',
   'yellow': 'yellow-100',
-  'yellow-200': 'yellow-200'
+  'yellow-200': 'yellow-200',
+  'secondary': 'secondary'
 );
 
 @each $name, $value in $backdrops {

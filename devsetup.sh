@@ -97,7 +97,7 @@ setup() {
 
   for name in "${REPOS[@]}"; do
     if [ ! -d $name ]; then
-      git clone git@github.com:okfde/$name.git
+      git clone git@github.com:fin/$name.git
     else
       pushd $name
         git pull origin "$(git branch --show-current)"

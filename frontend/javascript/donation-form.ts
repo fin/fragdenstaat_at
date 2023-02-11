@@ -170,7 +170,8 @@ function amountChanged(amountInput: HTMLInputElement | null): void {
           const fee = fees[key](amount)
           const displayAmount = (amount - fee).toFixed(2).replace(/\./, ',')
           feeHint.textContent =
-            document.documentElement.lang === 'de'
+            (document.documentElement.lang === 'de' ||
+             document.documentElement.lang === 'de-at')
               ? ` (abzüglich Gebühren erhalten wir ${displayAmount} Euro)`
               : `(minus fees we receive ${displayAmount} Euro)`
         }

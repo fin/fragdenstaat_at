@@ -1,6 +1,6 @@
 {% autoescape off %}{{ salutation }},
 
-Sie wollten unser Projekt FragDenStaat per Banküberweisung unterstützen, vielen Dank!
+Sie wollten unser Projekt FragDenStaat.at per Banküberweisung unterstützen, vielen Dank!
 
 Falls Sie bisher keine Zeit hatten, die Überweisung einzurichten, hier noch einmal die Details:
 

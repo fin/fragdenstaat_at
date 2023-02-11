@@ -41,7 +41,7 @@
     # via -r requirements.in
 -e git+https://github.com/okfde/froide-legalaction.git@main#egg=froide-legalaction
     # via -r requirements.in
--e git+https://github.com/okfde/froide-payment.git@main#egg=froide-payment
+-e git+https://github.com/fin/froide-payment.git@main#egg=froide-payment
     # via
     #   -r requirements.in
     #   froide-crowdfunding

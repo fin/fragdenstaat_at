@@ -216,6 +216,7 @@ class SimpleDonationForm(StartPaymentMixin, forms.Form):
         choices=[
             (_("General donation"), _("General donation")),
         ],
+        # initial="Spende {}".format(settings.SITE_NAME),
         # widget=BootstrapSelect(
         #     attrs={"data-toggle": "nonrecurring"},
         # ),
@@ -305,23 +306,29 @@ class SimpleDonationForm(StartPaymentMixin, forms.Form):
                 )
 
     def get_payment_metadata(self, data):
+        donation_recipient = (
+            settings.DONATION_SITE_NAME_OVERRIDE
+            if hasattr(settings, "DONATION_SITE_NAME_OVERRIDE")
+            else settings.SITE_NAME
+        )
+
         if data["interval"] > 0:
             return {
-                "category": _("Donation for %s") % settings.SITE_NAME,
+                "category": _("Donation for %s") % donation_recipient,
                 "plan_name": _(
                     "{amount} EUR donation {str_interval} to {site_name}"
                 ).format(
                     amount=data["amount"],
                     str_interval=interval_description(data["interval"]),
-                    site_name=settings.SITE_NAME,
+                    site_name=donation_recipient,
                 ),
-                "description": _("Donation for %s") % settings.SITE_NAME,
+                "description": _("Donation for %s") % donation_recipient,
                 "kind": "fds_donation.Donation",
             }
         else:
             return {
-                "category": _("Donation for %s") % settings.SITE_NAME,
-                "description": "{} ({})".format(data["purpose"], settings.SITE_NAME),
+                "category": _("Donation for %s") % donation_recipient,
+                "description": "{} ({})".format(data["purpose"], donation_recipient),
                 "kind": "fds_donation.Donation",
             }
 

@@ -1,0 +1,17 @@
+{% load i18n %}
+{% load humanize %}
+
+{% with amount_str=amount|floatformat:"0" regular_donors_goal_str=regular_donors_goal|floatformat:"0" %}
+<div>
+    <div class="progress" style="height: 25px; {% if amount > regular_donors_goal %}background-color: #ffa5a5 {% endif %}">
+
+        <div class="progress-bar" role="progressbar" title="{% translate 'Donation progress' %}" style="width: {{ percentage }}%;" aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">{% if amount > donors_goal %}{{ donors_goal_str }}{% endif %}</div>
+    </div>
+    <div class="text-end">
+        <small {% if not white_text %}class="text-muted"{% else %}class="text-white"{% endif %}>
+          Erstes Ziel: {{ amount_str }} von {{ regular_donors_goal_str }} Unterstützer{% if minimal_annual_contribution and minimal_annual_contribution.0 %},
+          <br/>die mindestens € {{ minimal_annual_contribution.0 }} jährlich beitragen {% endif %}
+        </small>
+    </div>
+</div>
+{% endwith %}

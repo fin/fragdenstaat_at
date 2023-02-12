@@ -569,3 +569,15 @@ class DonationProgressBarCMSPlugin(CMSPlugin):
     received_donations_only = models.BooleanField(default=False)
     white_text = models.BooleanField(default=False)
     donation_goal = models.DecimalField(decimal_places=2, max_digits=10)
+
+
+class RegularDonorsProgressBarCMSPlugin(CMSPlugin):
+    start_date = models.DateTimeField()
+    # reached_goal = models.DecimalField(
+    #     decimal_places=2, max_digits=10, blank=True, null=True
+    # ),
+    minimal_annual_contribution = models.DecimalField(
+        decimal_places=2, max_digits=10, blank=True, null=True
+    )
+    white_text = models.BooleanField(default=False)
+    regular_donors_goal = models.DecimalField(decimal_places=2, max_digits=10)

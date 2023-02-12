@@ -516,6 +516,8 @@ class FragDenStaatBase(German, Base):
         "default": ("payments.dummy.DummyProvider", {}),
     }
 
+    DONATION_SITE_NAME_OVERRIDE = "Forum Informationsfreiheit"
+
     DONATION_PROJECTS = [
         ("FOI", "Forum Informationsfreiheit"),  # First project becomes default project
         #  ("CFG", "Code for Germany"),

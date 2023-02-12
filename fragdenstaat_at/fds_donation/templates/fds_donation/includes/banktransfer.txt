@@ -3,7 +3,7 @@
 
 Kontoinhaber: Forum Informationsfreiheit
 IBAN: AT69 2011 1824 3494 2000
-BIC: GENODEGIBAATWWXXXM1GLS
+BIC: GIBAATWWXXX
 Betrag: {{ order.total_gross }} EUR
 {% if order.is_recurring %}Turnus:  {{ order.subscription.plan.get_interval_description }}{% endif %}
 Verwendungszweck: {{ order.remote_reference }}

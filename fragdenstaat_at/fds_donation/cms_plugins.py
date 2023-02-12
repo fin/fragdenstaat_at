@@ -14,6 +14,7 @@ from .models import (
     DonationGiftFormCMSPlugin,
     DonationProgressBarCMSPlugin,
     Donor,
+    RegularDonorsProgressBarCMSPlugin,
 )
 
 
@@ -235,5 +236,66 @@ class DonationProgressBarPlugin(CMSPluginBase):
             context["reached_goal_perc"] = self.get_percentage(
                 instance.reached_goal, instance.donation_goal
             )
+
+        return context
+
+
+@plugin_pool.register_plugin
+class RegularDonorsProgressBarPlugin(CMSPluginBase):
+    model = RegularDonorsProgressBarCMSPlugin
+    module = _("Donations")
+    name = _("Regular Donors Progress Bar")
+    text_enabled = True
+    cache = False
+    render_template = "fds_donation/cms_plugins/regular_donors_progress_bar.html"
+
+    def get_percentage(self, amount, max):
+        if amount > 0 and max > 0:
+            return min(int(amount / max * 100), 100)
+        return 0
+
+    def get_donor_count(self, instance):
+        qs = sum(
+            [
+                list(x.subscriptions.filter(canceled__isnull=True))
+                for x in Donor.objects.all()
+            ],
+            [],
+        )
+
+        if (
+            instance.minimal_annual_contribution
+            and instance.minimal_annual_contribution > 0
+        ):
+            qs = [
+                x
+                for x in qs
+                if (x.plan.amount * 12 / x.plan.interval)
+                > instance.minimal_annual_contribution
+            ]
+
+        return len(qs)
+
+    def get_donor_goal_perc(self, instance, donor_count):
+        regular_donors_goal = instance.regular_donors_goal
+
+        if donor_count and donor_count > 0 and regular_donors_goal > 0:
+            if regular_donors_goal >= donor_count:
+                perc = self.get_percentage(donor_count, regular_donors_goal)
+            else:
+                perc = self.get_percentage(regular_donors_goal, donor_count)
+            return perc
+        return 0
+
+    def render(self, context, instance, placeholder):
+        context = super().render(context, instance, placeholder)
+        donor_count = self.get_donor_count(instance)
+        donor_count_perc = self.get_donor_goal_perc(instance, donor_count)
+
+        context["amount"] = donor_count
+        context["percentage"] = donor_count_perc
+        context["regular_donors_goal"] = instance.regular_donors_goal
+        context["minimal_annual_contribution"] = (instance.minimal_annual_contribution,)
+        context["white_text"] = instance.white_text
 
         return context

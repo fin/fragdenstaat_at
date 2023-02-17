@@ -271,7 +271,7 @@ class RegularDonorsProgressBarPlugin(CMSPluginBase):
                 x
                 for x in qs
                 if (x.plan.amount * 12 / x.plan.interval)
-                > instance.minimal_annual_contribution
+                >= instance.minimal_annual_contribution
             ]
 
         return len(qs)

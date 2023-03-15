@@ -1,4 +1,3 @@
-import re
 from datetime import timedelta
 from decimal import Decimal
 
@@ -119,21 +118,22 @@ def import_banktransfer(transfer_ident, row, project):
 
 
 BLOCK_LIST = set(["Stripe Payments UK Ltd", "Stripe Technology Europe Ltd", "Stripe"])
-DEBIT_PATTERN = re.compile(r" \(P(\d+)\)")
+# DEBIT_PATTERN = re.compile(r"\(FDS (\d+)\)")
 
 
-def update_direct_debit(row):
-    match = DEBIT_PATTERN.search(row["reference"])
-    try:
-        payment = Payment.objects.get(id=int(match.group(1)))
-    except Payment.DoesNotExist:
-        return
-    amount = Decimal(str(row["amount"]))
-    payment.captured_amount = amount
-    payment.received_amount = amount
-    payment.received_timestamp = row["date_received"]
-    payment.change_status(PaymentStatus.CONFIRMED)
-    payment.save()
+# def update_direct_debit(row):
+#     match = DEBIT_PATTERN.search(row["reference"])
+#     try:
+#         payment = Payment.objects.get(transaction_id=match.group(1))
+#     except Payment.DoesNotExist:
+#         print('Payment does not exist for', row["reference"])
+#         return
+#     amount = Decimal(str(row["amount"]))
+#     payment.captured_amount = amount
+#     payment.received_amount = amount
+#     payment.received_timestamp = row["date_received"]
+#     payment.change_status(PaymentStatus.CONFIRMED)
+#     payment.save()
 
 
 def import_banktransfers(xls_file, project):
@@ -153,8 +153,14 @@ def import_banktransfers(xls_file, project):
             "BIC/SWIFT": "bic",
         }
     )
-    df = df.dropna(subset=["reference"])
+    df = df[df["amount"] >= 0 | df["reference"].str.contains("FDS")]
+    df["reference"] = (
+        df["reference"].fillna("").str.cat(df["Buchungs-Details"].fillna(""))
+    )
+
+    # df = df[df['reference'].str.contains('FDS')]
     df = df.dropna(subset=["date_received"])
+    df = df.dropna(subset=["name"])
     df["date_received"] = df["date_received"].dt.tz_localize(settings.TIME_ZONE)
     if "date" in df.columns:
         df["date"] = df["date"].dt.tz_localize(settings.TIME_ZONE)
@@ -166,9 +172,10 @@ def import_banktransfers(xls_file, project):
         if row["name"] in BLOCK_LIST:
             continue
         print(row["reference"], type(row["reference"]))
-        if DEBIT_PATTERN.search(row["reference"]):
-            update_direct_debit(row)
-            continue
+        # if DEBIT_PATTERN.search(row["reference"]):
+        #     print('DEBIT MATCHED', row)
+        #     update_direct_debit(row)
+        #     continue
         local_date = row["date_received"].date()
         transfer_ident = "{date}-{ref}-{iban}-{i}".format(
             date=local_date.isoformat(), ref=row["reference"], iban=row["iban"], i=i

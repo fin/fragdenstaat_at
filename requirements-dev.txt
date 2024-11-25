@@ -24,8 +24,6 @@ alabaster==0.7.12
     # via sphinx
 amqp==5.0.6
     # via kombu
-appnope==0.1.2
-    # via ipython
 asgiref==3.3.4
     # via
     #   channels
@@ -161,6 +159,7 @@ django==3.2.8
     #   django-formtools
     #   django-leaflet
     #   django-legal-advice-builder
+    #   django-localflavor
     #   django-logentry-admin
     #   django-mptt
     #   django-oauth-toolkit
@@ -241,6 +240,8 @@ django-json-widget==1.1.1
     #   -r requirements.in
     #   django-filingcabinet
 django-leaflet==0.28.1
+    # via -r requirements.in
+django-localflavor==3.1
     # via -r requirements.in
 django-logentry-admin==1.1.0
     # via -r requirements.in
@@ -402,7 +403,7 @@ incremental==21.3.0
     # via twisted
 ipdb==0.13.9
     # via -r requirements-dev.in
-ipython==7.24.1
+ipython==7.31.1
     # via ipdb
 ipython-genutils==0.2.0
     # via traitlets
@@ -561,6 +562,8 @@ python-mimeparse==1.6.0
     #   froide
 python-slugify==5.0.2
     # via -r requirements.in
+python-stdnum==1.17
+    # via django-localflavor
 pytz==2021.1
     # via
     #   -r requirements.in
@@ -719,8 +722,6 @@ yarl==1.6.3
     # via aiohttp
 zope.interface==5.4.0
     # via twisted
-
-django-localflavor
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

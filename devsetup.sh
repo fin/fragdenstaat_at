@@ -5,11 +5,11 @@ MAIN=fragdenstaat_at
 # REPOS=("froide" "froide-campaign" "froide-legalaction" "froide-food" "froide-payment" "froide-crowdfunding" "froide-govplan" "froide-fax" "froide-exam" "django-filingcabinet")
 REPOS=("froide" "froide-payment" "django-filingcabinet" )
 # FRONTEND_DIR=("froide" "froide_food" "froide_exam" "froide_campaign" "froide_payment" "froide_legalaction" "filingcabinet")
-FRONTEND_DIR=("froide" "froide_payment" "filingcabinet")
+FRONTEND_DIR=("froide" "froide-payment" "django-filingcabinet")
 # FRONTEND=("froide" "froide_food" "froide_exam" "froide_campaign" "froide_payment" "froide_legalaction" "@okfde/filingcabinet")
 FRONTEND=("froide" "froide_payment" "@okfde/filingcabinet")
 FRONTEND_DEPS=("froide" "@okfde/filingcabinet")
-
+FROIDE_PEERS=("froide-campaign" "froide-food")
 
 
 ask() {
@@ -64,11 +64,12 @@ setup() {
 
   python3 --version
   yarn --version
+  uv --version
 
   if [ ! -d fds-env ]; then
     if ask "Do you want to create a virtual environment using $(python3 --version)?" Y; then
       echo "Creating virtual environment with Python: $(python3 --version)"
-      python3 -m venv fds-env
+      uv venv fds-env
     fi
   fi
 
@@ -88,23 +89,28 @@ setup() {
       git pull origin "$(git branch --show-current)"
     popd
   fi
-  pip install -U pip-tools
-  pip-sync $MAIN/requirements-dev.txt
-  pip install -e $MAIN
-  install_precommit "$MAIN"
 
-  echo "Cloning / installing all editable dependencies..."
 
   for name in "${REPOS[@]}"; do
     if [ ! -d $name ]; then
-      git clone git@github.com:fin/$name.git
+      git clone git@github.com:okfde/$name.git
     else
       pushd $name
         git pull origin "$(git branch --show-current)"
       popd
     fi
-    pip uninstall -y $name
-    pip install -e $name
+  done
+
+  #pip install -U pip-tools
+  #pip-sync $MAIN/requirements-dev.txt
+  uv pip install -r $MAIN/requirements-dev.txt
+  #pip install -e $MAIN
+  install_precommit "$MAIN"
+
+  echo "Cloning / installing all editable dependencies..."
+
+  for name in "${REPOS[@]}"; do
+    uv pip install -e "./$name" --config-setting editable_mode=compat
     install_precommit "$name"
   done
 
@@ -117,32 +123,31 @@ setup() {
   echo "Done."
 }
 
+
+messages() {
+  fds-env/bin/python fragdenstaat_de/manage.py compilemessages -l de -i node_modules
+}
+
 frontend() {
   echo "Linking frontend dependencies..."
 
-  for name in "${FRONTEND_DIR[@]}"; do
-    pushd $(python -c "import $name as mod; print(mod.__path__[0])")/..
-    yarn link
-    popd
-  done
-
   echo "Installing frontend dependencies..."
   for name in "${FRONTEND_DIR[@]}"; do
-    pushd $(python -c "import $name as mod; print(mod.__path__[0])")/..
-    for dep in "${FRONTEND_DEPS[@]}"; do
-      if [ "$name" != "$dep" ]; then
-        yarn link $dep
-      fi
-    done
-    yarn install
+    pushd "$name"
+    if ! pnpm list -g --depth=0 | grep -q "$name"; then
+        pnpm link --global
+    fi
+    pnpm install
     popd
   done
 
-  pushd $MAIN
+  pushd "$MAIN"
+  pnpm install
   for name in "${FRONTEND[@]}"; do
-    yarn link $name
+    if ! pnpm list -g --depth=0 | grep -q "$name"; then
+        pnpm link --global "$name"
+    fi
   done
-  yarn install
   popd
 }
 

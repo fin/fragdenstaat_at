@@ -41,13 +41,15 @@ class FragDenStaatBase(German, Base):
             + installed.default
             + [
                 "django.contrib.postgres",
+                "djangocms_versioning",
                 "cms",
+                "djangocms_alias",
                 "menus",
                 "sekizai",
                 # easy thumbnails comes from froide
                 "easy_thumbnails.optimize",
                 "filer",
-                "mptt",
+                # "mptt",
                 "logentry_admin",
                 "localflavor",
                 # "fragdenstaat_at.fds_blog",
@@ -60,10 +62,12 @@ class FragDenStaatBase(German, Base):
                 # "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",
                 # "fragdenstaat_at.fds_fximport.apps.FdsFxImportConfig",
                 # Additional CMS plugins
-                "djangocms_text_ckeditor",
+                "djangocms_text",
+                "djangocms_text.contrib.text_ckeditor4",
                 "djangocms_picture",
                 "djangocms_video",
                 "djangocms_icon",
+                "djangocms_link",
                 "djangocms_frontend",
                 "djangocms_frontend.contrib.accordion",
                 "djangocms_frontend.contrib.alert",
@@ -73,7 +77,8 @@ class FragDenStaatBase(German, Base):
                 "djangocms_frontend.contrib.collapse",
                 "djangocms_frontend.contrib.content",
                 "djangocms_frontend.contrib.grid",
-                "djangocms_frontend.contrib.image",
+                # We use djangocms_picture instead
+                # "djangocms_frontend.contrib.image",
                 "djangocms_frontend.contrib.jumbotron",
                 "djangocms_frontend.contrib.link",
                 "djangocms_frontend.contrib.listgroup",
@@ -118,6 +123,7 @@ class FragDenStaatBase(German, Base):
                 "fragdenstaat_at.theme.context_processors.theme_settings",
             ]
         )
+
         return TEMP
 
     @property
@@ -181,6 +187,8 @@ class FragDenStaatBase(German, Base):
     # CMS
     CMS_PERMISSION = True
     CMS_RAW_ID_USERS = 50
+    CMS_CONFIRM_VERSION4 = True
+    CMS_MIGRATION_USER_ID = 1
 
     CMS_LANGUAGES = {
         # Customize this
@@ -198,7 +206,7 @@ class FragDenStaatBase(German, Base):
                 "hide_untranslated": False,
                 "name": _("Austrian"),
                 "redirect_on_fallback": False,
-                "fallbacks": ["de"],
+                # "fallbacks": ["de"],
             }
         ],
         # 2: [
@@ -213,19 +221,27 @@ class FragDenStaatBase(German, Base):
         # ],
     }
 
+
+    CMS_SIDEFRAME_ENABLED = False
     CMS_TOOLBAR_ANONYMOUS_ON = False
     CMS_TEMPLATES = [
         ("cms/home.html", "Homepage template"),
         ("cms/page.html", "Page template"),
         ("cms/page_headerless.html", "Page without header"),
         ("cms/page_reduced.html", "Page reduced"),
+        ("cms/page_minimal.html", "Page minimal"),
         ("cms/page_breadcrumb.html", "Page with breadcrumbs"),
         ("cms/blog_base.html", "Blog base template"),
         ("cms/help_base.html", "Help base template"),
-        # ("cms/static_placeholders.html", "Static Placeholder Overview"),
+        ("cms/pub_base.html", "Book Publication template"),
         # ("froide_govplan/base.html", "Govplan base template"),
+        ("cms/page_anon.html", "Page without tracking"),
+        # ("cmssites/cmssite/gegenrechtsschutz.html", "Gegenrechtsschutz Template"),
+        # (
+        #     "cmssites/cmssite/gegenrechtsschutz_minimal.html",
+        #     "Gegenrechtsschutz Minimal Template",
+        # ),
     ]
-
     # DONATION_LOGIC_PLUGINS = [
     #     "IsDonorPlugin",
     #     "IsNotDonorPlugin",
@@ -271,15 +287,7 @@ class FragDenStaatBase(German, Base):
         "embed",
     )
 
-    TEXT_ADDITIONAL_ATTRIBUTES = (
-        "scrolling",
-        "frameborder",
-        "webkitallowfullscreen",
-        "mozallowfullscreen",
-        "allowfullscreen",
-        "sandbox",
-        "style",
-    )
+    TEXT_ADDITIONAL_ATTRIBUTES = {"*": {'scrolling', 'frameborder', 'sandbox', 'style', 'allowfullscreen', 'webkitallowfullscreen', 'mozallowfullscreen'}}
     TEXT_ADDITIONAL_PROTOCOLS = ("bank",)
 
     CKEDITOR_SETTINGS = {
@@ -288,7 +296,7 @@ class FragDenStaatBase(German, Base):
         "toolbar": "CMS",
         "toolbar_CMS": [
             ["Undo", "Redo"],
-            ["cmsplugins", "-"],
+            ["CMSPlugins", "-"],
             ["Format", "Styles"],
             ["TextColor", "BGColor", "-", "PasteText", "PasteFromWord"],
             # ['Scayt'],
@@ -493,7 +501,7 @@ class FragDenStaatBase(German, Base):
 
     ELASTICSEARCH_INDEX_PREFIX = "fragdenstaat_at"
     ELASTICSEARCH_DSL = {
-        "default": {"hosts": "localhost:9200"},
+        "default": {"hosts": env('DJANGO_ELASTICSEARCH_HOSTS', "localhost:9200")},
     }
     ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = "froide.helper.search.CelerySignalProcessor"
 

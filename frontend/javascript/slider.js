@@ -7,7 +7,9 @@ window.onload = () => {
     if (el.dataset.options) {
       try {
         options = JSON.parse(el.dataset.options)
-      } catch {}
+      } catch {
+        /* */
+      }
     }
     new Glide(el, options).mount()
   })

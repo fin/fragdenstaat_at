@@ -67,5 +67,5 @@ class CustomStaticPlaceholderAdmin(StaticPlaceholderAdmin):
             return redirect(next_url)
 
 
-admin.site.unregister(StaticPlaceholder)
+# admin.site.unregister(StaticPlaceholder)
 admin.site.register(StaticPlaceholder, CustomStaticPlaceholderAdmin)

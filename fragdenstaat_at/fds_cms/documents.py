@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils import timezone, translation
 from django.utils.html import strip_tags
 
-from cms.models import Title
+from cms.models import PageContent
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 from sekizai.context import SekizaiContext
@@ -56,22 +56,13 @@ class CMSDocument(Document):
     special_signals = True
 
     class Django:
-        model = Title
+        model = PageContent
         queryset_chunk_size = 100
 
     def get_queryset(self):
-        now = timezone.now()
-        queryset = (
-            Title.objects.public()
-            .filter(
-                Q(page__publication_date__lt=now)
-                | Q(page__publication_date__isnull=True),
-                Q(page__publication_end_date__gte=now)
-                | Q(page__publication_end_date__isnull=True),
-                Q(redirect__exact="") | Q(redirect__isnull=True),
-            )
-            .select_related("page")
-        )
+        queryset = PageContent.objects.filter(
+            Q(redirect__exact="") | Q(redirect__isnull=True),
+        ).select_related("page")
 
         queryset = queryset.select_related("page__node")
         return queryset.distinct()

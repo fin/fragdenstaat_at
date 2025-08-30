@@ -9,14 +9,15 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
 
+from cms.models import CMSPlugin, Placeholder
 from cms.plugin_rendering import ContentRenderer
-from cms.toolbar.toolbar import CMSToolbar
+from djangocms_alias.models import Alias
 
 
 def get_plugin_children(instance):
-    return (
-        instance.get_descendants().filter(depth=instance.depth + 1).order_by("position")
-    )
+    return CMSPlugin.objects.filter(parent=instance).order_by("position")
+
+
 
 
 def get_request(language=None, path="/"):

@@ -122,7 +122,6 @@ function setupDonationForm(form: HTMLFormElement): void {
       // console.log(li.querySelector("a"))
       const infoLink = li.querySelector('a')
       if (infoLink != null) {
-        // eslint-disable-next-line no-new
         new Tooltip(infoLink)
       }
     }

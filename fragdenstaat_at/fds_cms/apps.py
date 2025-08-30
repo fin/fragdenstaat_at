@@ -6,12 +6,7 @@ from django.core.files.base import ContentFile
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import gettext_lazy as _
 
-from PIL import Image
 
-try:
-    import pillow_avif  # noqa
-except ImportError:
-    pillow_avif = None
 
 logger = logging.getLogger(__name__)
 
@@ -22,17 +17,31 @@ class FdsCmsConfig(AppConfig):
 
     def ready(self):
         from froide.account import account_merged
-        from froide.helper.search import search_registry
 
-        from . import listeners  # noqa
+        # from . import listeners  # noqa
 
         account_merged.connect(merge_user)
-        search_registry.register(add_search)
 
-        if pillow_avif is not None:
-            from easy_thumbnails.signals import thumbnail_created
+        # thumbnail_created.disconnect(thumbnail_created_callback)
+        # thumbnail_created.connect(async_optimize_thumbnail)
 
-            thumbnail_created.connect(store_as_avif)
+        # Monkey-patch Page.get_absolute_url to include site domain
+
+        from django.contrib.sites.models import Site
+
+        from cms.models import Page
+
+        original_absolute_url = Page.get_absolute_url
+
+        def page_absolute_url(self, language=None, fallback=True):
+            url = original_absolute_url(self, language=language, fallback=fallback)
+            current_site = Site.objects.get_current()
+
+            if self.site_id != current_site.id:
+                return f"//{self.site.domain}{url}"
+            return url
+
+        Page.get_absolute_url = page_absolute_url
 
 
 def merge_user(sender, old_user=None, new_user=None, **kwargs):
@@ -41,26 +50,9 @@ def merge_user(sender, old_user=None, new_user=None, **kwargs):
     FoiRequestListCMSPlugin.objects.filter(user=old_user).update(user=new_user)
 
 
-def add_search(request):
-    try:
-        return {
-            "title": _("Help pages"),
-            "name": "cms",
-            "url": reverse("fds_cms:fds_cms-search"),
-        }
-    except NoReverseMatch:
-        return
+def async_optimize_thumbnail(sender, **kwargs):
+    from .tasks import optimize_thumbnail_task
 
-
-def store_as_avif(sender, **kwargs):
-    if not sender.name.endswith((".png", ".jpg", ".jpeg")):
-        return
-    logger.info("Converting %s to avif", sender.name)
-    avif_name = ".".join([sender.name, "avif"])
-    img_file = sender.storage.open(sender.name, "rb")
-    im = Image.open(img_file)
-    out_file = BytesIO()
-    im.save(out_file, format="avif", quality=80)
-    out_file.seek(0)
-    sender.storage.save(avif_name, ContentFile(out_file.read()))
-    logger.info("Done converting %s to avif", sender.name)
+    optimize_thumbnail_task.delay(
+        sender.name, sender.file, sender.storage, sender.thumbnail_options
+    )

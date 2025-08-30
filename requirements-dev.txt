@@ -17,7 +17,7 @@ django_legal_advice_builder @ git+https://github.com/fragdenstaat/django-legal-a
     # via -r requirements.in
 fcdocs_annotate @ git+https://github.com/okfde/fcdocs-annotate.git@main#egg=fcdocs_annotate
     # via -r requirements.in
-froide @ git+https://github.com/fin/froide.git@main#egg=froide
+froide @ git+https://github.com/okfde/froide.git@main#egg=froide
     # via
     #   -r requirements.in
     #   froide-campaign
@@ -102,7 +102,7 @@ cffi==1.15.1
     #   webp
 cfgv==3.3.1
     # via pre-commit
-channels==4.0.0
+channels==4.2.2
     # via -r requirements.in
 charset-normalizer==2.1.1
     # via
@@ -137,7 +137,7 @@ cryptography==38.0.4
     #   jwcrypto
     #   pgpy
     #   pyopenssl
-cssselect2==0.7.0
+cssselect2==0.8.0
     # via
     #   svglib
     #   weasyprint
@@ -240,7 +240,7 @@ django-countries==7.5
     # via froide-payment
 django-coverage-plugin==3.0.0
     # via -r requirements-dev.in
-django-crossdomainmedia==0.0.3
+django-crossdomainmedia==0.0.4
     # via
     #   -r requirements.in
     #   froide
@@ -258,7 +258,7 @@ django-filer==3.3.1
     #   djangocms-link
     #   djangocms-picture
     #   djangocms-video
-django-filter==22.1
+django-filter==25.1
     # via
     #   -r requirements.in
     #   django-filingcabinet
@@ -276,17 +276,17 @@ django-json-widget==1.1.1
     # via
     #   -r requirements.in
     #   django-filingcabinet
-django-leaflet==0.28.3
+django-leaflet==0.32.0
     # via -r requirements.in
 django-localflavor==3.1
     # via froide-payment
 django-logentry-admin==1.1.0
     # via -r requirements.in
-django-mfa3==0.8.0
+django-mfa3==1.0.0
     # via -r requirements.in
 django-mptt==0.14.0
     # via django-filer
-django-oauth-toolkit==1.7.1
+django-oauth-toolkit>=3.0.1
     # via -r requirements.in
 django-parler==2.3
     # via -r requirements.in
@@ -357,7 +357,7 @@ djangocms-text-ckeditor==5.1.1
     #   djangocms-frontend
 djangocms-video==3.1.0
     # via -r requirements.in
-djangorestframework==3.14.0
+djangorestframework==3.16.0
     # via
     #   -r requirements.in
     #   django-filingcabinet
@@ -380,7 +380,7 @@ docopt==0.6.2
     # via num2words
 docutils==0.19
     # via sphinx
-drf-spectacular==0.25.1
+drf-spectacular==0.28.0
     # via froide
 easy-thumbnails==2.10
     # via
@@ -416,7 +416,7 @@ fdfgen==0.16.1
     # via froide-food
 feedgen==0.9.0
     # via django-filingcabinet
-fido2==1.1.0
+fido2>=2.0,<3.0
     # via django-mfa3
 filelock==3.8.2
     # via virtualenv
@@ -499,7 +499,7 @@ jsonschema==4.17.3
     #   -r requirements.in
     #   django-filingcabinet
     #   drf-spectacular
-jwcrypto==1.4.2
+jwcrypto==1.5.0
     # via django-oauth-toolkit
 kombu==5.5.3
     # via celery
@@ -571,9 +571,9 @@ phonenumberslite==8.13.2
     # via django-phonenumber-field
 pickleshare==0.7.5
     # via ipython
-pikepdf==6.2.6
+pikepdf==9.7.0
     # via django-filingcabinet
-pillow==9.3.0
+pillow==10.0.1
     # via
     #   -r requirements.in
     #   django-filingcabinet
@@ -616,7 +616,7 @@ pycparser==2.21
     # via cffi
 pycryptodome==3.16.0
     # via django-filingcabinet
-pydyf==0.5.0
+pydyf==0.11.0
     # via weasyprint
 pyee==9.0.4
     # via playwright
@@ -777,7 +777,7 @@ text-unidecode==1.3
     # via python-slugify
 time-machine==2.9.0
     # via -r requirements-dev.in
-tinycss2==1.2.1
+tinycss2==1.4.0
     # via
     #   cssselect2
     #   svglib
@@ -831,7 +831,7 @@ wand==0.6.10
     #   django-filingcabinet
 wcwidth==0.2.5
     # via prompt-toolkit
-weasyprint==57.1
+weasyprint>=65.1
     # via
     #   -r requirements.in
     #   django-legal-advice-builder

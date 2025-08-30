@@ -90,7 +90,7 @@ class FragDenStaatBase(German, Base):
                 "contractor",
                 "djcelery_email",
                 "django.contrib.redirects",
-                "django_prices",
+                # "django_prices",
                 # "froide_campaign.apps.FroideCampaignConfig",
                 # "froide_legalaction.apps.FroideLegalActionConfig",
                 "froide_payment.apps.FroidePaymentConfig",

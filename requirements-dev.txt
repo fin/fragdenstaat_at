@@ -156,7 +156,7 @@ dj-database-url==1.2.0
     # via
     #   -r requirements.in
     #   froide
-django==5.2.1
+django==5.2.6
     # via
     #   -r requirements.in
     #   channels
@@ -316,7 +316,7 @@ django-timezone-field==7.0
     # via django-celery-beat
 django-tinymce==3.5.0
     # via django-legal-advice-builder
-django-treebeard==4.4
+django-treebeard
     # via
     #   -r requirements.in
     #   django-cms
@@ -428,7 +428,7 @@ flake8-bugbear==22.12.6
     # via -r requirements-dev.in
 fonttools[woff]==4.38.0
     # via weasyprint
-frozenlist==1.4.0
+frozenlist
     # via
     #   aiohttp
     #   aiosignal
@@ -503,7 +503,7 @@ jwcrypto==1.5.0
     # via django-oauth-toolkit
 kombu==5.5.3
     # via celery
-lxml==5.3.0
+lxml
     # via
     #   -r requirements.in
     #   django-amenities
@@ -573,7 +573,7 @@ pickleshare==0.7.5
     # via ipython
 pikepdf==9.7.0
     # via django-filingcabinet
-pillow==10.0.1
+pillow
     # via
     #   -r requirements.in
     #   django-filingcabinet

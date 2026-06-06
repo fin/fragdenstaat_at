@@ -1,0 +1,16 @@
+{
+  "name": "FragDenStaat AT",
+  "dockerComposeFile": ["../compose-dev.yaml", "compose.yaml"],
+  "service": "web",
+  "workspaceFolder": "/workspaces/fds_at/fragdenstaat_at",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {"version": "22"}
+  },
+"postCreateCommand": "npm install -g pnpm@9.15 && cd /workspaces/fds_at && bash fragdenstaat_at/devsetup.sh",
+  "forwardPorts": [8000, 5432, 9200],
+  "portsAttributes": {
+    "8000": {"label": "Django"},
+    "5432": {"label": "PostgreSQL"},
+    "9200": {"label": "Elasticsearch"}
+  }
+}

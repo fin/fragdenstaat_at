@@ -1,5 +1,13 @@
 #!/bin/bash
-set -ex
+set -e
+
+# macOS's System Integrity Protection purges the environment variables controlling
+# `dyld` when launching protected processes (https://developer.apple.com/library/archive/documentation/Security/Conceptual/System_Integrity_Protection_Guide/RuntimeProtections/RuntimeProtections.html#//apple_ref/doc/uid/TP40016462-CH3-SW1)
+# This causes macOS to remove the DYLD_ env variables when running this script, so we have to set them again
+if [ !  -z "${FRAGDENSTAAT_DYLD_LIBRARY_PATH:-}" ]; then
+  export LD_LIBRARY_PATH=${FRAGDENSTAAT_DYLD_LIBRARY_PATH:-}:${LD_LIBRARY_PATH:-}
+  export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:${DYLD_LIBRARY_PATH:-}
+fi
 
 MAIN=fragdenstaat_at
 # REPOS=("froide" "froide-campaign" "froide-legalaction" "froide-food" "froide-payment" "froide-crowdfunding" "froide-govplan" "froide-fax" "froide-exam" "django-filingcabinet")
@@ -9,155 +17,142 @@ FRONTEND_DIR=("froide" "froide-payment" "django-filingcabinet")
 # FRONTEND=("froide" "froide_food" "froide_exam" "froide_campaign" "froide_payment" "froide_legalaction" "@okfde/filingcabinet")
 FRONTEND=("froide" "froide_payment" "@okfde/filingcabinet")
 FRONTEND_DEPS=("froide" "@okfde/filingcabinet")
-FROIDE_PEERS=("froide-campaign" "froide-food")
+FROIDE_PEERS=()
 
+ALL=("$MAIN" "${REPOS[@]}")
 
-ask() {
-    # https://djm.me/ask
-    local prompt default reply
+export UV_PYTHON="3.13"
 
-    if [ "${2:-}" = "Y" ]; then
-        prompt="Y/n"
-        default=Y
-    elif [ "${2:-}" = "N" ]; then
-        prompt="y/N"
-        default=N
-    else
-        prompt="y/n"
-        default=
-    fi
+if [[ $(basename "$PWD") == "$MAIN" ]]; then
+  # make sure we're starting from the main project's parent dir,
+  # even when executed from main project
+  cd ..
+fi
 
-    while true; do
+check_versions() {
+  if ! command -v uv > /dev/null 2>&1 || ! command -v pnpm > /dev/null 2>&1 ; then
+    echo "You need python, uv and pnpm 9 installed."
+    exit 1
+  fi
 
-        # Ask the question (not using "read -p" as it uses stderr not stdout)
-        echo -n "$1 [$prompt] "
-
-        # Read the answer (use /dev/tty in case stdin is redirected from somewhere else)
-        read reply </dev/tty
-
-        # Default?
-        if [ -z "$reply" ]; then
-            reply=$default
-        fi
-
-        # Check if the reply is valid
-        case "$reply" in
-            Y*|y*) return 0 ;;
-            N*|n*) return 1 ;;
-        esac
-
-    done
-}
-
-install_precommit() {
-  local repo_dir="$1"
-  if [ -e "$repo_dir/.pre-commit-config.yaml" ]; then
-    pushd "$repo_dir"
-    pre-commit install
-    popd
+  if [[ "$(pnpm --version)" != 9.* ]]; then
+    echo "You need to have pnpm v9 installed, but are using $(pnpm --version)."
+    exit 1
   fi
 }
 
-setup() {
-
-  echo "You need python3 >= 3.8 and yarn installed."
-
-  python3 --version
-  yarn --version
-  uv --version
-
-  if [ ! -d fds-env ]; then
-    if ask "Do you want to create a virtual environment using $(python3 --version)?" Y; then
-      echo "Creating virtual environment with Python: $(python3 --version)"
-      uv venv fds-env
-    fi
-  fi
-
-  if [ ! -d fds-env ]; then
-    echo "Could not find virtual environment fds-env"
-  fi
-
-  echo "Activating virtual environment..."
-  source fds-env/bin/activate
-
+pull() {
   echo "Cloning / installing $MAIN"
 
   if [ ! -d $MAIN ]; then
     git clone git@github.com:fin/$MAIN.git
   else
     pushd $MAIN
-      git pull origin "$(git branch --show-current)"
+      git pull origin --autostash "$(git branch --show-current)"
     popd
   fi
-
 
   for name in "${REPOS[@]}"; do
     if [ ! -d $name ]; then
       git clone git@github.com:okfde/$name.git
     else
       pushd $name
-        git pull origin "$(git branch --show-current)"
+        git pull origin --autostash "$(git branch --show-current)"
       popd
     fi
   done
-
-  #pip install -U pip-tools
-  #pip-sync $MAIN/requirements-dev.txt
-  uv pip install -r $MAIN/requirements-dev.txt
-  #pip install -e $MAIN
-  install_precommit "$MAIN"
-
-  echo "Cloning / installing all editable dependencies..."
-
-  for name in "${REPOS[@]}"; do
-    uv pip install -e "./$name" --config-setting editable_mode=compat
-    install_precommit "$name"
-  done
-
-  echo "Installing all frontend dependencies..."
-
-  frontend
-
-  fds-env/bin/python fragdenstaat_at/manage.py compilemessages -l de
-
-  echo "Done."
 }
 
+dependencies() {
+  echo "Creating virtual environments and installing dependencies..."
 
-messages() {
-  fds-env/bin/python fragdenstaat_de/manage.py compilemessages -l de -i node_modules
+  if ! command -v prek > /dev/null 2>&1; then
+    echo "prek is not installed. Run \`uv tool install prek\` to fix this. Make sure \`$(uv tool dir)\` is in your \$PATH. If it is not, run \`uv tool update-shell\`."
+    exit 1
+  fi
+
+  for name in "${ALL[@]}"; do
+    pushd "$name"
+
+    uv sync --all-extras
+    source .venv/bin/activate
+
+    if [[ $name == "froide" ]]; then
+      uv pip install -e ../django-filingcabinet --no-deps
+    fi
+
+    if [[ $name == "$MAIN" ]]; then
+      for project in "${REPOS[@]}"; do
+        uv pip install -e "../$project" --config-setting editable_mode=compat --no-deps
+      done
+    fi
+
+    if [ -e ".pre-commit-config.yaml" ]; then
+      prek install
+    fi
+
+    deactivate
+    popd
+  done
+}
+
+upgrade_backend_repos() {
+  pushd $MAIN
+  uv sync ${REPOS[@]/#/--upgrade-package }
+  popd
 }
 
 frontend() {
-  echo "Linking frontend dependencies..."
+  pnpm_version=$(pnpm --version)
+
+  if [[ $pnpm_version != 9.15* ]]; then
+    echo "You need to have pnpm@^9.15 installed"
+    exit 1
+  fi
 
   echo "Installing frontend dependencies..."
+
+  # we need to link globally since local linking adjusts the lockfile
+
+  # Install and link all frontend packages
   for name in "${FRONTEND_DIR[@]}"; do
     pushd "$name"
-    if ! pnpm list -g --depth=0 | grep -q "$name"; then
-        pnpm link --global
-    fi
+    pnpm link --global
     pnpm install
     popd
   done
 
+  # Link froide peer dependencies
+  for name in "${FROIDE_PEERS[@]}"; do
+    pushd "$name"
+    pnpm link --global "froide"
+    popd
+  done
+
+  # Setup main project and link dependencies
   pushd "$MAIN"
   pnpm install
   for name in "${FRONTEND[@]}"; do
-    if ! pnpm list -g --depth=0 | grep -q "$name"; then
-        pnpm link --global "$name"
-    fi
+    pnpm link --global "$name"
   done
   popd
 }
 
+upgrade_frontend_repos() {
+  pushd "$MAIN"
+  pnpm update "${FRONTEND[@]}"
+  popd
+}
+
+messages() {
+  source $MAIN/.venv/bin/activate
+  python $MAIN/manage.py compilemessages -l de -i node_modules
+}
+
 forall() {
   echo "Executing '$@' in all repos"
-  pushd $MAIN
-    "$@"
-  popd
 
-  for name in "${REPOS[@]}"; do
+  for name in "${ALL[@]}"; do
     pushd $name
       "$@"
     popd
@@ -171,10 +166,19 @@ help() {
 }
 
 
-if [[ $1 =~ ^(forall)$ ]]; then
-  "$@"
-elif [[ $1 =~ ^(frontend)$ ]]; then
+if [ -z "$1" ]; then
+  check_versions
+  pull
+  dependencies
   frontend
+  messages
+
+  echo "Done!"
 else
-  setup
+  if [[ $(type -t "$1") == function ]]; then
+    "$@"
+  else
+    help
+    exit 1
+  fi
 fi

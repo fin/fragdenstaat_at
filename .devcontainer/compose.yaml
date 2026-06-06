@@ -1,0 +1,27 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: fragdenstaat_at/.devcontainer/Dockerfile
+    volumes:
+      - ..:/workspaces/fds_at:cached
+      - ${SSH_AUTH_SOCK}:/ssh-agent
+    environment:
+      SSH_AUTH_SOCK: /ssh-agent
+      DATABASE_HOST: db
+      DATABASE_NAME: fragdenstaat_at
+      DATABASE_USER: fragdenstaat_at
+      DATABASE_PASSWORD: fragdenstaat_at
+      DJANGO_ELASTICSEARCH_HOSTS: elasticsearch:9200
+      DJANGO_SETTINGS_MODULE: fragdenstaat_at.settings.development
+      DJANGO_CONFIGURATION: Dev
+    command: sleep infinity
+    depends_on:
+      - db
+      - elasticsearch
+
+  db:
+    environment:
+      POSTGRES_USER: fragdenstaat_at
+      POSTGRES_DB: fragdenstaat_at
+      POSTGRES_PASSWORD: fragdenstaat_at

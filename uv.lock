@@ -1130,14 +1130,14 @@ wheels = [
 
 [[package]]
 name = "django-treebeard"
-version = "5.2.2"
+version = "5.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/43/0d/a7d57d9c9231f91f239ae49a256e0645da2646ed62e6f5150223fc88b427/django_treebeard-5.2.2.tar.gz", hash = "sha256:4863191d8cd63daaa985f0853293ccae8c459e3d44963c4e4eec80dae7156e98", size = 311070, upload-time = "2026-06-05T11:19:40.185Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/50/6d044d777767608e996f78ce0b5f0d7178af08ef66217eafa40dbb554dd5/django_treebeard-5.0.2.tar.gz", hash = "sha256:c785b4d22a53e3aed9f3d79947ed28e8a61aecb93b18330dbbd494b455129150", size = 801806, upload-time = "2026-02-13T07:26:07.816Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/64/ee/a2b4ae5e65beabc28eeb8f125bd2dab38ee110dac6020129fc35f6c7a998/django_treebeard-5.2.2-py3-none-any.whl", hash = "sha256:1ca902609860e1e9d87a531c34397ebca7f0d5fc72c6f8dd83c808eb6838c0c5", size = 80942, upload-time = "2026-06-05T11:19:38.467Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/20/78aebc410de6c308de6369ccc0d9d54a1005823c66c665d31a667d710aeb/django_treebeard-5.0.2-py3-none-any.whl", hash = "sha256:14f4e4df34541fd4a3f0d24b5ca640ecdc32d6468b80f2f9f239f7583fc959e6", size = 76875, upload-time = "2026-02-13T07:26:04.435Z" },
 ]
 
 [[package]]
@@ -1953,7 +1953,7 @@ requires-dist = [
     { name = "django-taggit", specifier = "==6.1.0" },
     { name = "django-timezone-field", specifier = "==7.0" },
     { name = "django-tinymce", specifier = "==3.5.0" },
-    { name = "django-treebeard", specifier = ">=5.2.2" },
+    { name = "django-treebeard", specifier = "==5.0.2" },
     { name = "djangocms-admin-style", specifier = "==3.3.1" },
     { name = "djangocms-alias", specifier = "==2.0.4" },
     { name = "djangocms-attributes-field", specifier = "==4.0.0" },

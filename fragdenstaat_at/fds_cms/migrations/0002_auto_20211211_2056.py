@@ -4,7 +4,7 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
-import djangocms_bootstrap4.fields
+# import djangocms_bootstrap4.fields
 import filer.fields.file
 import filer.fields.image
 
@@ -160,35 +160,35 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("identifier", models.CharField(max_length=255)),
-                (
-                    "tag_type",
-                    djangocms_bootstrap4.fields.TagTypeField(
-                        choices=[
-                            ("div", "div"),
-                            ("section", "section"),
-                            ("article", "article"),
-                            ("header", "header"),
-                            ("footer", "footer"),
-                            ("aside", "aside"),
-                        ],
-                        default="div",
-                        help_text="Select the HTML tag to be used.",
-                        max_length=255,
-                        verbose_name="Tag type",
-                    ),
-                ),
-                (
-                    "attributes",
-                    djangocms_bootstrap4.fields.AttributesField(
-                        blank=True, default=dict, verbose_name="Attributes"
-                    ),
-                ),
-                (
-                    "dialog_attributes",
-                    djangocms_bootstrap4.fields.AttributesField(
-                        blank=True, default=dict, verbose_name="Attributes"
-                    ),
-                ),
+                # (
+                #     "tag_type",
+                #     djangocms_bootstrap4.fields.TagTypeField(
+                #         choices=[
+                #             ("div", "div"),
+                #             ("section", "section"),
+                #             ("article", "article"),
+                #             ("header", "header"),
+                #             ("footer", "footer"),
+                #             ("aside", "aside"),
+                #         ],
+                #         default="div",
+                #         help_text="Select the HTML tag to be used.",
+                #         max_length=255,
+                #         verbose_name="Tag type",
+                #     ),
+                # ),
+                # (
+                #     "attributes",
+                #     djangocms_bootstrap4.fields.AttributesField(
+                #         blank=True, default=dict, verbose_name="Attributes"
+                #     ),
+                # ),
+                # (
+                #     "dialog_attributes",
+                #     djangocms_bootstrap4.fields.AttributesField(
+                #         blank=True, default=dict, verbose_name="Attributes"
+                #     ),
+                # ),
             ],
             options={
                 "abstract": False,

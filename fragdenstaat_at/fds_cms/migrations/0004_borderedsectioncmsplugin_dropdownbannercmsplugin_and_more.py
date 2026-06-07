@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import migrations, models
 
 import cms.models.fields
-import djangocms_bootstrap4.fields
+# import djangocms_bootstrap4.fields
 import filer.fields.image
 
 
@@ -75,12 +75,12 @@ class Migration(migrations.Migration):
                         verbose_name="Heading level",
                     ),
                 ),
-                (
-                    "attributes",
-                    djangocms_bootstrap4.fields.AttributesField(
-                        blank=True, default=dict, verbose_name="Attributes"
-                    ),
-                ),
+                # (
+                #     "attributes",
+                #     djangocms_bootstrap4.fields.AttributesField(
+                #         blank=True, default=dict, verbose_name="Attributes"
+                #     ),
+                # ),
             ],
             options={
                 "abstract": False,
@@ -206,12 +206,12 @@ class Migration(migrations.Migration):
                         blank=True, max_length=50, verbose_name="Reveal text"
                     ),
                 ),
-                (
-                    "attributes",
-                    djangocms_bootstrap4.fields.AttributesField(
-                        blank=True, default=dict, verbose_name="Attributes"
-                    ),
-                ),
+                # (
+                #     "attributes",
+                #     djangocms_bootstrap4.fields.AttributesField(
+                #         blank=True, default=dict, verbose_name="Attributes"
+                #     ),
+                # ),
             ],
             options={
                 "abstract": False,
@@ -250,13 +250,13 @@ class Migration(migrations.Migration):
             model_name="designcontainercmsplugin",
             name="style",
         ),
-        migrations.AddField(
-            model_name="cardcmsplugin",
-            name="attributes",
-            field=djangocms_bootstrap4.fields.AttributesField(
-                blank=True, default=dict, verbose_name="Attributes"
-            ),
-        ),
+        # migrations.AddField(
+        #     model_name="cardcmsplugin",
+        #     name="attributes",
+        #     field=djangocms_bootstrap4.fields.AttributesField(
+        #         blank=True, default=dict, verbose_name="Attributes"
+        #     ),
+        # ),
         migrations.AddField(
             model_name="cardcmsplugin",
             name="background",
@@ -331,13 +331,13 @@ class Migration(migrations.Migration):
                 verbose_name="link",
             ),
         ),
-        migrations.AddField(
-            model_name="cardheadercmsplugin",
-            name="attributes",
-            field=djangocms_bootstrap4.fields.AttributesField(
-                blank=True, default=dict, verbose_name="Attributes"
-            ),
-        ),
+        # migrations.AddField(
+        #     model_name="cardheadercmsplugin",
+        #     name="attributes",
+        #     field=djangocms_bootstrap4.fields.AttributesField(
+        #         blank=True, default=dict, verbose_name="Attributes"
+        #     ),
+        # ),
         migrations.AddField(
             model_name="cardheadercmsplugin",
             name="background_image",
@@ -350,20 +350,20 @@ class Migration(migrations.Migration):
                 verbose_name="Background image",
             ),
         ),
-        migrations.AddField(
-            model_name="cardiconcmsplugin",
-            name="attributes",
-            field=djangocms_bootstrap4.fields.AttributesField(
-                blank=True, default=dict, verbose_name="Attributes"
-            ),
-        ),
-        migrations.AddField(
-            model_name="cardimagecmsplugin",
-            name="attributes",
-            field=djangocms_bootstrap4.fields.AttributesField(
-                blank=True, default=dict, verbose_name="Attributes"
-            ),
-        ),
+        # migrations.AddField(
+        #     model_name="cardiconcmsplugin",
+        #     name="attributes",
+        #     field=djangocms_bootstrap4.fields.AttributesField(
+        #         blank=True, default=dict, verbose_name="Attributes"
+        #     ),
+        # ),
+        # migrations.AddField(
+        #     model_name="cardimagecmsplugin",
+        #     name="attributes",
+        #     field=djangocms_bootstrap4.fields.AttributesField(
+        #         blank=True, default=dict, verbose_name="Attributes"
+        #     ),
+        # ),
         migrations.AddField(
             model_name="cardimagecmsplugin",
             name="page_link",
@@ -397,13 +397,13 @@ class Migration(migrations.Migration):
                 verbose_name="link",
             ),
         ),
-        migrations.AddField(
-            model_name="cardinnercmsplugin",
-            name="attributes",
-            field=djangocms_bootstrap4.fields.AttributesField(
-                blank=True, default=dict, verbose_name="Attributes"
-            ),
-        ),
+        # migrations.AddField(
+        #     model_name="cardinnercmsplugin",
+        #     name="attributes",
+        #     field=djangocms_bootstrap4.fields.AttributesField(
+        #         blank=True, default=dict, verbose_name="Attributes"
+        #     ),
+        # ),
         migrations.AlterField(
             model_name="cardcmsplugin",
             name="cmsplugin_ptr",
@@ -729,12 +729,12 @@ class Migration(migrations.Migration):
                         verbose_name="Icon",
                     ),
                 ),
-                (
-                    "attributes",
-                    djangocms_bootstrap4.fields.AttributesField(
-                        blank=True, default=dict, verbose_name="Attributes"
-                    ),
-                ),
+                # (
+                #     "attributes",
+                #     djangocms_bootstrap4.fields.AttributesField(
+                #         blank=True, default=dict, verbose_name="Attributes"
+                #     ),
+                # ),
                 (
                     "page_link",
                     cms.models.fields.PageField(

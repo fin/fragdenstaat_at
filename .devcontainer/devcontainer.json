@@ -2,15 +2,29 @@
   "name": "FragDenStaat AT",
   "dockerComposeFile": ["../compose-dev.yaml", "compose.yaml"],
   "service": "web",
-  "workspaceFolder": "/workspaces/fds_at/fragdenstaat_at",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces,type=bind",
+  "workspaceFolder": "/workspaces/fds_at",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {"version": "22"}
   },
-"postCreateCommand": "npm install -g pnpm@9.15 && cd /workspaces/fds_at && bash fragdenstaat_at/devsetup.sh",
+"postCreateCommand": "bash -c \"sudo chmod -R +777 /home/vscode/.local/share/uv && sudo chmod -R +777  /home/vscode/.local/share/pnpm && npm install -g pnpm@9.15 && pnpm setup && source /home/vscode/.bashrc && cd /workspaces/fds_at && mkdir -p /home/vscode/.local/share/pnpm && bash fragdenstaat_at/devsetup.sh\"",
   "forwardPorts": [8000, 5432, 9200],
   "portsAttributes": {
     "8000": {"label": "Django"},
     "5432": {"label": "PostgreSQL"},
     "9200": {"label": "Elasticsearch"}
-  }
+  },
+  "containerEnv": {"SHELL": "/bin/bash", "ENV": "/home/vscode/.bashrc", "PNPM_HOME": "/home/vscode/.local/share/pnpm"},
+  "remoteEnv": {
+    "SHELL": "/bin/bash",
+    "ENV": "/home/vscode/.bashrc",
+    "PNPM_HOME": "/home/vscode/.local/share/pnpm",
+
+    "UV_CACHE_DIR": "/home/vscode/.local/share/uv",
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/share/pnpm"
+  },
+  "mounts": [
+    "source=pnpm_cache,target=/home/vscode/.local/share/pnpm:Z",
+    "source=uv_cache,target=/home/vscode/.local/share/uv:Z"
+  ]
 }

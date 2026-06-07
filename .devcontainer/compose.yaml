@@ -25,3 +25,6 @@ services:
       POSTGRES_USER: fragdenstaat_at
       POSTGRES_DB: fragdenstaat_at
       POSTGRES_PASSWORD: fragdenstaat_at
+volumes:
+  pnpm_cache:
+  uv_cache:

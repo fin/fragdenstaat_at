@@ -29,3 +29,6 @@ messagesde:
 
 messagesls:
 	python manage.py extendedmakemessages -l de_LS $(MAKEMESSAGES_OPTS)
+
+run_frontend_server:
+	pnpm run dev --host=0.0.0.0

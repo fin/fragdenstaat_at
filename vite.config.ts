@@ -90,7 +90,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 5173,
     origin: 'http://127.0.0.1:5173',
-    fs: { allow: ['..'] }
+    fs: { allow: ['..'] },
+    cors: true
   },
   plugins: [
     vue(),

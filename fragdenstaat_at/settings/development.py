@@ -3,7 +3,7 @@ from .base import FragDenStaatBase, env
 
 class Dev(FragDenStaatBase):
     GEOIP_PATH = None
-    FRONTEND_DEBUG = False
+    FRONTEND_DEBUG = True
 
     @property
     def INSTALLED_APPS(self):
@@ -11,6 +11,7 @@ class Dev(FragDenStaatBase):
 
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     CELERY_EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    FRONTEND_SERVER_URL = "http://localhost:5173/static/"
 
     CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
 

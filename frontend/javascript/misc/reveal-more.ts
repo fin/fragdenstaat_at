@@ -37,10 +37,8 @@ revealElemets.forEach((element) => {
     }
   }
 
-  anchored() && destroy()
-  window.addEventListener('hashchange', () => {
-    anchored() && destroy()
-  })
+  (() => (anchored() && destroy()))();
+  window.addEventListener('hashchange', () => (anchored() && destroy()));
 
   // if we only save around half the height, it's not worth it
   if (originalHeight / pixels < 1.9) {

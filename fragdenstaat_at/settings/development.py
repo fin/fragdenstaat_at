@@ -5,6 +5,10 @@ class Dev(FragDenStaatBase):
     GEOIP_PATH = None
     FRONTEND_DEBUG = False
 
+    @property
+    def INSTALLED_APPS(self):
+        return ["daphne"] + list(super().INSTALLED_APPS)
+
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     CELERY_EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

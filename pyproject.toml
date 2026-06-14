@@ -270,3 +270,8 @@ froide-campaign = { git = "https://github.com/okfde/froide-campaign.git", rev = 
 froide-payment = { git = "https://github.com/okfde/froide-payment.git", rev = "main" }
 pygtail = { git = "https://github.com/okfde/pygtail.git", rev = "3be17b00f55781caba62d589bcf8aceb0805a58c" }
 sortabletable = { git = "https://github.com/stefanw/djangocms-sortabletable.git", rev = "main" }
+
+[dependency-groups]
+dev = [
+    "daphne>=4.2.2",
+]

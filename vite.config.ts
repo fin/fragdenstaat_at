@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import * as url from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import devManifest from 'vite-plugin-dev-manifest'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
@@ -13,6 +13,22 @@ const outputDir = resolve(__dirname, 'build')
 // (froide_campaign, list.js) => node_modules/froide_campaign/frontend/javascript/list.js
 const r = (project: string, file: string) =>
   resolve(__dirname, 'node_modules', project, 'frontend', 'javascript', file)
+
+const devServerOrigin = process.env.VITE_DEV_SERVER_ORIGIN || 'http://localhost:5173'
+
+// vite-plugin-dev-manifest overwrites server.origin with the container's
+// network IP when vite runs with --host, which breaks asset urls (e.g.
+// webfonts) rewritten into dev CSS. Re-assert our origin after it does.
+// Must come after devManifest() in the plugins array.
+const fixServerOrigin = (): Plugin => ({
+  name: 'fix-server-origin',
+  enforce: 'post',
+  configureServer(server) {
+    server.httpServer?.once('listening', () => {
+      server.config.server.origin = devServerOrigin
+    })
+  }
+})
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -89,13 +105,14 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     port: 5173,
-    origin: 'http://127.0.0.1:5173',
+    origin: devServerOrigin,
     fs: { allow: ['..'] },
     cors: true
   },
   plugins: [
     vue(),
     devManifest(),
+    fixServerOrigin(),
     mode === 'production' &&
       sentryVitePlugin({
         telemetry: false

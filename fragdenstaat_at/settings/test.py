@@ -2,7 +2,7 @@ import os
 
 from configurations import values
 
-from .base import THEME_ROOT, FragDenStaatBase
+from .base import THEME_ROOT, FragDenStaatBase, env
 
 
 class Test(FragDenStaatBase):
@@ -34,6 +34,6 @@ class Test(FragDenStaatBase):
     )
     ELASTICSEARCH_INDEX_PREFIX = "fds_test"
     ELASTICSEARCH_DSL = {
-        "default": {"hosts": "localhost:9200"},
+        "default": {"hosts": env("DJANGO_ELASTICSEARCH_HOSTS", "localhost:9200")},
     }
     FIXTURE_DIRS = [os.path.join(THEME_ROOT, "..", "tests", "fixtures")]

@@ -5,7 +5,7 @@ https://github.com/divio/aldryn-search/blob/master/aldryn_search/search_indexes.
 
 from django.conf import settings
 from django.db.models import Q
-from django.utils import timezone, translation
+from django.utils import translation
 from django.utils.html import strip_tags
 
 from cms.models import PageContent

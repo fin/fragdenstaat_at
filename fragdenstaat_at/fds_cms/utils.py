@@ -9,9 +9,8 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
 
-from cms.models import CMSPlugin, Placeholder
+from cms.models import CMSPlugin
 from cms.plugin_rendering import ContentRenderer
-from djangocms_alias.models import Alias
 
 
 def get_plugin_children(instance):
@@ -21,6 +20,9 @@ def get_plugin_children(instance):
 
 
 def get_request(language=None, path="/"):
+    # import here, as it accesses the app registry at import time
+    from cms.toolbar.toolbar import CMSToolbar
+
     request_factory = RequestFactory()
     request = request_factory.get(path)
     request.session = {}

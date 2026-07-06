@@ -1,18 +1,11 @@
 from django.core import mail
-from django.core.management import call_command
 
 import pytest
 from fragdenstaat_at.fds_donation.models import Donation
 
 
-@pytest.fixture(scope="function")
-def django_db_setup(django_db_setup, django_db_blocker):
-    with django_db_blocker.unblock():
-        call_command("loaddata", "cms.json")
-
-
 @pytest.mark.django_db
-def test_donation_page(page, live_server, django_db_setup):
+def test_donation_page(page, live_server):
     mail.outbox = []
     response = page.goto(live_server.url + "/spenden/spende/spenden/")
     assert response.status == 200

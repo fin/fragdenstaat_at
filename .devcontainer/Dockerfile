@@ -16,6 +16,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 RUN UV_TOOL_DIR=/usr/local/share/uv/tools UV_TOOL_BIN_DIR=/usr/local/bin uv tool install prek
 
+RUN apt-get install ghostscript poppler-utils
+
 # Activate the project virtualenv in every interactive shell. The VS Code
 # Python extension's terminal activation is racy (only works for terminals
 # opened after the extension has activated), so do it deterministically here.

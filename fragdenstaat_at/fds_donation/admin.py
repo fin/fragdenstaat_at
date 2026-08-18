@@ -46,8 +46,8 @@ from .models import (
 )
 from .services import send_donation_gift_order_shipped
 
-# from fragdenstaat_at.fds_mailing.models import MailingMessage
-# from fragdenstaat_at.fds_mailing.utils import SetupMailingMixin
+from fragdenstaat_at.fds_mailing.models import MailingMessage
+from fragdenstaat_at.fds_mailing.utils import SetupMailingMixin
 
 
 def median(field):
@@ -154,7 +154,7 @@ class DonorChangeList(ChangeList):
         return ret
 
 
-class DonorAdmin(admin.ModelAdmin):  # SetupMailingMixin,
+class DonorAdmin(SetupMailingMixin, admin.ModelAdmin):
     form = DonorAdminForm
 
     list_display = (
@@ -175,7 +175,7 @@ class DonorAdmin(admin.ModelAdmin):  # SetupMailingMixin,
         make_rangefilter("amount_last_year", _("amount last year")),
         make_rangefilter("recurring_amount", _("recurring monthly amount")),
         make_daterangefilter("last_donation", _("Last donation")),
-        # "subscriber__subscribed",
+        "subscriber__subscribed",
         "email_confirmed",
         "become_user",
         "receipt",
@@ -196,10 +196,7 @@ class DonorAdmin(admin.ModelAdmin):  # SetupMailingMixin,
         "identifier",
         "note",
     )
-    raw_id_fields = (
-        "user",
-        "subscriptions",
-    )  # "subscriber")
+    raw_id_fields = ("user", "subscriptions", "subscriber")
     actions = [
         "send_donor_optin_email",
         "merge_donors",
@@ -211,7 +208,7 @@ class DonorAdmin(admin.ModelAdmin):  # SetupMailingMixin,
         "send_mailing",
         "update_newsletter_tag",
         "export_donor_csv",
-    ]  # + SetupMailingMixin.actions
+    ] + SetupMailingMixin.actions
 
     tag_all = make_batch_tag_action(autocomplete_url=DONOR_TAG_AUTOCOMPLETE)
 
@@ -219,7 +216,7 @@ class DonorAdmin(admin.ModelAdmin):  # SetupMailingMixin,
         return DonorChangeList
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)  # .select_related("subscriber")
+        qs = super().get_queryset(request).select_related("subscriber")
         donations_filter = Q(donations__received_timestamp__isnull=False)
 
         donation_projects = request.GET.get(DonorProjectFilter.parameter_name)
@@ -458,12 +455,12 @@ class DonorAdmin(admin.ModelAdmin):  # SetupMailingMixin,
         queryset = queryset.exclude(email="")
 
         count = queryset.count()
-        # MailingMessage.objects.bulk_create(
-        #     [
-        #         MailingMessage(mailing_id=mailing.id, donor_id=donor_id)
-        #         for donor_id in queryset.values_list("id", flat=True)
-        #     ]
-        # )
+        MailingMessage.objects.bulk_create(
+            [
+                MailingMessage(mailing_id=mailing.id, donor_id=donor_id)
+                for donor_id in queryset.values_list("id", flat=True)
+            ]
+        )
 
         return _(
             "Prepared mailing of emailable donors " "with {count} recipients"
@@ -671,8 +668,8 @@ class DonationAdmin(admin.ModelAdmin):
                     "donor_recurring_amount": donation.donor.recurring_amount,
                     "first_donation": to_local(donation.donor.first_donation),
                     "last_donation": to_local(donation.donor.last_donation),
-                    # "subscribed": donation.donor.subscriber
-                    # and to_local(donation.donor.subscriber.subscribed),
+                    "subscribed": donation.donor.subscriber
+                    and to_local(donation.donor.subscriber.subscribed),
                     "become_user": donation.donor.become_user,
                     "receipt": donation.donor.receipt,
                     "tags": ", ".join(x.name for x in donation.donor.tags.all()),

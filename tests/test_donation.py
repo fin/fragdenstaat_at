@@ -21,7 +21,9 @@ def test_donation_page(page, live_server, django_db_setup):
     page.fill("#id_last_name", "Testor")
     page.fill("#id_email", "test@example.com")
     page.click("text=Überweisung")
-    page.click("#id_contact_1")
+    # No #id_contact_* radio to click: the newsletter opt-in is hidden and
+    # defaults to "no" under D3 (AT routes no subscription URLs). Restore the
+    # click here if the opt-in is ever shown again.
     page.click("#id_account_1")
     page.fill("input[name=test]", "7")
     page.click("#donate-now")

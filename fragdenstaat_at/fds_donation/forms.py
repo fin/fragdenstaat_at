@@ -503,16 +503,22 @@ class DonorForm(get_basic_info_form(), forms.Form):
 
 class DonationForm(SpamProtectionMixin, SimpleDonationForm, DonorForm):
     form_settings = forms.CharField(widget=forms.HiddenInput)
+    # Hidden and defaulted to "no" (D3): fds_newsletter is installed for its
+    # models, but AT routes no subscription URLs, so there is nothing to opt in
+    # to. Asking the question and then never acting on the answer would be worse
+    # than not asking. DE handles this with a `hide_contact` form setting, which
+    # AT's hash-era fds_donation does not have -- adopt that in P2 step 4 and
+    # switch to it then.
     contact = forms.TypedChoiceField(
-        widget=BootstrapRadioSelect,
+        widget=forms.HiddenInput(),
         choices=(
             (1, _("Yes, please!")),
             (0, _("No, thank you.")),
         ),
         coerce=lambda x: bool(int(x)),
-        required=True,
+        required=False,
+        initial=0,
         label=_("News"),
-        error_messages={"required": _("You have to decide.")},
     )
     account = forms.TypedChoiceField(
         widget=BootstrapRadioSelect,
@@ -671,9 +677,9 @@ def get_merge_donor_form(admin_site):
                 "user": ForeignKeyRawIdWidget(
                     Donor._meta.get_field("user").remote_field, admin_site
                 ),
-                # "subscriber": ForeignKeyRawIdWidget(
-                #    Donor._meta.get_field("subscriber").remote_field, admin_site
-                # ),
+                "subscriber": ForeignKeyRawIdWidget(
+                    Donor._meta.get_field("subscriber").remote_field, admin_site
+                ),
             }
 
     return MergeDonorForm

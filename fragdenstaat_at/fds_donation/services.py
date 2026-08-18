@@ -353,9 +353,10 @@ def confirm_donor_email(donor, request=None):
     else:
         user = donor.user
 
-    if "newsletter" in request.GET:
-        donor.contact_allowed = True
-        donor.save()
+    # DE opts a donor in whenever the confirmation link carries `?newsletter`.
+    # Deliberately not carried over (D3): it bypasses the donation form's opt-in
+    # entirely, so it would silently subscribe people the moment the subscribe
+    # calls below are re-enabled. Restore it only together with a real opt-in.
 
     if donor.contact_allowed:
         # Subscribe to normal and donor newsletter

@@ -330,10 +330,21 @@ AT's suite is now a working baseline to migrate *from*. **[R]**
 
 ### P2 — rebuild the AT layer against DE@HEAD · 3–4 weeks
 
-1. **D3 execution.** Add `fds_newsletter` and `fds_mailing` back to
-   `INSTALLED_APPS`; restore `Donor.subscriber` (a plain `AddField(null=True)` — the
-   column does not exist, so no backfill) and `SetupMailingMixin`; set
-   `hide_contact=True` on every donation form. **[R]**
+1. **D3 execution.** *Step 1 done:* both apps are vendored from DE@HEAD with the
+   package renamed (138 files, ~9400 lines, 37 migrations) but **not wired** —
+   they are absent from `INSTALLED_APPS` and their tests are excluded via
+   `pytest.ini`'s `addopts`. Their only unmet dependencies were two symbols, now
+   present: `fds_cms.utils.get_alias_placeholder` (ported; works because D10
+   moved static placeholders to aliases) and `theme.admin.PublicBodyAdmin`
+   (written as a minimal subset — DE's `theme/admin.py` also customises User,
+   GeoRegion, Amenity and InformationObject admins and would drag back
+   `django-amenities` and other apps D6 dropped).
+
+   *Remaining:* add both to `INSTALLED_APPS` and **remove the `addopts` ignore in
+   the same commit**; run the 37 migrations against the extract; restore
+   `Donor.subscriber` (a plain `AddField(null=True)` — the column does not exist,
+   so no backfill) and `SetupMailingMixin`; set `hide_contact=True` on every
+   donation form. **[R]**
 
    ⚠️ `hide_contact` alone is not sufficient. `services.py:398` in
    `confirm_donor_email()` does `if "newsletter" in request.GET:

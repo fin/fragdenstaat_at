@@ -466,3 +466,73 @@ running alongside from day one** — it is the only part gated on external input
 
 Open, and needing a human: everything marked **[H]** above, of which P4 is the only
 one blocked on someone outside the team.
+
+---
+
+## 9. Pre-deploy TODO
+
+Things that must be decided or done before this branch reaches production. None
+of them block the merge work itself.
+
+### 9.1 Settings that are product decisions, not merge mechanics
+
+DE defines these and AT does not. All are optional — nothing crashes without them
+(the only setting that *was* load-bearing, `SENDER_DOMAINS`, is already set).
+Decide each, or consciously decline it:
+
+| Setting | The decision |
+|---|---|
+| `USER_LANGUAGES` | Which languages appear in the switcher. AT runs single-language `de-at`; DE splits `LANGUAGES` from `USER_LANGUAGES` to hide `de-ls`. Only matters if AT adds a second language |
+| `COOKIE_CONSENT_LOG_ENABLED`, `COOKIE_CONSENT_SECURE` | `django-cookie-consent` ships via D6 but is unconfigured and unused. Does AT want a consent banner? Interacts with whether AT reinstates analytics |
+| `MATOMO_SITE_ID` | AT deliberately removed DE's Matomo. Reinstate with an AT instance, or stay untracked |
+| `CMS_COLOR_SCHEME`, `CMS_COLOR_SCHEME_TOGGLE` | Dark mode. DE ships a toggle plugin; AT's theme has no dark palette yet, so this is a design decision first |
+| `THUMBNAIL_ALIASES`, `THUMBNAIL_DEFAULT_ALIAS`, `FDS_THUMBNAIL_ENABLE_AVIF` | Image sizes and whether to serve AVIF. Affects storage and CDN volume |
+| `LEAFLET_CONFIG` | Map defaults. DE's centre/zoom are German — needs Austrian values if AT ever enables maps |
+| `DEFAULT_CURRENCY_LABEL`, `DEFAULT_CURRENCY_SYMBOL` | Cosmetic; both sites are EUR |
+| `CREW_GROUP` | Name of the staff group froide treats as crew. Must match the group that actually exists in AT's database |
+| `CMS_REDIRECT_TO_LOWERCASE_SLUG` | URL normalisation. Changing it on a live site changes canonical URLs — check for SEO impact |
+| `VERSIONING_ALIAS_MODELS_ENABLED` | Whether Aliases are versioned. Now relevant, since D10 moved static content into Aliases |
+| `FILER_REMOVE_FILE_VALIDATORS`, `DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL`, `APP_SITE_URL`, `PAYMENT_SUBSCRIPTION_ACCESS_FUNC` | Small; adopt with the app that needs them |
+
+Also review `SECRET_URLS["admin"]`, currently the literal `"admin"` on both sites.
+
+### 9.2 One-off production steps
+
+- **`manage.py migrate --fake fds_cms 0005`** (D9). Must **not** be run on a
+  database that lacks those columns — check `information_schema` first.
+- **Celery task rename** — the five `fragdenstaat_de.fds_donation.*` names. Drain
+  and deploy per `docs/runbooks/celery-task-rename.md`; not a code edit.
+- **Confirm `remind_unreceived_banktransfers` is in the beat config.** It is
+  documented "run on the 15th" but nothing in the repo schedules it.
+
+### 9.3 Verify before trusting
+
+- **Rehearse the migrations against a real production dump.** The dev extract is
+  schema-faithful but not content-faithful — it collapses draft/public, so
+  `fds_cms/0006` cannot be exercised against real divergence locally.
+- **Measure production row counts** for `foirequest_*`, `account_user`,
+  `fds_donation_*`, `froide_payment_*`. They set the migration window; the 10 CMS
+  pages do not.
+- **Rebuild the container to verify the Elasticsearch 8.15.1 bump.** Changed but
+  never rebuilt; re-run `search_index --rebuild` afterwards.
+- **`RegularDonorsProgressBarPlugin` and the bank importer have no test cover** and
+  were both changed. The plugin query was hand-checked against an extract whose
+  donation tables are empty — that proves the SQL valid, not the arithmetic.
+
+### 9.4 Known live defects to fix before or with the deploy
+
+- **The footer alias hardcodes hash-stamped static URLs** (four sponsor logos).
+  They are orphans from a deployment that used manifest storage; production no
+  longer hashes. They resolve today, but `collectstatic --clear` or any edit to
+  those source images breaks them.
+- **`zwb.html` renders a blank PDF** and the donation receipt field is hidden.
+  Leave hidden until P4 lands the Austrian FinanzOnline flow.
+- **CMS pages are missing from site search** until DE's `cms_apps.py` apphook is
+  adopted (P2 step 3).
+- **If mailing is ever enabled, a working unsubscribe route is legally required.**
+  Three DE test modules are currently ignored for exactly this reason.
+
+### 9.5 Housekeeping
+
+- The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
+  origin; this branch exists only in the dev container.

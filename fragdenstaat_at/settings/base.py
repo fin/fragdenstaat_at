@@ -22,6 +22,20 @@ def env(key, default=None):
 THEME_ROOT = Path(__file__).resolve().parent.parent
 
 
+
+def es_hosts(value):
+    """Normalise Elasticsearch host settings to scheme-qualified URLs.
+
+    elasticsearch-py 8 rejects a bare ``host:port`` with
+    ``ValueError: URL must include a 'scheme', 'host', and 'port' component``.
+    Existing deployments and devcontainers set ``DJANGO_ELASTICSEARCH_HOSTS``
+    without a scheme, so default to http:// rather than requiring every
+    environment to be updated in lockstep.
+    """
+    hosts = [h.strip() for h in str(value).split(",") if h.strip()]
+    return [h if "://" in h else "http://" + h for h in hosts]
+
+
 class FragDenStaatBase(German, Base):
     ROOT_URLCONF = "fragdenstaat_at.theme.urls"
     ASGI_APPLICATION = "fragdenstaat_at.routing.application"
@@ -523,7 +537,9 @@ class FragDenStaatBase(German, Base):
 
     ELASTICSEARCH_INDEX_PREFIX = "fragdenstaat_at"
     ELASTICSEARCH_DSL = {
-        "default": {"hosts": env('DJANGO_ELASTICSEARCH_HOSTS', "localhost:9200")},
+        "default": {
+            "hosts": es_hosts(env("DJANGO_ELASTICSEARCH_HOSTS", "localhost:9200"))
+        },
     }
     ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = "froide.helper.search.CelerySignalProcessor"
 

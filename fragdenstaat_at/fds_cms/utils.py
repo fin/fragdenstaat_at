@@ -18,9 +18,11 @@ def get_plugin_children(instance):
     return CMSPlugin.objects.filter(parent=instance).order_by("position")
 
 
-
-
 def get_request(language=None, path="/"):
+    # Deferred import: CMSToolbar pulls in the plugin pool, which is not ready
+    # at module-import time during app loading.
+    from cms.toolbar.toolbar import CMSToolbar
+
     request_factory = RequestFactory()
     request = request_factory.get(path)
     request.session = {}

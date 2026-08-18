@@ -8,7 +8,7 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
-from .base import FragDenStaatBase, env
+from .base import FragDenStaatBase, env, es_hosts
 
 
 class MyStaticFilesStorage(storage.StaticFilesStorage):
@@ -209,7 +209,7 @@ class FragDenStaat(FragDenStaatBase):
     ELASTICSEARCH_INDEX_PREFIX = "fragdenstaat_at"
     ELASTICSEARCH_DSL = {
         "default": {
-            "hosts": env("DJANGO_ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
+            "hosts": es_hosts(env("DJANGO_ELASTICSEARCH_HOSTS", "localhost:9200"))
         },
     }
     ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = "froide.helper.search.CelerySignalProcessor"

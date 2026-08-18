@@ -12,7 +12,7 @@ services:
       DATABASE_NAME: fragdenstaat_at
       DATABASE_USER: fragdenstaat_at
       DATABASE_PASSWORD: fragdenstaat_at
-      DJANGO_ELASTICSEARCH_HOSTS: elasticsearch:9200
+      DJANGO_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
       DJANGO_SETTINGS_MODULE: fragdenstaat_at.settings.development
       DJANGO_CONFIGURATION: Dev
     command: sleep infinity

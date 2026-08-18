@@ -162,9 +162,9 @@ every account cancellation. Now on DE's WebDAV implementation, skipped when
 unconfigured.
 
 *Dead machinery removed:* `amenity_updater.py` and its task (OSM ingestion for
-uninstalled apps). Still present and still German: `update_georegion.py` hardcodes
-the **ARS** key lengths (2/3/5/9/12) and cannot load Austrian
-Gemeindekennziffern.
+uninstalled apps). `update_georegion.py` is **left in place on purpose** — it is
+German (hardcoded **ARS** key lengths 2/3/5/9/12) and cannot load Austrian
+Gemeindekennziffern, but georegions are not in use, so it is inert. See §9.7.
 
 ### `settings/`
 
@@ -565,7 +565,21 @@ Once it does, four things must change together — the last is easy to miss:
 - **If mailing is ever enabled, a working unsubscribe route is legally required.**
   Three DE test modules are currently ignored for exactly this reason.
 
-### 9.6 Housekeeping
+### 9.6 Deferred: georegion loading
+
+`theme/management/commands/update_georegion.py` and
+`fds_cms/management/commands/load_georegion.py` are both German: they are built
+around the **ARS** (Amtlicher Regionalschlüssel) hierarchy and hardcode its
+2/3/5/9/12-digit key lengths. Austria's equivalent is the 5-digit
+Gemeindekennziffer under a Bundesland/Bezirk/Gemeinde hierarchy.
+
+Deliberately not touched: **georegions are not used by AT at present**, so both
+commands are inert. They need rewriting — not adapting — before any feature that
+depends on regional data (map plugins, region-scoped search, `LEAFLET_CONFIG`).
+Until then they are harmless, and deleting them would throw away the shape of a
+working loader.
+
+### 9.7 Housekeeping
 
 - The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
   origin; this branch exists only in the dev container.

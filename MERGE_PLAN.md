@@ -139,9 +139,11 @@ IBAN in donor export, refund handling, a real test suite. Migrations 44 → 79.
 
 ### `fds_ogimage`
 
-Byte-identical to DE, but disabled everywhere and `FDS_OGIMAGE_URL = ""`. Either
-host an AT ogimage service or remove the app. Until then `SITE_LOGO` is unset, so
-social shares have no image.
+Byte-identical to DE and **deliberately kept** — an AT ogimage service is to be set
+up later. Currently inert: absent from `INSTALLED_APPS` and `theme/urls.py`, with
+`FDS_OGIMAGE_URL` empty (now read from the environment rather than hardcoded).
+Social shares fall back to `SITE_LOGO`, which is set, so the interim behaviour is
+sane rather than broken. Enabling it is a four-step checklist in §9.2.
 
 ### `theme`
 
@@ -509,7 +511,23 @@ snippet and was written here from the German original, not by anyone who owns th
 messaging. And **add AT's own `google-site-verification` token** if AT uses Search
 Console; DE's was removed rather than replaced.
 
-### 9.2 One-off production steps
+### 9.2 Enabling `fds_ogimage`
+
+The app is kept on purpose; the external rendering service does not exist yet.
+Once it does, four things must change together — the last is easy to miss:
+
+1. Set `FDS_OGIMAGE_URL` (env), in DE's shape:
+   `https://<host>/api/{hash}?path={path}`.
+2. Add `fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig` to `INSTALLED_APPS`.
+3. Uncomment the `fds_ogimage.urls` include in `theme/urls.py` — the service
+   fetches the pages it screenshots from these routes.
+4. **Restore the two template overrides that were deleted.**
+   `templates/account/profile.html` and `templates/foirequest/show.html` used to
+   call `{% ogimage_url %}`, but with the tag commented out they emitted an empty
+   `og:image` on every profile and request page, so the overrides were removed in
+   favour of froide's `SITE_LOGO` default. Per-page images need them back.
+
+### 9.3 One-off production steps
 
 - **`manage.py migrate --fake fds_cms 0005`** (D9). Must **not** be run on a
   database that lacks those columns — check `information_schema` first.
@@ -518,7 +536,7 @@ Console; DE's was removed rather than replaced.
 - **Confirm `remind_unreceived_banktransfers` is in the beat config.** It is
   documented "run on the 15th" but nothing in the repo schedules it.
 
-### 9.3 Verify before trusting
+### 9.4 Verify before trusting
 
 - **Rehearse the migrations against a real production dump.** The dev extract is
   schema-faithful but not content-faithful — it collapses draft/public, so
@@ -532,7 +550,7 @@ Console; DE's was removed rather than replaced.
   were both changed. The plugin query was hand-checked against an extract whose
   donation tables are empty — that proves the SQL valid, not the arithmetic.
 
-### 9.4 Known live defects to fix before or with the deploy
+### 9.5 Known live defects to fix before or with the deploy
 
 - **The footer alias hardcodes hash-stamped static URLs** (four sponsor logos).
   They are orphans from a deployment that used manifest storage; production no
@@ -547,7 +565,7 @@ Console; DE's was removed rather than replaced.
 - **If mailing is ever enabled, a working unsubscribe route is legally required.**
   Three DE test modules are currently ignored for exactly this reason.
 
-### 9.5 Housekeeping
+### 9.6 Housekeeping
 
 - The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
   origin; this branch exists only in the dev container.

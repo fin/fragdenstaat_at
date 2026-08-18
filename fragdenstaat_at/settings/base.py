@@ -797,7 +797,12 @@ class FragDenStaatBase(German, Base):
 
     SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
     SENTRY_JS_URL = ""
-    FDS_OGIMAGE_URL = ""  # https://ogimage.frag-den-staat.de/api/{hash}?path={path}"
+    # Per-page Open Graph images, rendered by an external service. Kept and
+    # intended -- an AT service is still to be set up. Empty means the app is
+    # inert and social shares fall back to SITE_LOGO.
+    # DE's value: "https://ogimage.frag-den-staat.de/api/{hash}?path={path}"
+    # To enable, see the checklist in MERGE_PLAN.md §9.
+    FDS_OGIMAGE_URL = env("FDS_OGIMAGE_URL", "")
 
     # FRONTEX_CAPTCHA_MODEL_PATH = os.environ.get("FRONTEX_CAPTCHA_MODEL_PATH", None)
 

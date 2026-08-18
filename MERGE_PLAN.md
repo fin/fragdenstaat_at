@@ -527,8 +527,10 @@ Also review `SECRET_URLS["admin"]`, currently the literal `"admin"` on both site
   those source images breaks them.
 - **`zwb.html` renders a blank PDF** and the donation receipt field is hidden.
   Leave hidden until P4 lands the Austrian FinanzOnline flow.
-- **CMS pages are missing from site search** until DE's `cms_apps.py` apphook is
-  adopted (P2 step 3).
+- **Attach the CMS search apphook to a page.** `FdsCmsSearchApp` is ported and
+  registers, but an apphook does nothing until it is attached to a CMS page in
+  the admin (DE attaches it to its help section). Until then CMS pages stay
+  missing from site search.
 - **If mailing is ever enabled, a working unsubscribe route is legally required.**
   Three DE test modules are currently ignored for exactly this reason.
 

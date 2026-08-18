@@ -564,7 +564,17 @@ class FragDenStaatBase(German, Base):
     SITE_NAME = "FragDenStaat.at"
     SITE_EMAIL = "info@fragdenstaat.at"
     SITE_URL = "http://localhost:8000"
-    # SITE_LOGO TODO
+
+    # froide's share_image block emits og:image only when this is set, which is
+    # why request and profile pages currently share with no image at all.
+    # Absolute by necessity: og:image is fetched by third parties.
+    @property
+    def SITE_LOGO(self):
+        return "{}img/logo/logo.png".format(self.STATIC_URL)
+
+    # Domains a mailing may be sent from. fds_mailing.validators reads this
+    # unguarded, so without it saving a Mailing raises AttributeError.
+    SENDER_DOMAINS = ["fragdenstaat.at"]
 
     DEFAULT_CURRENCY = "EUR"
     DEFAULT_DECIMAL_PLACES = 2

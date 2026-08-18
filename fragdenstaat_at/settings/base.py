@@ -576,6 +576,11 @@ class FragDenStaatBase(German, Base):
     # unguarded, so without it saving a Mailing raises AttributeError.
     SENDER_DOMAINS = ["fragdenstaat.at"]
 
+    # WebDAV target for the retention backup taken when a user schedules account
+    # cancellation. Unset means the backup is skipped (see theme/tasks.py).
+    FDS_LEGAL_BACKUP_URL = env("FDS_LEGAL_BACKUP_URL")
+    FDS_LEGAL_BACKUP_CREDENTIALS = env("FDS_LEGAL_BACKUP_CREDENTIALS")
+
     DEFAULT_CURRENCY = "EUR"
     DEFAULT_DECIMAL_PLACES = 2
     PAYMENT_HOST = "localhost:8000"

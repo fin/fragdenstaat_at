@@ -932,11 +932,22 @@ reviews), or **[HUMAN]** (genuine design/legal decision).
 
 ### P0 — Freeze the ground truth *(≈½ day)*
 
-1. **[AUTO]** Record a machine-readable inventory: for every path under
-   `fragdenstaat_at/`, its status (`identical-to-DE@hash` / `modified` / `at-only`)
-   and, for modified files, the diff. The comparison must apply the
-   `fragdenstaat_de`→`fragdenstaat_at` rename first. *(This document's numbers came
-   from exactly such a pass; commit the script.)*
+1. **[DONE 2026-08-18]** `scripts/de_drift.py` — classifies every file under
+   `fragdenstaat_at/` as identical / modified / at-only / de-only against a
+   fragdenstaat_de checkout, applying the package rename first. Supports `--ref`,
+   `--list <bucket>`, `--json`, and `--check-max-modified N` as a CI drift gate.
+
+   **Measured, and the two reference points differ sharply:**
+
+   | vs | identical | **modified** | at-only | de-only |
+   |---|---|---|---|---|
+   | DE @ `abe0781d` (baseline) | 243 | **57** | 51 | 255 |
+   | DE @ HEAD (target) | 42 | **240** | 69 | 635 |
+
+   The second row is the real P2 workload: **240 files to reconcile**, not 57. The
+   57 is only how far AT drifted from where it forked. This is the strongest
+   argument yet for **D2** — without configure-out, that 240 is what every future
+   sync re-litigates. Re-run the script instead of hand-editing these numbers.
 2. **[AUTO]** Same for `frontend/`, `pyproject.toml`, `package.json`, root config.
 3. ~~Ratify D1.~~ **Settled: rebase onto DE@HEAD** (§0).
 4. **[AUTO]** Tag the current AT tree (`pre-sync-2026-08`) and snapshot the

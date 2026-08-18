@@ -212,7 +212,10 @@ renders the CMS static alias (migrated in `fds_cms/0006`) via
 `{% static_alias "footer" %}` in `base.html`. Editing `templates/footer.html` has
 no effect. The alias also stores *hash-stamped* static URLs pasted into its HTML,
 so sponsor logos break on any `collectstatic` that changes those files — fix
-during template work.
+during template work. Verified: those four are the *only* hashed URLs on the live
+page (everything template-rendered is unhashed), so they are orphans from an older
+deployment that used manifest storage. They resolve today; nothing regenerates
+them.
 
 *Germany-specific left in place:* `base.html`'s `metadescription` is still German
 IFG boilerplate; Austria's Informationsfreiheitsgesetz (in force 2025) replaced the
@@ -364,6 +367,30 @@ AT's suite is now a working baseline to migrate *from*. **[R]**
 2. **Settings.** Rewrite `settings/base.py` as DE@HEAD's file plus an explicit AT
    override block — configuration, not commented-out code (D2). Resolve the items
    flagged in §3. **[H]**
+
+   *Measured:* DE defines **114** settings in `base.py`, AT **71**. DE has 49 AT
+   lacks; AT has 6 DE lacks (`CKEDITOR_SETTINGS`, `CMS_LANGUAGES`,
+   `DONATION_SITE_NAME_OVERRIDE`, `LANGUAGE_CODE`, `TESSERACT_LANGUAGE`,
+   `TEXT_ADDITIONAL_PROTOCOLS`). Most of the 49 belong to apps AT does not run
+   (amenities, campaign, food, govplan, telnyx/fax, paperless, easylang,
+   evidencecollection). Worth evaluating for AT:
+
+   `STORAGES` ✅ done · `THUMBNAIL_ALIASES` / `THUMBNAIL_DEFAULT_ALIAS` /
+   `FDS_THUMBNAIL_ENABLE_AVIF` · `CMS_COLOR_SCHEME(_TOGGLE)` ·
+   `CMS_REDIRECT_TO_LOWERCASE_SLUG` · `VERSIONING_ALIAS_MODELS_ENABLED` (relevant
+   post-D10) · `FLOWCONTROL_CONTENT_TYPES` / `FLOWCONTROL_TEMPLATE_FILTERS` (now
+   that flowcontrol is installed) · `SENDER_DOMAINS` (mailing sender validation) ·
+   `SITE_LOGO` (unset, which is why social shares have no image) · `CREW_GROUP` ·
+   `LEAFLET_CONFIG` · `USER_LANGUAGES` · `APP_SITE_URL` ·
+   `PAYMENT_SUBSCRIPTION_ACCESS_FUNC` · `FILER_REMOVE_FILE_VALIDATORS` ·
+   `COOKIE_CONSENT_*` · `DEFAULT_CURRENCY_LABEL` / `_SYMBOL`.
+
+   ⚠️ **Look for dead configuration, not just missing configuration.**
+   `STATICFILES_STORAGE` had been silently ignored since Django 5.1 removed it,
+   along with the `MyStaticFilesStorage` subclass it named — which only overrode
+   `manifest_strict`, a no-op on a non-manifest backend. Dead twice over and
+   invisible. (`CKEDITOR_SETTINGS` was checked for the same failure and is fine:
+   `djangocms_text` still reads it.)
 
 3. **`fds_cms` / `theme` / `fds_ogimage`.** Take DE's versions; re-apply
    `HomepageHero`/`HomepageHow`, `export_fdscms`, AT template overrides. Adopt DE's

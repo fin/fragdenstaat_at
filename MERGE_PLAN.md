@@ -152,10 +152,16 @@ social shares have no image.
 the custom homepage view, `inject_status_change` (DE redirects to a donation ask
 after a request is marked successful — worth revisiting as an AT fundraising hook).
 
-*Dead German machinery still present:* `legal_backup.py` + its Celery tasks (built
-for the German Klageautomat), `amenity_updater.py` (OSM ingestion for
-`froide_food`/`froide_campaign`, both uninstalled). `update_georegion.py` hardcodes
-the German **ARS** key lengths (2/3/5/9/12) and cannot load Austrian
+*Corrected:* `legal_backup.py` is **not** Klageautomat machinery and is not dead —
+it is a data-retention backup of a departing user's requests, fired by
+`account_future_canceled`, and it applies to AT as much as DE. AT's copy used the
+Google Drive API, which was never a dependency of either repo, so it failed on
+every account cancellation. Now on DE's WebDAV implementation, skipped when
+unconfigured.
+
+*Dead machinery removed:* `amenity_updater.py` and its task (OSM ingestion for
+uninstalled apps). Still present and still German: `update_georegion.py` hardcodes
+the **ARS** key lengths (2/3/5/9/12) and cannot load Austrian
 Gemeindekennziffern.
 
 ### `settings/`
@@ -490,6 +496,7 @@ Decide each, or consciously decline it:
 | `LEAFLET_CONFIG` | Map defaults. DE's centre/zoom are German — needs Austrian values if AT ever enables maps |
 | `DEFAULT_CURRENCY_LABEL`, `DEFAULT_CURRENCY_SYMBOL` | Cosmetic; both sites are EUR |
 | `CREW_GROUP` | Name of the staff group froide treats as crew. Must match the group that actually exists in AT's database |
+| `FDS_LEGAL_BACKUP_URL`, `FDS_LEGAL_BACKUP_CREDENTIALS` | **Now honoured.** A WebDAV target for the retention backup taken when a user cancels their account. Unset means no backup is kept — decide whether AT needs one, since it is a data-protection commitment either way |
 | `CMS_REDIRECT_TO_LOWERCASE_SLUG` | URL normalisation. Changing it on a live site changes canonical URLs — check for SEO impact |
 | `VERSIONING_ALIAS_MODELS_ENABLED` | Whether Aliases are versioned. Now relevant, since D10 moved static content into Aliases |
 | `FILER_REMOVE_FILE_VALIDATORS`, `DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL`, `APP_SITE_URL`, `PAYMENT_SUBSCRIPTION_ACCESS_FUNC` | Small; adopt with the app that needs them |

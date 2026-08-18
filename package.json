@@ -1,15 +1,14 @@
 {
   "name": "fragdenstaat_at",
   "version": "0.0.0",
-  "description": "Freedom of Information Portal in Germany",
+  "description": "Freedom of Information Portal in Austria",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint frontend --ext .js,.ts,.vue",
     "serve": "vite",
     "dev": "vite",
-    "build": "vite build",
-    "favicon": "real-favicon generate fragdenstaat_de/theme/static/img/favicon/favicon.json favicon-result.json fragdenstaat_de/theme/static/img/favicon"
+    "build": "vite build"
   },
   "homepage": "https://github.com/fin/fragdenstaat_at#readme",
   "devDependencies": {
@@ -42,10 +41,6 @@
     "dompurify": "^3.2.5",
     "font-awesome": "^4.7.0",
     "froide": "github:okfde/froide",
-    "froide_campaign": "github:okfde/froide-campaign",
-    "froide_exam": "github:okfde/froide-exam",
-    "froide_food": "github:okfde/froide-food",
-    "froide_legalaction": "github:okfde/froide-legalaction",
     "froide_payment": "github:okfde/froide-payment",
     "pdfjs-dist": "^2.16.105",
     "vega": "^6.1.2",

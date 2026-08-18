@@ -91,7 +91,7 @@ $glide-modifier-separator: '--' !default;
     color: white;
     text-transform: uppercase;
     padding: 0.6rem;
-    background-color: white;
+    background-color: var(--#{$prefix}body-bg);
     // border: 1px solid transparent;
     border: none;
     border-radius: 50%;
@@ -107,15 +107,15 @@ $glide-modifier-separator: '--' !default;
       outline: none;
     }
     &:hover {
-      background-color: $blue-600;
-      // border-color: $blue-600;
+      background-color: var(--#{$prefix}primary);
+      // border-color: var(--#{$prefix}primary);
       svg path {
         fill: white;
       }
     }
 
     svg path {
-      fill: $blue-600;
+      fill: var(--#{$prefix}primary);
     }
 
     &#{$sm}left {
@@ -146,7 +146,7 @@ $glide-modifier-separator: '--' !default;
   }
 
   &#{$se}bullet {
-    background-color: $blue-600;
+    background-color: var(--#{$prefix}primary);
     width: 15px;
     height: 15px;
     padding: 0;
@@ -170,7 +170,7 @@ $glide-modifier-separator: '--' !default;
 
     &#{$sm}active {
       background-color: white;
-      border-color: $blue-600;
+      border-color: var(--#{$prefix}primary);
     }
   }
 

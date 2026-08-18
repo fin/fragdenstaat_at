@@ -1,7 +1,48 @@
 import '../styles/vega.scss'
 
 import { expressionInterpreter } from 'vega-interpreter'
+import { Tooltip } from 'bootstrap'
+import { mergeConfig } from 'vega'
 import embed from 'vega-embed'
+
+const backgroundColor = 'var(--bs-body-bg)'
+const textColor = 'var(--bs-body-color)'
+const mediumColor = 'var(--bs-secondary-bg)'
+
+const colorTheme = {
+  background: backgroundColor,
+
+  view: {
+    stroke: mediumColor
+  },
+
+  title: {
+    color: textColor,
+    subtitleColor: textColor
+  },
+
+  style: {
+    'guide-label': {
+      fill: textColor
+    },
+    'guide-title': {
+      fill: textColor
+    },
+    cell: { stroke: null },
+    'group-title': { font: 'Inter', fontSize: 14, fontWeight: 'bold' }
+  },
+
+  axis: {
+    domainColor: mediumColor,
+    gridColor: mediumColor,
+    tickColor: mediumColor,
+    labelColor: textColor,
+    labelFont: 'Inter',
+    labelFontSize: 12,
+    titleFont: 'Inter',
+    titleFontWeight: 'normal'
+  }
+}
 
 const LOCALE = {
   de: {
@@ -58,6 +99,28 @@ const LOCALE = {
   }
 }
 
+const bootstrapTooltipHandler = (handler, _event, item, value) => {
+  let tooltip = Tooltip.getInstance(item._svg)
+  let created = false
+  if (!tooltip && value) {
+    const html = `<dl>${Object.keys(value)
+      .map((key) => `<dt>${key}</dt><dd>${value[key]}</dd>`)
+      .join('')}</dl>`
+
+    tooltip = Tooltip.getOrCreateInstance(item._svg, {
+      html: true,
+      sanitize: false,
+      container: handler._el,
+      placement: 'auto',
+      title: html
+    })
+    created = true
+  }
+  if (value && created) {
+    tooltip.show()
+  }
+}
+
 document.querySelectorAll('[data-vegachart]').forEach((el) => {
   let spec
   if (el.dataset.vegachartdata) {
@@ -65,7 +128,9 @@ document.querySelectorAll('[data-vegachart]').forEach((el) => {
   } else {
     spec = JSON.parse(document.getElementById(el.dataset.vegachart).textContent)
   }
-  if (!spec.data.url && !spec.data.values) {
+  const hasData =
+    (spec.data && (spec.data.url || spec.data.values)) || spec.datasets
+  if (!hasData) {
     const data = JSON.parse(
       document.getElementById(el.dataset.vegachart + '_data').textContent
     )
@@ -83,8 +148,13 @@ document.querySelectorAll('[data-vegachart]').forEach((el) => {
     }
   }
 
-  // Slightly smaller than container
-  if (spec.width === undefined) {
+  if (spec.columns) {
+    // If we have a facet chart with columns and
+    if (el.clientWidth < 500) {
+      spec.columns = Math.floor(spec.columns / 2)
+    }
+  } else if (spec.width === undefined) {
+    // Only set container width on non-facet charts
     spec.width = 'container'
     spec.autosize = 'fit'
   }
@@ -95,6 +165,8 @@ document.querySelectorAll('[data-vegachart]').forEach((el) => {
     expr: expressionInterpreter,
     renderer: 'svg',
     actions: showActions,
+    tooltip: bootstrapTooltipHandler,
+    config: mergeConfig(colorTheme, spec.config),
     ...extras
   })
 })

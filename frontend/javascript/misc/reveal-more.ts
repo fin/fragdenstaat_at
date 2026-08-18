@@ -37,8 +37,10 @@ revealElemets.forEach((element) => {
     }
   }
 
-  (() => (anchored() && destroy()))();
-  window.addEventListener('hashchange', () => (anchored() && destroy()));
+  if (anchored()) destroy()
+  window.addEventListener('hashchange', () => {
+    if (anchored()) destroy()
+  })
 
   // if we only save around half the height, it's not worth it
   if (originalHeight / pixels < 1.9) {
@@ -47,7 +49,13 @@ revealElemets.forEach((element) => {
 
   button?.addEventListener('click', () => {
     button.setAttribute('aria-expanded', 'true')
-    inner.addEventListener('transitionend', () => destroy(), { once: true })
+    inner.addEventListener(
+      'transitionend',
+      () => {
+        destroy()
+      },
+      { once: true }
+    )
     element.classList.add('transitioning')
   })
 })

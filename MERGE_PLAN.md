@@ -25,7 +25,7 @@
 |---|---|---|
 | D1 | Merge direction | Rebase AT onto DE@HEAD; re-apply AT's delta as a branding/config layer |
 | D2 | Delta style | Configure-out locally (settings/templates), no upstreaming to DE |
-| D3 | Dropped apps | `fds_newsletter` + `fds_mailing` return with **no signup surface**; `fds_blog`, `fds_fximport` stay out |
+| D3 | Dropped apps | `fds_newsletter` + `fds_mailing` return with **no signup surface**; `fds_blog`, `fds_fximport` stay out ✅ |
 | D4 | Language | Keep `de-at`; overrides move into `fragdenstaat_at/locale/de_AT/` |
 | D5 | froide | No permanent fork; `fin/froide` is a time-boxed test bed, exit = `de_AT` relocation proven |
 | D6 | Dependencies | DE's curated `pyproject.toml` minus apps AT does not enable ✅ |
@@ -85,7 +85,7 @@ for `fds_donation`, where rows are real money.
 
 ### Not done
 
-D3, settings reconstruction, `fds_cms`/`theme` adoption from DE, `fds_donation`
+Settings reconstruction, `fds_cms`/`theme` adoption from DE, `fds_donation`
 adoption, frontend, template re-derivation, migration forward-porting, Austrian
 donation receipts, translations.
 
@@ -330,28 +330,36 @@ AT's suite is now a working baseline to migrate *from*. **[R]**
 
 ### P2 — rebuild the AT layer against DE@HEAD · 3–4 weeks
 
-1. **D3 execution.** *Step 1 done:* both apps are vendored from DE@HEAD with the
-   package renamed (138 files, ~9400 lines, 37 migrations) but **not wired** —
-   they are absent from `INSTALLED_APPS` and their tests are excluded via
-   `pytest.ini`'s `addopts`. Their only unmet dependencies were two symbols, now
-   present: `fds_cms.utils.get_alias_placeholder` (ported; works because D10
-   moved static placeholders to aliases) and `theme.admin.PublicBodyAdmin`
-   (written as a minimal subset — DE's `theme/admin.py` also customises User,
-   GeoRegion, Amenity and InformationObject admins and would drag back
-   `django-amenities` and other apps D6 dropped).
+1. **D3 execution — ✅ done.** Both apps vendored from DE@HEAD (138 files) and
+   wired, along with `flowcontrol`. `Donor.subscriber` restored as
+   `fds_donation/0045` (plain nullable `AddField`, no backfill). Donor admin
+   re-coupled: `SetupMailingMixin`, subscriber raw-id/filter/`select_related`/CSV
+   column, `DonorAdminForm` widget. The newsletter opt-in is hidden and defaults
+   to no, and DE's `?newsletter` bypass is not carried over.
 
-   *Remaining:* add both to `INSTALLED_APPS` and **remove the `addopts` ignore in
-   the same commit**; run the 37 migrations against the extract; restore
-   `Donor.subscriber` (a plain `AddField(null=True)` — the column does not exist,
-   so no backfill) and `SetupMailingMixin`; set `hide_contact=True` on every
-   donation form. **[R]**
+   Three things worth knowing:
 
-   ⚠️ `hide_contact` alone is not sufficient. `services.py:398` in
-   `confirm_donor_email()` does `if "newsletter" in request.GET:
-   donor.contact_allowed = True`, so any confirmation link carrying `?newsletter`
-   subscribes regardless. There are exactly two subscribe call sites
-   (`services.py:210-212`, `:402-412`), both gated on `contact_allowed`, and this
-   one bypass. Neutralise lines 398–400 in the same change. **[R]**
+   - **The vendored migrations were replaced with generated initials.** DE's
+     `fds_mailing.0023` depends on `fds_donation.0063`, unresolvable against AT's
+     lineage ending at `0044` (D8(b)). Safe because AT had no newsletter/mailing
+     tables and the vendored history holds zero data migrations. Verified on a
+     clean extract: 29 tables, exit 0.
+   - **Two shims** were needed: `fds_cms.utils.get_alias_placeholder` (ported;
+     works because D10 moved static placeholders to aliases) and a minimal
+     `theme/admin.py` with `PublicBodyAdmin` — DE's version also customises User,
+     GeoRegion, Amenity and InformationObject and would drag back
+     `django-amenities` and other apps D6 dropped.
+   - **Three DE test modules are ignored** in `pytest.ini`, with the reason and
+     the condition for restoring them. They drive subscribe/confirm/unsubscribe
+     views through `reverse()`, which cannot resolve while AT routes no
+     subscription URLs. ⚠️ One of them,
+     `fds_mailing/tests/test_mailing.py`, fails because a mailing embeds an
+     unsubscribe link — **if mailing is ever enabled, a working unsubscribe route
+     is legally required, not optional**, and those tests must come back with it.
+
+   Fixed in passing: `setup_mailing_messages` reported "Prepared mailing … with N
+   recipients" while the `bulk_create` was commented out. It created nothing and
+   said it had.
 
 2. **Settings.** Rewrite `settings/base.py` as DE@HEAD's file plus an explicit AT
    override block — configuration, not commented-out code (D2). Resolve the items

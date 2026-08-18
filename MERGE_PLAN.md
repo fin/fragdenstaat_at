@@ -236,6 +236,20 @@ identical to DE's, which is wrong in both directions; removed.
 AT: 65 files, DE@HEAD: 98. AT added `base.scss`/`globalvars.scss`, StixTwo serif,
 dropdown/modal tokens, Vite 6 + pnpm. Search is commented out of `main.ts`.
 
+⚠️ **Do not "adopt DE's frontend" wholesale.** Unlike the Python apps, most of
+this tree is *visual identity*, not shared machinery: DE carries Gregory Grotesk,
+its UBF campaign artwork and its own palette, while AT has its own dropdown, dark
+mode and colours. Treat the frontend as AT's, and cherry-pick DE's *functional* JS
+fixes only. 32 files differ; almost all are stylesheets.
+
+**Fixed:** every `@font-face` in AT's CSS was 404ing in production — the site
+rendered in system fallback fonts. `type.scss` came from DE in Aug 2025 and builds
+its `src` paths from a mixin expecting variable-weight subsets
+(`fonts/inter/inter-latin.woff2`, `fonts/stixtwo/stixtwo-latin.woff2`), but AT
+shipped the older static-weight naming and no StixTwo at all. Vite passes an
+unresolvable `url()` straight through instead of failing, so the build stayed
+green and nothing surfaced it.
+
 ---
 
 ## 4. Apps in DE, absent from AT
@@ -579,7 +593,16 @@ depends on regional data (map plugins, region-scoped search, `LEAFLET_CONFIG`).
 Until then they are harmless, and deleting them would throw away the shape of a
 working loader.
 
-### 9.7 Housekeeping
+### 9.7 Filesystem caveat for macOS developers
+
+This workspace is a **case-insensitive** bind mount, so `Inter-Italic-latin.woff2`
+and `inter-italic-latin.woff2` are one path locally but two on CI and production
+Linux. It already caused one near-miss: a font rename appeared to work locally
+while leaving capitalised names in the tree that would have 404'd on deploy. When
+changing only the case of a filename, verify with `git ls-tree`, not `ls`, and
+rename through `git update-index` if `git mv` refuses.
+
+### 9.8 Housekeeping
 
 - The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
   origin; this branch exists only in the dev container.

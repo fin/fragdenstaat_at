@@ -69,10 +69,13 @@ class FragDenStaatBase(German, Base):
                 # "fragdenstaat_at.fds_blog",
                 "adminsortable2",
                 # Customisations
-                # "fragdenstaat_de.fds_newsletter",
+                # Required by fds_newsletter/fds_mailing (D3): their flow
+                # actions register against flowcontrol's model registry.
+                "flowcontrol",
+                "fragdenstaat_at.fds_newsletter.apps.NewsletterConfig",
                 "fragdenstaat_at.fds_cms.apps.FdsCmsConfig",
                 "fragdenstaat_at.fds_donation.apps.FdsDonationConfig",
-                # "fragdenstaat_de.fds_mailing.apps.FdsMailingConfig",
+                "fragdenstaat_at.fds_mailing.apps.FdsMailingConfig",
                 # "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",
                 # "fragdenstaat_at.fds_fximport.apps.FdsFxImportConfig",
                 # Additional CMS plugins
@@ -178,9 +181,13 @@ class FragDenStaatBase(German, Base):
     # ]
 
     # Newsletter
-    # NEWSLETTER_RICHTEXT_WIDGET = "djangocms_text_ckeditor.widgets.TextEditorWidget"
-    # DEFAULT_NEWSLETTER = "fragdenstaat"
-    # DONOR_NEWSLETTER = "spenden"
+    # Newsletter slugs are nominal under D3: nothing subscribes anyone, because
+    # every donation form sets hide_contact=True and the ?newsletter bypass is
+    # neutralised. Kept at DE's values to minimise divergence.
+    DEFAULT_NEWSLETTER = "fragdenstaat"
+    DONOR_NEWSLETTER = "spenden"
+    NEWSLETTER_PIXEL_ORIGIN = env("NEWSLETTER_PIXEL_ORIGIN", "http://localhost:8000")
+    NEWSLETTER_PIXEL_LOG = env("NEWSLETTER_PIXEL_LOG", "/var/log/pixel.log")
 
     # BLOG
 
@@ -267,19 +274,28 @@ class FragDenStaatBase(German, Base):
     #     "ConcactNotAllowedDonor",
     # ]
 
+    # Plugins allowed inside a mailing's email body. DE's list also includes
+    # donation-logic plugins (IsDonorPlugin, IsRecentDonor, ...); those are left
+    # out here because AT has not enabled that feature -- add them alongside the
+    # fds_donation adoption in P2.
+    EMAIL_BODY_PLUGINS = [
+        "TextPlugin",
+        "PicturePlugin",
+        "EmailActionPlugin",
+        "EmailSectionPlugin",
+        "EmailStoryPlugin",
+        "EmailHeaderPlugin",
+        "EmailButtonPlugin",
+        "IsNewsletterSubscriberPlugin",
+        "IsNotNewsletterSubscriberPlugin",
+    ]
+
     CMS_PLACEHOLDER_CONF = {
         "email_body": {
-            "plugins": [
-                "TextPlugin",
-                "EmailActionPlugin",
-                "EmailSectionPlugin",
-                "EmailStoryPlugin",
-                "EmailBodyPlugin",
-                "EmailHeaderPlugin",
-                "PicturePlugin",
-            ]
-            # + DONATION_LOGIC_PLUGINS
-            ,
+            # Single source of truth: EmailBodyPlugin.child_classes reads
+            # EMAIL_BODY_PLUGINS, so deriving the placeholder conf from it keeps
+            # the two from drifting apart.
+            "plugins": EMAIL_BODY_PLUGINS,
             "text_only_plugins": [],
             "name": _("E-Mail Body"),
             "language_fallback": True,
@@ -288,7 +304,7 @@ class FragDenStaatBase(German, Base):
             "parent_classes": {},
         }
     }
-    # CMS_PLUGIN_CONTEXT_PROCESSORS = ["fragdenstaat_de.fds_mailing.utils.add_style"]
+    CMS_PLUGIN_CONTEXT_PROCESSORS = ["fragdenstaat_at.fds_mailing.utils.add_style"]
 
     DJANGOCMS_PICTURE_NESTING = True
 

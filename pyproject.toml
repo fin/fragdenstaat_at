@@ -125,6 +125,9 @@ production = [
 dev = [
   "django-debug-toolbar>=3.2.1",
   "django-extended-makemessages>=1.7.1",
+  # froide's test package (imported by the vendored fds_newsletter tests) needs
+  # bs4; froide is installed with --no-deps so it does not come along.
+  "beautifulsoup4",
   "factory-boy>=3.3",
   "faker",
   "mock",

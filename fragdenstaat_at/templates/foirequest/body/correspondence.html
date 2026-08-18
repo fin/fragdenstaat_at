@@ -2,18 +2,19 @@
 
 {% load i18n %}
 {% load fds_cms_tags %}
+{% load djangocms_alias_tags %}
 {% load foirequest_tags %}
 
 
 {% block foirequest_message_before_last %}
   <div class="d-print-none">
-    {% fds_static_placeholder "message_donation_banner" %}
+    {% static_alias "message_donation_banner" %}
   </div>
 {% endblock %}
 
 {% block foirequest_message_after_single %}
   <div class="d-print-none">
-    {% fds_static_placeholder "message_donation_banner" %}
+    {% static_alias "message_donation_banner" %}
   </div>
 {% endblock %}
 

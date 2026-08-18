@@ -19,6 +19,13 @@ class Migration(migrations.Migration):
         ("foirequest", "0053_alter_foimessage_email_headers"),
         migrations.swappable_dependency(settings.FILER_IMAGE_MODEL),
         ("filer", "0013_image_width_height_to_float"),
+        # This migration adds a FK to filingcabinet.DocumentPortal, which is
+        # created by filingcabinet.0016. The edge was missing: the graph
+        # happened to order filingcabinet first, until 0006's `run_before`
+        # perturbed it and surfaced "Related model
+        # 'filingcabinet.documentportal' cannot be resolved". Ordering-only
+        # change, so it is safe to add to an already-applied migration.
+        ("filingcabinet", "0016_auto_20200108_1228"),
         ("fds_cms", "0001_initial"),
     ]
 

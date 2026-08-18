@@ -841,7 +841,7 @@ wheels = [
 
 [[package]]
 name = "django-cms"
-version = "5.0.10"
+version = "5.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
@@ -849,13 +849,10 @@ dependencies = [
     { name = "django-formtools" },
     { name = "django-sekizai" },
     { name = "django-treebeard" },
-    { name = "djangocms-admin-style" },
-    { name = "packaging" },
-    { name = "setuptools" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/85/57/2922f6efb4e76e743474a90c658d4896355c4867cee588f21557103aa237/django_cms-5.0.10.tar.gz", hash = "sha256:e5e9d2c49c6111009d0a21bfdafcb4f24c99ace7cebc82bf5d4d6a4939b29bcb", size = 5332278, upload-time = "2026-08-06T08:32:20.461Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/3a/bdd65af31e2ecc624f50d687d10cadc86774c7f4a793d09c2118829eaf06/django_cms-5.1.1.tar.gz", hash = "sha256:9b25f17d591e1f8beae8b2d47ce54e9b16f5af2d2a933b00d4ee62cdc9b2a55e", size = 6702776, upload-time = "2026-08-06T08:34:12.02Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/08/cdd1ddf91bb5ba766d05a128d145f176a7f21eea9e29fa6939437b11ea5d/django_cms-5.0.10-py2.py3-none-any.whl", hash = "sha256:cab81d24fa05ab587e4e7a4e8154ea3f9c09ba077df858e3cb65b96517c77ba2", size = 3273517, upload-time = "2026-08-06T08:32:18.549Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/04/989d308a2b51b3b2b51a8f3f5da789bc56f76d35428713dc29d690bb7d41/django_cms-5.1.1-py3-none-any.whl", hash = "sha256:1a4b0ad854f586837735d677760f2c6af72eabc42a172d1f6273759b2e300d11", size = 3516544, upload-time = "2026-08-06T08:34:09.789Z" },
 ]
 
 [[package]]
@@ -1312,18 +1309,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/60/50/6d044d777767608e996f78ce0b5f0d7178af08ef66217eafa40dbb554dd5/django_treebeard-5.0.2.tar.gz", hash = "sha256:c785b4d22a53e3aed9f3d79947ed28e8a61aecb93b18330dbbd494b455129150", size = 801806, upload-time = "2026-02-13T07:26:07.816Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a1/20/78aebc410de6c308de6369ccc0d9d54a1005823c66c665d31a667d710aeb/django_treebeard-5.0.2-py3-none-any.whl", hash = "sha256:14f4e4df34541fd4a3f0d24b5ca640ecdc32d6468b80f2f9f239f7583fc959e6", size = 76875, upload-time = "2026-02-13T07:26:04.435Z" },
-]
-
-[[package]]
-name = "djangocms-admin-style"
-version = "3.3.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6c/1e/47b2d031c6d8f4ac5394b4b3dc863a8f21fd6d92aadf260ba1fc633b286f/djangocms-admin-style-3.3.1.tar.gz", hash = "sha256:da20de3831f1a1a74de33fe12bbd3865a0027a982878c02aa1d102b1c799d767", size = 319126, upload-time = "2024-02-29T22:12:45.167Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/f2/e0ed0cf8036708f7b7a26a4586a27b5e53891cf8d965f1e4751bf4f50de3/djangocms_admin_style-3.3.1-py3-none-any.whl", hash = "sha256:9b76aafda245205e0a88d57efd5097a96c1a7fcb78d7f3efa50955eb980079de", size = 408789, upload-time = "2024-02-29T22:12:42.557Z" },
 ]
 
 [[package]]
@@ -1941,7 +1926,7 @@ requires-dist = [
     { name = "django-admin-sortable2", specifier = ">=2.2.8" },
     { name = "django-celery-beat", specifier = ">=2.8.1" },
     { name = "django-celery-email", specifier = ">=3.0.0" },
-    { name = "django-cms", specifier = ">=5.0.5,<5.1" },
+    { name = "django-cms", specifier = ">=5.0.5,<6" },
     { name = "django-configurations", specifier = ">=2.5.1" },
     { name = "django-contractor", specifier = ">=0.0.8" },
     { name = "django-contrib-comments", specifier = ">=2.2.0" },
@@ -3975,15 +3960,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/61/87/ad52e2c582c0f0e7f0a1b86950494c38d67422dc0f5ed9044a5fb9569a49/service_identity-26.1.0.tar.gz", hash = "sha256:6358c52882c96e66ac4a55eb3a72c7dd4a70763f8cc6fa4e70abde2656f4bf3b", size = 42898, upload-time = "2026-05-30T12:04:55.184Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/93/eb/2433e1af4ff903499144de4846569fb3300b816179ae99a03c2f011b666a/service_identity-26.1.0-py3-none-any.whl", hash = "sha256:68c32dadbb69135fb951077677e07cd7f6031020f3a8c8f47a28cda8a0742118", size = 11370, upload-time = "2026-05-30T12:04:53.911Z" },
-]
-
-[[package]]
-name = "setuptools"
-version = "84.0.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6d/44/f5da03a8ef95d369145c5bb53050e7877c9f3d312e128605fd9504829143/setuptools-84.0.0.tar.gz", hash = "sha256:f4695c21257f0d9b537ec2692c941d02ee143b7cc1276941349a546573b2ef73", size = 1168449, upload-time = "2026-08-08T18:27:58.365Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/9c/c510029fc6ef33a6275cd2c5d3cecd6613dfd6aa401d57c54f1c18852ccf/setuptools-84.0.0-py3-none-any.whl", hash = "sha256:51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670", size = 818216, upload-time = "2026-08-08T18:27:56.719Z" },
 ]
 
 [[package]]

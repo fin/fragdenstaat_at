@@ -2,6 +2,7 @@
 
 {% load i18n %}
 {% load cms_tags %}
+{% load djangocms_alias_tags %}
 {% load menu_tags %}
 
 {% block body %}
@@ -66,7 +67,7 @@
       </div>
     </div>
 
-    {% static_placeholder "help_footer" %}
+    {% static_alias "help_footer" %}
 
   </div>
 {% endblock %}

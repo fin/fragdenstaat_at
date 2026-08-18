@@ -31,7 +31,7 @@ is recorded.
 | **D6** | Dependencies | **Adopt DE's curated `pyproject.toml` + `[dependency-groups]`,** minus apps AT will not run. |
 | **D7** | Tests | **Adopt DE's pytest + Playwright harness *before* the code sync.** |
 | **D8** | Migration lineage | **Keep AT's graphs; forward-port DE's models** as AT `0006, 0007…` for both `fds_cms` and `fds_donation`. |
-| **D10** | Static placeholders | ⚠️ **OPEN — blocks lifting the `django-cms<5.1` pin.** Migrate to djangocms-alias (recommended, during P3) or stay on cms 5.0.x. |
+| **D10** | Static placeholders | **(a) Migrate to djangocms-alias.** ✅ **Done — `fds_cms/0006`, verified against the extract (§1f).** `django-cms` unpinned to `>=5.0.5,<6`. |
 | **D9** | `fds_cms/0005` | **Keep `0005`; `--fake` it on production.** Fresh and post-June-2026 dev DBs run it for real. ✅ **Verified end-to-end — §1b.** |
 
 ### What these choices commit you to
@@ -157,7 +157,7 @@ Playwright with a `fragdenstaat_de/tests/` package, a `database-cache` workflow 
 two translation workflows. Decide whether AT adopts DE's test harness before or
 after the code sync. Before is safer but slower to first value.
 
-### D10 — Static placeholders: migrate to djangocms-alias, or stay on cms 5.0? ⚠️ **OPEN**
+### D10 — Static placeholders: migrate to djangocms-alias, or stay on cms 5.0? ✅ **(a), done**
 
 *Raised 2026-08-18 during D6. This is the one decision blocking the rest of P2.*
 
@@ -178,10 +178,10 @@ DE has already completed this move: it has **zero** references to
   branch stays working. Diverges from DE's `<6`, and the pin has to be lifted
   eventually — cms 5.0.x will not be supported forever.
 
-> **Recommendation: (a), during P3**, where a staging rehearsal against the
-> extract is already planned — but it is a live-content migration, so it is the
-> user's call. The rest of the cms/alias/versioning upgrade is **already proven
-> safe** (§1e), which makes (a) less risky than it would have looked yesterday.
+> **Chosen: (a).** Implemented as `fds_cms/0006_static_placeholders_to_aliases`
+> — a **data migration, not a management command**, at the user's direction: it
+> has to run automatically and in the right order on production, which nobody can
+> rehearse against beforehand. See §1f.
 
 ---
 
@@ -555,6 +555,86 @@ placeholders). `manage.py check` clean, suite green (10 passed, 1 skipped).
    and `pkg_resources` (gone from modern setuptools) broke startup. Needed an
    explicit `uv lock --upgrade-package`. Expect more of these; upgrade per package
    as breakage appears rather than assuming the lock refreshed.
+
+
+---
+
+## 1f. D10 executed — static placeholders converted to aliases — 2026-08-18
+
+`fds_cms/0006_static_placeholders_to_aliases` converts every `StaticPlaceholder`
+into a djangocms-alias static Alias, then `django-cms` is unpinned to `>=5.0.5,<6`
+(now 5.1.1). Templates use `{% static_alias %}`; `fds_cms/admin.py` and
+`fds_cms_tags.py` no longer reference the removed model.
+
+### Why a migration and not a management command
+
+A command was the first instinct — it can be rehearsed, and `StaticPlaceholder`
+only exists on cms 5.0.x. Both arguments are wrong:
+
+- **The extract cannot rehearse this.** `export_dev_db.py` writes `public_id` into
+  *both* the draft and public FKs, so every static placeholder in the extract has
+  `draft_id == public_id`. Draft/public divergence — the one thing a conversion has
+  to get right — is structurally absent from the only copy available locally. A
+  command "verified" against it would prove nothing about production.
+- **The model does exist, in the migration graph.** Historical models come from
+  the graph state, not the installed package. Depending on
+  `cms.0041` (last state with `StaticPlaceholder`) and declaring `run_before`
+  `cms.0042` (which deletes it) makes it available on any django-cms version.
+
+So it runs automatically, in the right order, on every database — nobody has to
+remember an ops step.
+
+### What it does
+
+Per placeholder: create `Alias(static_code=code, site=…)` under a `Static Alias`
+category, one `AliasContent` per language present, a **published** `Version` for
+each, then move the plugins from the **public** placeholder (falling back to draft
+only if public is empty), and finally delete both source `Placeholder` rows.
+
+Deliberate choices, each recorded in the migration itself: **published content
+wins** — unpublished draft edits are not carried over, because migrating them
+would publish content nobody approved; the **source placeholders are deleted**,
+because `cms.0042` removes only `StaticPlaceholder` and would otherwise leave rows
+pointing at a dead content type (enough to break `dumpdata`); and it is
+**idempotent** — an existing Alias for a code is skipped.
+
+⚠️ **Not reversible.** Rolling back past it needs a database restore.
+
+### Verified against the production extract
+
+```
+fds_cms.0005 …………………………………… FAKED       (D9)
+fds_cms.0006_static_placeholders_to_aliases … OK
+cms.0042_remove_placeholderreference_… …… OK   ← ran after 0006, as intended
+cms.0043 / 0044 / 0045 ………………………… OK
+33 migrations, exit 0, no drift afterwards
+```
+
+4 aliases, 1 content + 1 published version each, footer's 7 plugins carried over,
+0 orphaned placeholders. Rendering `{% static_alias "footer" %}` produces 1862
+characters containing the full sponsor block, credits and legal menu — matching
+the live site.
+
+### Three bugs it surfaced
+
+1. **`values_list(...).distinct()` does not dedupe** when the queryset has a Meta
+   ordering: the ordering columns leak into `SELECT DISTINCT`. The first run
+   created **seven** `AliasContent` rows for `footer`, one per plugin. Only caught
+   by inspecting the resulting rows — the migration exited 0.
+2. **`fds_cms/0002` was missing a dependency** on `filingcabinet.0016`, despite
+   adding a FK to `DocumentPortal`. The graph happened to order it correctly until
+   `0006`'s `run_before` perturbed things, then it failed with *"Related model
+   'filingcabinet.documentportal' cannot be resolved"*. Ordering-only fix, safe on
+   an already-applied migration.
+3. **cms 5.1 removed `PageExtension.public_extension`**, leaving `fds_cms` drifting
+   from its migrations — now `fds_cms/0007`.
+
+### Test coverage now matches reality
+
+`tests/fixtures/cms.json` is regenerated from the migrated extract and contains
+the real aliases and plugins, so `tests/test_footer.py` finally tests **the footer
+visitors see** (`LiveFooterTest`, via `{% static_alias %}`) alongside the dead
+template copy (`FooterTemplateTest`). Suite: **14 passed, 1 skipped**.
 
 
 ---

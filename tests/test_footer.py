@@ -17,20 +17,20 @@ This renders ``footer.html`` directly rather than fetching a page, so it needs
 no database, no CMS fixtures and no running services.  That is deliberate: the
 test stays usable while the rest of the stack is mid-port.
 
-⚠️ **Scope limit -- read before trusting this file.**  The production site does
-**not** render this template.  Verified against https://fragdenstaat.at/ on
-2026-08-18: the live footer comes from the ``footer`` **CMS static placeholder**
-(djangocms-frontend Grid plugins, absolute ``https://fragdenstaat.at/...`` URLs,
-``<u>`` tags, a responsive ``d-sm-none`` duplicate of the sponsor block).
-``templates/footer.html`` is the *dead* copy -- ``base.html`` renders the
-placeholder via ``{% fds_static_placeholder "footer" %}``.
+There are two footers, and they are tested separately:
 
-So these tests guard the template copy only.  They are still worth having: the
-template is what a DE-sourced override would collide with, and it is the copy
-that would become live if the placeholder were removed.  But they do **not**
-cover what visitors see.  Covering the real footer needs the static placeholder
-and its plugins in the fixture, which is deferred until **D10** decides whether
-those placeholders migrate to djangocms-alias.  See MERGE_PLAN.md 2.7.
+``LiveFooterTest``
+    The one visitors actually see.  It lives in a djangocms-alias static alias
+    (``{% static_alias "footer" %}``), migrated out of a cms StaticPlaceholder by
+    ``fds_cms/migrations/0006``.  This is the one that matters.
+
+``FooterTemplateTest``
+    ``templates/footer.html`` -- a near-duplicate that the site does **not**
+    render.  Kept under test because it is what a DE-sourced override would
+    collide with, and because it is configuration-driven (``{% content_url %}``)
+    where the alias copy hardcodes absolute URLs.
+
+See MERGE_PLAN.md §2.7 for how the duplication arose.
 """
 
 import json
@@ -38,7 +38,7 @@ import re
 from pathlib import Path
 
 from django.template.loader import render_to_string
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 
 SNAPSHOT = Path(__file__).parent / "snapshots" / "footer_live.json"
 STATIC_HASH = re.compile(r"\.[0-9a-f]{12}(\.[a-z0-9]+)$")
@@ -56,7 +56,7 @@ def norm_static(src: str) -> str:
     return STATIC_HASH.sub(r"\1", src)
 
 
-class FooterRegressionTest(SimpleTestCase):
+class FooterTemplateTest(SimpleTestCase):
     """Compare the rendered footer against the pre-sync live site."""
 
     @classmethod
@@ -124,3 +124,65 @@ class FooterRegressionTest(SimpleTestCase):
             "the template copy has grown hardcoded absolute URLs; it should use "
             "{% content_url %} so it tracks FROIDE_CONFIG['content_urls']",
         )
+
+
+class LiveFooterTest(TestCase):
+    """Guard the footer visitors actually get: the djangocms-alias static alias.
+
+    Renders through the same ``{% static_alias %}`` path as ``base.html``, against
+    the real page/alias content captured from production in
+    ``tests/fixtures/cms.json``.
+    """
+
+    fixtures = ["cms.json"]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.expected = json.loads(SNAPSHOT.read_text(encoding="utf-8"))
+
+    def _render(self):
+        from django.template import Template
+        from sekizai.context import SekizaiContext
+
+        from fragdenstaat_at.fds_cms.utils import get_request
+
+        request = get_request(language="de-at", path="/")
+        context = SekizaiContext(request)
+        context["request"] = request
+        html = Template(
+            '{% load djangocms_alias_tags %}{% static_alias "footer" %}'
+        ).render(context)
+        return html, re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+
+    def test_alias_renders_non_empty(self):
+        html, _ = self._render()
+        self.assertGreater(
+            len(html),
+            500,
+            "the footer alias rendered (almost) nothing -- migration 0006 may not "
+            "have moved the plugins, or the AliasContent has no published Version",
+        )
+
+    def test_credit_and_sponsor_copy_present(self):
+        _, text = self._render()
+        for fragment in self.expected["text_fragments"]:
+            self.assertIn(fragment, text, f"live footer lost copy: {fragment!r}")
+
+    def test_legal_links_present(self):
+        html, _ = self._render()
+        for link in self.expected["links"]:
+            if not link["text"]:
+                continue
+            path = norm_url(link["href"])
+            self.assertIn(
+                path.split("/", 1)[-1] if "/" in path else path,
+                html,
+                f"live footer lost link {link['text']!r}",
+            )
+
+    def test_no_german_site_identity(self):
+        html, _ = self._render()
+        lowered = html.lower()
+        for forbidden in self.expected["must_not_contain"]:
+            self.assertNotIn(forbidden.lower(), lowered)

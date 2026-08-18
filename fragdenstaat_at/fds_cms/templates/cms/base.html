@@ -1,6 +1,7 @@
 {% extends "cms/scaffold.html" %}
 
 {% load cms_tags %}
+{% load djangocms_alias_tags %}
 {% load static %}
 {% load sekizai_tags %}
 {% load frontendbuild %}
@@ -14,7 +15,7 @@
 
   {% block top_block %}
     <div class="top-banner" style="display: none;">
-      {% static_placeholder "top_banner" %}
+      {% static_alias "top_banner" %}
     </div>
   {% endblock %}
 
@@ -42,7 +43,7 @@
   {% block footer_container %}
     <footer class="footer" id="footer">
       <div class="container">
-        {% static_placeholder "footer" %}
+        {% static_alias "footer" %}
       </div>
     </footer>
   {% endblock %}

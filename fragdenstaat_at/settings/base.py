@@ -282,12 +282,34 @@ class FragDenStaatBase(German, Base):
     # https://github.com/divio/django-cms/issues/5725
     CMS_PAGE_CACHE = False
 
-    TEXT_ADDITIONAL_TAGS = (
-        "iframe",
-        "embed",
-    )
-
-    TEXT_ADDITIONAL_ATTRIBUTES = {"*": {'scrolling', 'frameborder', 'sandbox', 'style', 'allowfullscreen', 'webkitallowfullscreen', 'mozallowfullscreen'}}
+    # TEXT_ADDITIONAL_TAGS is deprecated in djangocms-text: a tag is allowed by
+    # having a key here. Ported from DE, minus its form/input/button/textarea
+    # entries -- those widen what CMS editors may inject and AT has no need for
+    # them yet (revisit in P2, see MERGE_PLAN.md).
+    #
+    # `src` matters: without it nh3 strips the src from every iframe, silently
+    # breaking video embeds. The previous `{"*": {...}}`-only form did exactly that.
+    TEXT_ADDITIONAL_ATTRIBUTES = {
+        "iframe": {
+            "scrolling",
+            "frameborder",
+            "webkitallowfullscreen",
+            "mozallowfullscreen",
+            "allowfullscreen",
+            "allow",
+            "sandbox",
+            "src",
+            "style",
+            "class",
+            "id",
+            "height",
+            "width",
+        },
+        "embed": {"type", "src", "width", "height"},
+        "summary": {"class"},
+        "details": {"class", "open"},
+        "*": {"style", "class", "id", "hidden", "disabled"},
+    }
     TEXT_ADDITIONAL_PROTOCOLS = ("bank",)
 
     CKEDITOR_SETTINGS = {
@@ -686,7 +708,10 @@ class FragDenStaatBase(German, Base):
                     )
                 ],
                 recipient_blocklist_regex=rec(
-                    r".*\.de-mail\.de$|^z@bundesnachrichtendienst.de|^pad.donotreply@frontex.europa.eu|^noreply@.*|^empfangsbestaetigung@bahn.de$|.*\.local$"
+                    # NOTE: this list is inherited wholesale from DE and is entirely
+                    # German (de-mail, BND, bahn.de, jobcenter-ge.de). The generic
+                    # entries (noreply/postmaster) earn their keep; the rest should be
+                    # reviewed for Austrian relevance during P2.
                     r".*\.de-mail\.de$|^z@bundesnachrichtendienst\.de|"
                     r"^pad\.donotreply@frontex\.europa\.eu|"
                     r"^noreply@.*|^empfangsbestaetigung@bahn\.de$|.*\.local$|^postmaster@.*|"

@@ -1,13 +1,20 @@
-from django.dispatch.dispatcher import receiver
+from django.dispatch import receiver
 
-from cms.signals import post_publish, post_unpublish
-
-from .models import FdsPageExtension
 from djangocms_versioning.constants import OPERATION_PUBLISH, OPERATION_UNPUBLISH
 from djangocms_versioning.signals import post_version_operation
 
+from froide.helper.tasks import search_instance_delete, search_instance_save
+
+from .models import FdsPageExtension
+
+
 @receiver(post_version_operation, dispatch_uid="publish_cms_page")
 def handle(sender, operation, obj, **kwargs):
+    """Keep the search index in step with djangocms-versioning publish state.
+
+    Replaces the django-cms 3 ``post_publish`` / ``post_unpublish`` signals,
+    which no longer exist under versioning.
+    """
     instance = obj.content
     if operation == OPERATION_PUBLISH:
         try:
@@ -27,9 +34,7 @@ def handle(sender, operation, obj, **kwargs):
         search_instance_delete.delay(instance._meta.label_lower, instance.pk)
 
 
-@receiver(saved_file)
-def generate_thumbnails_async(sender, fieldfile, **kwargs):
-    if sender == Image:
-        generate_thumbnails.delay(
-            model=sender, pk=fieldfile.instance.pk, field=fieldfile.field.name
-        )
+# NOTE: DE also registers an easy-thumbnails `saved_file` receiver here that
+# defers thumbnail generation to `fds_cms.tasks.generate_thumbnails`. AT has no
+# `fds_cms/tasks.py` and has not enabled async thumbnailing, so that receiver is
+# deliberately not ported -- it is what made this module un-importable.

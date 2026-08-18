@@ -1,13 +1,5 @@
 {% extends "foirequest/show.html" %}
 
-{% comment %}{% load fds_ogimage %}{% endcomment %}
-
-
-{% block share_image %}
-
-{% url 'foirequest-show-og' slug=object.slug as foirequest_path %}
-{%comment%}{% ogimage_url path=foirequest_path as og_image_url %}{% endcomment %}
-<meta property="og:image" content="{{ og_image_url }}" />
-<meta name="twitter:card" content="summary_large_image">
-
-{% endblock %}
+{# No share_image override: fds_ogimage is disabled (see MERGE_PLAN.md 2.3), so
+   froide's default block is used, which emits og:image only when SITE_LOGO is
+   set. The previous override emitted an empty og:image on every request page. #}

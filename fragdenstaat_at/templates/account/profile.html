@@ -1,15 +1,11 @@
 {% extends "account/profile.html" %}
 
-{% comment %}{% load fds_ogimage %}{% endcomment %}
-
 {% block meta %}
 {{ block.super }}
 
-{% url 'account-profile-og' slug=object.username as profile_path %}
-{% comment %}{% ogimage_url path=profile_path as og_image_url %}{% endcomment %}
-
+{# fds_ogimage is disabled (see MERGE_PLAN.md 2.3). og:image and
+   twitter:card=summary_large_image were emitted here with an empty URL; they are
+   omitted until an AT ogimage service exists or SITE_LOGO is set. #}
 <meta property="og:title" content="{{ object.get_full_name }} – FragDenStaat-Profil" />
-<meta property="og:image" content="{{ og_image_url }}" />
-<meta name="twitter:card" content="summary_large_image">
 
 {% endblock %}

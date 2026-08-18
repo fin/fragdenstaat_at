@@ -104,7 +104,7 @@ class DonorLogicMixin:
         raise NotImplementedError
 
     def render_text(self, context, instance):
-        from fragdenstaatat.fds_mailing.utils import render_plugin_text
+        from fragdenstaat_at.fds_mailing.utils import render_plugin_text
 
         context = self.add_to_context(context)
 

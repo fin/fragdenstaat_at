@@ -153,7 +153,13 @@ def import_banktransfers(xls_file, project):
             "BIC/SWIFT": "bic",
         }
     )
-    df = df[df["amount"] >= 0 | df["reference"].str.contains("FDS")]
+    # `|` binds tighter than `>=`, so the parentheses are load-bearing: without
+    # them this reads `amount >= (0 | contains(...))`, i.e. a comparison against a
+    # boolean, which silently dropped rows. `na=False` because `reference` is only
+    # filled in on the next statement.
+    df = df[
+        (df["amount"] >= 0) | df["reference"].str.contains("FDS", na=False)
+    ]
     df["reference"] = (
         df["reference"].fillna("").str.cat(df["Buchungs-Details"].fillna(""))
     )
@@ -171,7 +177,6 @@ def import_banktransfers(xls_file, project):
     for i, row in df.iterrows():
         if row["name"] in BLOCK_LIST:
             continue
-        print(row["reference"], type(row["reference"]))
         # if DEBIT_PATTERN.search(row["reference"]):
         #     print('DEBIT MATCHED', row)
         #     update_direct_debit(row)

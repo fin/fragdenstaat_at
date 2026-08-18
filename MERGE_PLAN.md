@@ -223,10 +223,11 @@ page (everything template-rendered is unhashed), so they are orphans from an old
 deployment that used manifest storage. They resolve today; nothing regenerates
 them.
 
-*Germany-specific left in place:* `base.html`'s `metadescription` is still German
-IFG boilerplate; Austria's Informationsfreiheitsgesetz (in force 2025) replaced the
-Auskunftspflichtgesetz. `snippets/meta.html` still carries DE's
-`google-site-verification` token.
+*Germany-specific:* both fixed. `base.html`'s `metadescription` was DE's copy
+describing German law (incl. `Transparenzgesetz`, a German-state concept) and is
+rewritten for Austria — ⚠️ **it is SEO copy and wants review by whoever owns AT's
+messaging**. `snippets/meta.html` carried a `google-site-verification` token
+identical to DE's, which is wrong in both directions; removed.
 
 ### Frontend
 
@@ -502,6 +503,11 @@ Decide each, or consciously decline it:
 | `FILER_REMOVE_FILE_VALIDATORS`, `DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL`, `APP_SITE_URL`, `PAYMENT_SUBSCRIPTION_ACCESS_FUNC` | Small; adopt with the app that needs them |
 
 Also review `SECRET_URLS["admin"]`, currently the literal `"admin"` on both sites.
+
+Also: **review the rewritten `base.html` meta description** — it is AT's search
+snippet and was written here from the German original, not by anyone who owns the
+messaging. And **add AT's own `google-site-verification` token** if AT uses Search
+Console; DE's was removed rather than replaced.
 
 ### 9.2 One-off production steps
 

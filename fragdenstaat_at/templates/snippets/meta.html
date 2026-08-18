@@ -5,7 +5,11 @@
 <meta name="keywords" content="{% if keywords %}{{ keywords }}{% else %}{% trans 'Freedom of Information Requests, Freedom of Information Law, Public Body Information' %}{% endif %}" />
 
 {% block additional_meta %}
-  <meta name="google-site-verification" content="upljx19ZJVGT73Sx1miWKLOWBKga4LQJ_hqFl0vhhJE" />
+  {# The google-site-verification token that used to sit here was copied from
+     fragdenstaat.de verbatim. A verification token proves site ownership to
+     whoever holds the matching Search Console property, so DE's token on the AT
+     site is wrong in both directions. Add AT's own token here if AT uses Search
+     Console. #}
 {% endblock %}
 
 <link rel="icon" type="image/svg+xml" href="{% static 'img/logo/logo.svg' %}">

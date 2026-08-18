@@ -39,7 +39,6 @@ function showTopBanner(): void {
       removeBanner()
     }
 
-    window._paq?.push(['trackEvent', 'ads', 'topBanner', 'close'])
   }
 
   // various checks, if banner should not be shown on current page
@@ -91,7 +90,6 @@ function showTopBanner(): void {
 
   // tracking
   setTimeout(() => {
-    window._paq?.push(['trackEvent', 'ads', 'topBanner', 'shown'])
   }, 3000)
 }
 

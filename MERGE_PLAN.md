@@ -70,13 +70,24 @@ for `fds_donation`, where rows are real money.
   `page__node` / `page.placeholders` / `CMSToolbar` breakage, schemeless
   Elasticsearch hosts, iframe `src` stripped by the sanitiser, a bank-import
   filter that silently dropped sub-€1 transfers and refunds, empty `og:image`
-  tags, a duplicated blocklist regex, a stray `print` corrupting `dumpdata`.
+  tags, a duplicated blocklist regex, a stray `print` corrupting `dumpdata`, and
+  an N+1 query in `RegularDonorsProgressBarPlugin` (one query per donor).
+- **Mechanical cleanup.** `package.json` pruned of JS deps for uninstalled Python
+  apps, description corrected to Austria, dead `favicon` script removed; dead
+  templates deleted (`snippets/temp.html`, `legal_advice_builder/`); dev
+  Elasticsearch image bumped 7.15.0 → 8.15.1 (**needs a container rebuild to
+  verify**); Celery rename runbook written.
+- **Guards.** `tests/conftest.py` now aborts if `DJANGO_SETTINGS_MODULE` /
+  `DJANGO_CONFIGURATION` are set to anything other than `pytest.ini`'s values —
+  this container's ambient env trips it, which is the point. A non-blocking
+  `de-drift` job in `ci.yml` reports divergence from DE (`--check-max-modified 260`;
+  currently 240).
 
 ### Not done
 
-D3, settings reconstruction, `fds_cms`/`theme` adoption from DE,
-`fds_donation` adoption, frontend, template re-derivation, migration
-forward-porting, CI drift gate, Austrian donation receipts, translations.
+D3, settings reconstruction, `fds_cms`/`theme` adoption from DE, `fds_donation`
+adoption, frontend, template re-derivation, migration forward-porting, Austrian
+donation receipts, translations.
 
 ---
 
@@ -180,6 +191,8 @@ drain-and-deploy operation, not a code edit.
 `remind_unreceived_banktransfers` is documented "run on the 15th" but nothing in AT
 schedules it — confirm it exists in the deployment's beat config.
 
+The rename procedure is written up in `docs/runbooks/celery-task-rename.md`.
+
 ### Templates
 
 AT extends froide/DE templates and empties the blocks that referenced disabled
@@ -252,7 +265,7 @@ No new Django apps. What is AT's alone:
 - `.devcontainer/`, `compose-dev.yaml`, `devsetup.sh`, `Makefile`,
   `export_dev_db.py` — a working local environment DE does not have in this form.
   **Preserve through any rebase.**
-- `scripts/de_drift.py`, `scripts/froide-source.sh`.
+- `scripts/de_drift.py`, `scripts/froide-source.sh`, `docs/runbooks/`.
 - Within shared apps: `RegularDonorsProgressBarCMSPlugin`, the legacy structural
   CMS plugins, `HomepageHero`/`HomepageHow`, `update_georegion.py`.
 
@@ -293,10 +306,14 @@ constraint does not upgrade it; use `--upgrade-package`.
 
 **Environment variables override `pytest.ini`.** A shell left over from a
 `manage.py` session runs the suite under the wrong settings. Unset
-`DJANGO_SETTINGS_MODULE` and `DJANGO_CONFIGURATION`.
+`DJANGO_SETTINGS_MODULE` and `DJANGO_CONFIGURATION`. `tests/conftest.py` now
+refuses to run rather than silently using the wrong settings.
 
-**Elasticsearch:** the dev image is 7.15 against an 8.x client — unsupported, though
-it interoperates. DE runs ES 8.
+**Elasticsearch:** `deps/elasticsearch/Dockerfile` is bumped to 8.15.1 to match the
+locked client, but **this is unverified** — it cannot be rebuilt from inside the
+container. Rebuild and re-run a `search_index --rebuild` before relying on it. ES 8
+enables security by default; `xpack.security.enabled=false` is already set in
+`compose-dev.yaml`.
 
 ---
 
@@ -340,6 +357,11 @@ AT's suite is now a working baseline to migrate *from*. **[R]**
    `RegularDonorsProgressBarCMSPlugin`. Re-enable `update_direct_debit` against
    Austrian reference formats. **[H]**
 
+   ⚠️ Nothing in the suite exercises `RegularDonorsProgressBarPlugin` or the bank
+   importer, so both were changed on this branch without test cover — the plugin
+   query was checked by hand against an extract whose donation tables are empty,
+   which proves the SQL valid but not the arithmetic. Add tests here.
+
 5. **Frontend.** Adopt DE's `frontend/`, re-applying AT's `base.scss`,
    `globalvars.scss`, StixTwo and dropdown tokens. **[R]**
 
@@ -370,10 +392,12 @@ Design and build the Spendenabsetzbarkeit / FinanzOnline flow replacing the Germ
 ZWB pipeline. Until it lands, do not un-hide the `receipt` form field. Gated on
 external tax/legal input — **start immediately**, it is the long pole. **[H]**
 
-### P5 — repeatable sync · 2 days
+### P5 — repeatable sync · ~1 day
 
-Wire `scripts/de_drift.py` into CI as a drift gate. Record the new baseline. Delete
-commented-out DE code that D2's configure-out makes redundant. **[A]**
+The drift job is wired into `ci.yml` (non-blocking, limit 260). Remaining: tighten
+the limit as P2 lands and the modified count falls, record the new baseline commit
+here, and delete the commented-out DE code that D2's configure-out makes
+redundant. **[A]**
 
 ### P6 — translations (D4/D5) · ~1 week · **LAST**
 

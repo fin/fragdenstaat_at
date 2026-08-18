@@ -265,7 +265,16 @@ Not all 32 need to stay different — only ~11 do. Measured by inspecting each d
 | **G** | Belongs with its Python app | `javascript/donation-form.ts` (the largest diff: DE refactored to a `DonationForm` class with amount validation, shipping setup, typed payment-confirm events) | **Defer to P2 step 4.** It is the client half of DE's 374 donation commits and expects DE's form fields |
 | **H** | Font tooling | `fonts/make_subsets.sh`, `fonts/requirements.txt` | **Take DE** — it generates the subsets AT now ships |
 
-So: **17 files can take DE's version** (A+B+C, plus H), **11 stay AT's** (D+E), one is a live-config bug to fix (F), and one waits for `fds_donation` (G).
+**Done.** A, B, C, H taken from DE; E merged selectively (only
+`misc/autosubmit.ts` — AT already had `data-autosubmit` markup in the newsletter
+templates with no JS behind it; `datawrapper` and `inline-detailbox` skipped as
+zero-reference dead weight); F replaced with DE's host-derived version. **32 → 13
+differing files**, all deliberate: AT's visual identity (8), its import lists (3),
+`matomo.ts` (an added comment) and `donation-form.ts` (G, deferred to P2 step 4).
+
+Noted in passing: `javascript/request.ts` is identical to DE's and hotlinks
+`media.frag-den-staat.de` for a glyphosat loading GIF. Dead in AT — the feature's
+templates were removed — but it still ships in the bundle.
 
 ---
 
@@ -524,7 +533,7 @@ Decide each, or consciously decline it:
 |---|---|
 | `USER_LANGUAGES` | Which languages appear in the switcher. AT runs single-language `de-at`; DE splits `LANGUAGES` from `USER_LANGUAGES` to hide `de-ls`. Only matters if AT adds a second language |
 | `COOKIE_CONSENT_LOG_ENABLED`, `COOKIE_CONSENT_SECURE` | `django-cookie-consent` ships via D6 but is unconfigured and unused. Does AT want a consent banner? Interacts with whether AT reinstates analytics |
-| `MATOMO_SITE_ID` | AT deliberately removed DE's Matomo. Reinstate with an AT instance, or stay untracked |
+| `MATOMO_SITE_ID` | AT deliberately removed DE's Matomo. Reinstate with an AT instance, or stay untracked. The JS now reads the id from `body[data-matomoid]` rather than hardcoding DE's, but `MATOMO_DOMAIN` still points at **OKF Deutschland's** Matomo host — confirm that before enabling |
 | `CMS_COLOR_SCHEME`, `CMS_COLOR_SCHEME_TOGGLE` | Dark mode. DE ships a toggle plugin; AT's theme has no dark palette yet, so this is a design decision first |
 | `THUMBNAIL_ALIASES`, `THUMBNAIL_DEFAULT_ALIAS`, `FDS_THUMBNAIL_ENABLE_AVIF` | Image sizes and whether to serve AVIF. Affects storage and CDN volume |
 | `LEAFLET_CONFIG` | Map defaults. DE's centre/zoom are German — needs Austrian values if AT ever enables maps |

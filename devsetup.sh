@@ -41,6 +41,19 @@ check_versions() {
   fi
 }
 
+# Pull the current branch from its configured upstream, falling back to origin.
+# Using the upstream (rather than hardcoding `origin`) means a sibling checkout
+# repointed at a different remote survives a devsetup re-run -- see
+# scripts/froide-source.sh, which switches froide between okfde and the fork.
+pull_current() {
+  local upstream
+  if upstream="$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null)"; then
+    git pull --autostash "${upstream%%/*}" "${upstream#*/}"
+  else
+    git pull origin --autostash "$(git branch --show-current)"
+  fi
+}
+
 pull() {
   echo "Cloning / installing $MAIN"
 
@@ -48,7 +61,7 @@ pull() {
     git clone git@github.com:fin/$MAIN.git
   else
     pushd $MAIN
-      git pull origin --autostash "$(git branch --show-current)"
+      pull_current
     popd
   fi
 
@@ -57,7 +70,7 @@ pull() {
       git clone git@github.com:okfde/$name.git
     else
       pushd $name
-        git pull origin --autostash "$(git branch --show-current)"
+        pull_current
       popd
     fi
   done

@@ -377,6 +377,48 @@ this one — concurrent migrations against one database will corrupt each other'
 
 ---
 
+## 1c. Porting against upstream froide, with a switch back — built 2026-08-18
+
+Per **D5**, porting happens against `okfde/froide`. The fax-transport work lives on
+the fork and must stay reachable, so the source is switchable rather than replaced.
+
+**How froide is actually wired** (this is what makes the switch cheap):
+`pyproject.toml` already declares `froide = { git = "okfde/froide", rev = "main" }`.
+But the venv installs it **editable** from the sibling checkout
+`/workspaces/fds_at/froide` (`__editable__.froide-6.0.0.pth`), so what Python
+imports is that working tree, whatever `pyproject.toml` says. Only the checkout had
+been repointed at `fin/froide`. **Switching source is therefore a `git checkout` —
+no `uv sync`, no reinstall.**
+
+```
+./scripts/froide-source.sh status   # which source is active
+./scripts/froide-source.sh okfde    # upstream — the porting baseline
+./scripts/froide-source.sh fin      # the fork — fax transport work
+```
+
+The script resolves remotes **by URL, not by name**, because `origin` is the fork in
+the current checkout but upstream in a fresh `devsetup.sh` clone. It leaves `origin`
+alone, adds an `okfde` remote if missing, and reports uncommitted edits on each
+switch.
+
+**Verified round-trip:** `fin → okfde → fin → okfde`, with the uncommitted
+devcontainer edits to `froide/settings.py` byte-identical throughout (that file does
+not differ between the two sources, so a checkout carries it cleanly).
+
+**One dev-script change was needed.** `devsetup.sh` pulled with
+`git pull origin --autostash "$(git branch --show-current)"`, which breaks on a
+branch tracking `okfde` — it would ask `origin` (the fork) for a branch it lacks. It
+now pulls from the branch's configured **upstream**, falling back to the old
+behaviour when a branch has none. A `devsetup.sh` re-run no longer undoes a switch.
+
+⚠️ **Migration divergence between the two sources.** The fork adds
+`foirequest/0076_alter_foimessage_kind`; upstream's head is `0075`. A database
+migrated against the fork has an applied migration with no file upstream. Use a
+separate scratch DB per source — the script prints this on every switch to upstream.
+
+
+---
+
 ## 2. Apps present in **both** repos, with AT changes
 
 ### 2.1 `fds_cms`
@@ -667,6 +709,14 @@ Schriftformerfordernis fax-signature prompt.
 **AT-only templates:**
 - `footer.html` — Forum Informationsfreiheit + OKF Deutschland credit + **Easyname
   server sponsorship**. Impressum/Nutzungsbedingungen/Datenschutz links.
+  ⚠️ **Duplicated, and the CMS copy is dead.** The database also holds a `footer`
+  CMS *static placeholder* with near-identical content (GridRow/GridColumn/Text
+  plugins). The live site renders the **template**, not the placeholder — proven by
+  the live footer's relative `/info/ueber/` links and hashed static filenames, which
+  only `{% content_url %}` and `{% static %}` produce; the placeholder stores
+  absolute `https://fragdenstaat.at/...` URLs and unhashed image paths. Anyone
+  editing the footer in the CMS today sees no effect. Reconcile or delete the
+  placeholder during P2; `tests/test_footer.py` pins the current behaviour.
 - `foirequest/emails/presserecht/overdue_reply.txt` — **Austrian press-law
   (Informationsrecht der Presse) chase-up email.** Genuinely AT-specific law; no DE
   counterpart.
@@ -840,26 +890,31 @@ reviews), or **[HUMAN]** (genuine design/legal decision).
    production database schema — P3 depends on knowing exactly which migrations are
    applied in production.
 
-### P1 — Detach from the froide fork *(≈1 week, blocking)*
+### P1 — Port against upstream froide *(≈2 days, blocking)*
 
-Do this **first**. Until AT tracks `okfde/froide@main`, every other merge is a
-three-way merge against a moving fork.
+Do this **first**. Until AT builds against `okfde/froide@main`, every other merge
+is a three-way merge against a moving fork. **Translations are explicitly excluded
+from this phase** and deferred to P6.
 
-5. **[HUMAN]** **D4/D5 execution.** Run `sync_froide_translations.py`, fill in the
-   `de_AT` msgstrs, and land `fragdenstaat_at/locale/de_AT/` in *this* repo. Fix the
-   script's hardcoded `../froide/` path first. **This is the D5 exit criterion:**
-   AT's catalogue must fully replace froide's 590 `de_AT` msgids (505 translated)
-   with no regression.
+5. **[DONE 2026-08-18]** Port against **upstream** `okfde/froide` from the start,
+   with a one-command switch back to the fork: `./scripts/froide-source.sh
+   okfde|fin|status` (§1c). froide is installed *editable* from `../froide`, so the
+   switch is a checkout — no `uv sync`, no reinstall, and local devcontainer edits
+   to `froide/settings.py` carry across untouched.
+
+   ⚠️ **Translation work is deliberately NOT here — it is P6, at the end.** The
+   `de_AT` relocation is the *last* step, not a prerequisite. Porting proceeds
+   against upstream froide while froide keeps carrying `de_AT` as it does today.
 6. **[HUMAN]** Upstream (or park on a clearly-named branch) the fax-transport work
    described in `../HANDOFF.md`. `froide/plan.md` §2.4 is still open and is why
    `froide-fax` carries a duplicated `send_foimessage_sent_confirmation`.
-7. **[ASSIST]** Once step 5 is proven, repin `froide` from `fin/froide` to
-   `okfde/froide@main` and get the test suite green. Per **D5** the fork is a test
-   bed with a defined exit, not a position — keep unrelated changes out of it, and
-   do not commit `froide/settings.py`'s devcontainer edits along with it.
-8. **[ASSIST]** Make the language configuration internally consistent per **D4**:
-   keep `LANGUAGE_CODE="de-at"`, keep `locale/de/` as the fallback catalogue, and
-   add `locale/de_AT/` as the override layer.
+7. **[ASSIST]** `pyproject.toml` already declares `okfde/froide@main`; only the
+   sibling checkout pointed at the fork, and step 5 fixed that. Keep unrelated
+   changes out of `../froide`, and never commit its `froide/settings.py`
+   devcontainer edits. **Verified:** the full migrate against upstream applies 22
+   migrations cleanly (§1b). The fork's `foirequest/0076_alter_foimessage_kind` does
+   not exist upstream, so upstream verification runs need a *fresh* scratch DB.
+8. *(moved to **P6** — see below. Language configuration changes land last.)*
 
 ### P2 — Rebuild the AT layer against DE@HEAD *(≈3–4 weeks)*
 
@@ -895,6 +950,17 @@ three-way merge against a moving fork.
     `globalvars.scss`, StixTwo and dropdown tokens. Prune the dead
     `froide_campaign`/`exam`/`food`/`legalaction` JS deps and fix `package.json`'s
     description and `favicon` path.
+14a. **[AUTO]** **Footer comparison gate.** `tests/test_footer.py` compares the
+    rendered footer against `tests/snapshots/footer_live.json`, captured from the
+    live https://fragdenstaat.at/ on 2026-08-18 *before* any sync work. It asserts
+    the FOI/OKF credit and Easyname sponsorship copy, the three sponsor logos
+    through the static pipeline, and the `content_urls` legal links. Run it after
+    **every** template or settings step in P2 — the footer is the smallest markup
+    that exercises the AT identity end to end, so a DE template winning over the AT
+    override shows up here first.
+    Verified to fail correctly: removing `templates/footer.html` fails 3 of 6.
+    Needs no database, CMS fixtures or services, so it stays usable mid-port.
+
 15. **[ASSIST]** Re-derive the AT template overrides against DE@HEAD's templates.
     Delete `snippets/temp.html`. Rewrite `base.html`'s `metadescription` for the
     Austrian IFG. Drop DE's `google-site-verification` token.
@@ -967,6 +1033,26 @@ tracking DE implies.
 
 ---
 
+### P6 — Translations: relocate `de_AT` out of froide *(≈1 week, LAST)*
+
+**Deliberately last.** Until this lands, froide keeps carrying the 590 `de_AT`
+msgids (505 translated) exactly as it does today, and nothing in P1–P5 depends on
+that changing. Doing it earlier would mean re-syncing the catalogue against a
+moving target every time a template or form label changes during P2.
+
+27. **[HUMAN]** Fix `sync_froide_translations.py`'s hardcoded `../froide/` path,
+    then run it against the *final* post-sync string set — not the current one.
+28. **[HUMAN]** Fill in the `de_AT` msgstrs and land `fragdenstaat_at/locale/de_AT/`.
+29. **[ASSIST]** Apply the **D4** language configuration: keep
+    `LANGUAGE_CODE="de-at"` and `locale/de/` as the fallback, with `locale/de_AT/`
+    as the override layer. Reconcile against DE's `USER_LANGUAGES` / `de-ls` split.
+30. **[HUMAN]** **D5 exit criterion:** AT's catalogue fully replaces
+    froide's `de_AT` with no regression. Then drop `de_AT` from the froide fork and
+    confirm nothing else keeps AT on `fin/froide`.
+31. **[AUTO]** Re-run the footer test and the §1b migrate check under `de-at` —
+    translation changes are exactly the kind of thing that silently alters
+    user-visible copy.
+
 ## 6. Defects found during the analysis
 
 Independent of the merge; several are live bugs today.
@@ -985,8 +1071,11 @@ Independent of the merge; several are live bugs today.
 | 10 | `settings/development.py` | `print('devtemplates', TEMP)` in the `TEMPLATES` property — fires on every settings access. |
 | 11 | `fds_donation/external.py` | `df[df["amount"] >= 0 \| df["reference"].str.contains("FDS")]` — `\|` binds tighter than `>=` in pandas, so this is `df["amount"] >= (0 \| …)`, not the intended or-condition. Also a leftover `print(row["reference"], type(...))` in the import loop. |
 | 12 | `templates/account/profile.html`, `foirequest/show.html` | `ogimage_url` commented out but `<meta property="og:image" content="{{ og_image_url }}" />` left in → **empty og:image on every profile and request page.** |
-| 13 | `settings/production.py` | `STATIC_URL` default `https://static.frag.denstaat.at/static/` and `MEDIA_URL` `https://media.frag.denstaat.at/files/` — `frag.denstaat.at` looks like a bad search-and-replace of `frag-den-staat.de`. Confirm those hosts exist. |
+| ~~13~~ | `settings/production.py` | ~~`frag.denstaat.at` looks like a bad search-and-replace.~~ **Withdrawn — verified 2026-08-18.** Both hosts are real and serving: `https://static.frag.denstaat.at/static/img/foi_logo.e81e7e609d90.png` → HTTP 200, `https://media.frag.denstaat.at/` → HTTP 200. The live footer references them. Not a defect. |
 | 14 | `fds_donation/cms_plugins.py` | `RegularDonorsProgressBarPlugin.get_donor_count()` iterates every `Donor` in Python (§2.2). |
+| 15 | `pyproject.toml` | 🔴 **The test suite could not run at all.** `time-machine==2.9.0` uses `uuid._load_system_functions`, removed in Python 3.13 — it fails at pytest *plugin load*, so every test errors before collection. **Fixed on this branch:** `time-machine>=2.16`. |
+| 16 | `pyproject.toml` | 🔴 Same class: `factory-boy==3.2.1` predates `Meta.skip_postgeneration_save`, which froide's `UserFactory` uses — `tests/conftest.py` fails to import, so nothing runs even with #15 fixed. **Fixed on this branch:** `factory-boy>=3.3`. |
+| 17 | `tests/test_web.py`, `tests/test_admin.py` | `fixtures = ["cms.json"]` fails with `CommandError: No fixture named 'cms' found`, despite `FIXTURE_DIRS` being set in `settings/test.py` (the path is built with an unnormalised `..`). Masked until now by #15/#16. |
 
 > *Human involvement: **low to fix, required to prioritise.** #1, #5, #7, #8 and #12
 > are user-visible or silently-wrong today and are worth fixing **before** the merge,
@@ -1021,16 +1110,22 @@ Independent of the merge; several are live bugs today.
 |---|---|---|
 | **P3 step 16a — `--fake fds_cms 0005` on prod** (D9) | **½–1 day** | **🔴 blocks all deploys, merge or not** |
 | P0 inventory | ½ day | yes, trivially |
-| P1 froide detach + `de_AT` relocation (D4, D5) | ~1 week | yes — before P2 |
+| ~~P1 froide detach~~ **✅ done 2026-08-18** (§1c) | — | was blocking |
 | **P1b test harness adoption (D7)** | **~1 week** | **yes — D7 puts it before the code sync** |
 | P2 rebuild AT layer (D1, D2, D3, D6) | 3–4 weeks | — |
 | P3 migrations (D8) | ~1 week + staging | risk now concentrated in the alias/versioning bumps |
 | P4 AT donation receipts | 2–4 weeks | independent track |
 | P5 repeatable sync | 2 days | — |
+| **P6 translations / `de_AT` relocation (D4, D5)** | **~1 week** | **LAST — by instruction** |
 
-The critical path is **16a → P1 → P1b → P2 → P3**, roughly **7–9 weeks**, with P4
+The critical path is **16a → P1b → P2 → P3 → P6**, roughly **7–9 weeks**, with P4
 (2–4 weeks) running alongside from day one — it is the only part gated on external
 tax/legal input, so start it immediately.
+
+**Translations moved to the end (P6).** Relocating `de_AT` before P2 would mean
+re-syncing the catalogue every time a template or form label changed during the
+port. froide keeps carrying `de_AT` until then, exactly as today; nothing in P1–P5
+depends on that changing.
 
 **D7 adds ~1 week (P1b) before any visible merge progress.** That is deliberate:
 P2 and P3 are where regressions get made, and D8's forward-port approach means

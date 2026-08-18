@@ -1,0 +1,33 @@
+{
+  "_source": "https://fragdenstaat.at/ — captured 2026-08-18, before the fragdenstaat_de sync",
+  "_purpose": "Golden reference for tests/test_footer.py. The footer is the smallest piece of markup that exercises the AT identity end to end: the sponsor/credit copy, the FROIDE_CONFIG content_urls, and the static pipeline. If the sync breaks AT branding, this is where it shows first.",
+  "_refresh": "python manage.py shell < tests/snapshots/refresh_footer.py  (see test docstring)",
+  "links": [
+    {"href": "/info/ueber/", "text": "Impressum"},
+    {"href": "/info/nutzungsbedingungen/", "text": "Nutzungsbedingungen"},
+    {"href": "/info/datenschutz/", "text": "Datenschutzerklärung"},
+    {"href": "https://www.informationsfreiheit.at/", "text": "Forum Informationsfreiheit"},
+    {"href": "https://okfn.de/", "text": "Open Knowledge Foundation Deutschland e.V."},
+    {"href": "https://www.easyname.at/hosting", "text": "Easyname"},
+    {"href": "https://www.easyname.at/", "text": ""}
+  ],
+  "images": [
+    {"src": "img/foi_logo.png", "alt": "Forum Informationsfreiheit"},
+    {"src": "img/okfde.svg", "alt": "Open Knowledge Foundation"},
+    {"src": "img/nessus_easyname_logo.png", "alt": "Nessus/Easyname"}
+  ],
+  "text_fragments": [
+    "FragDenStaat.at ist ein Projekt des",
+    "Forum Informationsfreiheit",
+    "mit freundlicher Unterstützung von",
+    "Open Knowledge Foundation Deutschland e.V.",
+    "Danke an",
+    "für das Sponsoring der Server-Infrastruktur."
+  ],
+  "must_not_contain": [
+    "Open Knowledge Foundation Deutschland e.V., Singerstr",
+    "fragdenstaat.de",
+    "frag-den-staat.de",
+    "Wir befreien Informationen"
+  ]
+}

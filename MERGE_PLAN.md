@@ -447,7 +447,8 @@ AT's suite is now a working baseline to migrate *from*. **[R]**
    `cms_apps.py` apphook to restore CMS pages in site search. Delete the dead German
    machinery identified in §3. **[R]**
 
-4. **`fds_donation`.** Take DE@HEAD, re-apply the AT layer: Austrian banking,
+4. **`fds_donation`.** ⚠️ **Blocked on verifiability, not effort — see below.**
+   Take DE@HEAD, re-apply the AT layer: Austrian banking,
    `DONATION_SITE_NAME_OVERRIDE` 🔁, `MIN_AMOUNT=2` 🔁, `country="AT"`,
    `DONATION_PROJECTS=["FOI"]`, the Erste/George importer 🔁, and
    `RegularDonorsProgressBarCMSPlugin`. Re-enable `update_direct_debit` against
@@ -457,6 +458,27 @@ AT's suite is now a working baseline to migrate *from*. **[R]**
    importer, so both were changed on this branch without test cover — the plugin
    query was checked by hand against an extract whose donation tables are empty,
    which proves the SQL valid but not the arithmetic. Add tests here.
+
+   **Why this is blocked.** Measured 2026-08-18:
+
+   - **The app is atomic.** DE's `Donation` has an FK to `Recurrence`, `forms.py`
+     references recurrence 26 times, and `auth.py` imports it directly. The useful
+     smaller pieces — `form_settings.py`'s proper `hide_contact`, donor
+     self-service auth — cannot be taken without the central architectural change:
+     recurring donations moving off froide-payment `Subscription`s onto a
+     first-class `Recurrence` model. 34 migrations, 583 → 1359 model lines.
+   - **Nothing local can verify it.** The extract holds **0 donors, 0 donations,
+     0 payments, 0 subscriptions**, and AT's only donation test is a single
+     browser test. That migrations apply and modules import can be checked; that
+     donation *behaviour* is preserved cannot.
+   - **It carries product surface AT has not asked for** — recurrence upgrade
+     flows, gift-order shipping, flowcontrol donor journeys — the same question D3
+     answered for newsletters with "install the models, expose no surface".
+
+   This is the one place where a green suite would be false confidence, on the app
+   that handles money. It needs either a production-shaped dump with real donation
+   rows, or a deliberate decision to accept DE's own tests plus review as the
+   assurance. **Doing P1b first is the cheapest way to unblock it.**
 
 5. **Frontend.** Adopt DE's `frontend/`, re-applying AT's `base.scss`,
    `globalvars.scss`, StixTwo and dropdown tokens. **[R]**

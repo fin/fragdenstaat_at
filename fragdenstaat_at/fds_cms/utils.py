@@ -14,6 +14,20 @@ from cms.plugin_rendering import ContentRenderer
 from djangocms_alias.models import Alias
 
 
+def get_alias_placeholder(alias_name, language=None):
+    """Placeholder of a static Alias, or "" when it does not exist.
+
+    Ported from DE. Usable in AT since D10 moved static placeholders to
+    djangocms-alias (see fds_cms/migrations/0006).
+    """
+    alias = Alias.objects.filter(static_code=alias_name).first()
+    if not alias:
+        return ""
+    if language is None:
+        language = settings.LANGUAGE_CODE
+    return alias.get_placeholder(language=language, show_draft_content=False)
+
+
 def get_plugin_children(instance):
     return CMSPlugin.objects.filter(parent=instance).order_by("position")
 

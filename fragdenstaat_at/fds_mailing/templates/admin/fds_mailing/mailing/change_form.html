@@ -1,0 +1,44 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+{% block object-tools-items %}
+    {% if original.pk %}
+        {% if original.newsletter %}
+            {% with segment_count=original.segments.count recipient_count=original.get_recipient_count %}
+                {% if segment_count %}
+                    <li>
+                        {% blocktrans with recipient_count=recipient_count segment_count=segment_count %}Sending to {{ recipient_count }} newsletter subscribers of {{ segment_count }} segments{% endblocktrans %}
+                    </li>
+                {% else %}
+                    <li>
+                        {% blocktrans with recipient_count=recipient_count %}Sending to {{ recipient_count }} newsletter subscribers{% endblocktrans %}
+                    </li>
+                {% endif %}
+            {% endwith %}
+        {% endif %}
+        {% if not original.newsletter or original.submitted %}
+            <li>
+                <a href="{% url 'admin:fds_mailing_mailingmessage_changelist' %}?mailing={{ original.pk }}">
+                    {% blocktrans with recipient_count=recipient_count %}See {{ recipient_count }} recipients{% endblocktrans %}
+                </a>
+            </li>
+        {% endif %}
+    {% endif %}
+    {% if original and original.ready and not original.submitted %}
+        <li>
+            <form method="post"
+                  action="{% url 'admin:fds_mailing_mailing_send' original.pk %}">
+                {% csrf_token %}
+                <button type="submit">
+                    {% with recipient_count=original.get_recipient_count %}
+                        {% if original.sending_date %}
+                            {% blocktrans with recipient_count=recipient_count date=original.sending_date|date:"DATE_FORMAT" %}Send to {{ recipient_count }} recipients on {{ date }}{% endblocktrans %}
+                        {% else %}
+                            {% blocktrans with recipient_count=recipient_count %}Send now to {{ recipient_count }} recipients{% endblocktrans %}
+                        {% endif %}
+                    {% endwith %}
+                </button>
+            </form>
+        </li>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}

@@ -1,0 +1,190 @@
+from urllib.parse import parse_qsl, unquote
+
+from django import forms
+from django.conf import settings
+from django.forms import ModelForm
+from django.utils.translation import gettext_lazy as _
+
+from froide.helper.spam import SpamProtectionMixin
+from froide.helper.widgets import (
+    BootstrapCheckboxSelectMultiple,
+    BootstrapRadioSelect,
+)
+
+from .models import (
+    Newsletter,
+    Subscriber,
+    UnsubscribeFeedback,
+)
+from .utils import (
+    SubscriptionReturn,
+    has_newsletter,
+    subscribe,
+    subscribed_newsletters,
+)
+
+
+class NewsletterForm(SpamProtectionMixin, forms.Form):
+    SPAM_PROTECTION = {
+        "captcha": "ip",
+        "action": "newsletter",
+        "action_limit": 3,
+        "action_block": True,
+    }
+
+    email = forms.EmailField(
+        label=_("Email"),
+        required=True,
+        widget=forms.EmailInput(
+            attrs={
+                "class": "form-control",
+            }
+        ),
+    )
+    reference = forms.CharField(required=False, widget=forms.HiddenInput())
+    keyword = forms.CharField(required=False, widget=forms.HiddenInput())
+    next = forms.CharField(required=False, widget=forms.HiddenInput())
+    data = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.request.user.is_authenticated:
+            self.fields["email"].initial = self.request.user.email
+
+    def clean_reference(self):
+        # Avoid validation error, just cut off
+        return self.cleaned_data["reference"][:255]
+
+    def clean_keyword(self):
+        # Avoid validation error, just cut off
+        return self.cleaned_data["keyword"][:255]
+
+    def clean_data(self):
+        encoded_data = self.cleaned_data.get("data", "")
+        return dict(parse_qsl(unquote(encoded_data)))
+
+    def save(self, newsletter, user) -> SubscriptionReturn:
+        email = self.cleaned_data["email"]
+        reference = self.cleaned_data["reference"]
+        keyword = self.cleaned_data["keyword"]
+        data = self.cleaned_data["data"]
+
+        return subscribe(
+            newsletter,
+            email,
+            user=user,
+            reference=reference,
+            keyword=keyword,
+            data=data,
+        )
+
+
+FORM_REFERENCE = "settings"
+
+
+class NewslettersUserForm(forms.Form):
+    newsletters = forms.ModelMultipleChoiceField(
+        label=_("Newsletters"),
+        queryset=Newsletter.objects.get_visible().filter(visible=True),
+        required=False,
+        widget=BootstrapCheckboxSelectMultiple,
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+        subscribed_nls = list(subscribed_newsletters(self.user))
+        self.fields["newsletters"].initial = subscribed_nls
+
+    def save(self):
+        chosen_newsletters = set(self.cleaned_data["newsletters"])
+        newsletters = Newsletter.objects.get_visible()
+        for newsletter in newsletters:
+            wants_nl = newsletter in chosen_newsletters
+            try:
+                subscriber = Subscriber.objects.get(
+                    user=self.user, newsletter=newsletter
+                )
+                if wants_nl:
+                    if not subscriber.subscribed:
+                        subscriber.reference = FORM_REFERENCE
+                        subscriber.subscribe()
+                else:
+                    subscriber.unsubscribe(method=FORM_REFERENCE)
+            except Subscriber.DoesNotExist:
+                if wants_nl:
+                    subscriber = Subscriber.objects.create(
+                        newsletter=newsletter, user=self.user, reference=FORM_REFERENCE
+                    )
+                    subscriber.subscribe()
+
+
+class NewsletterUserExtra:
+    def on_init(self, form):
+        if hasattr(form, "request"):
+            request = form.request
+            if request.user.is_authenticated and has_newsletter(request.user):
+                return
+
+        form.fields["newsletter"] = forms.TypedChoiceField(
+            widget=BootstrapRadioSelect,
+            choices=(
+                (
+                    1,
+                    _("Yes, I want to receive the newsletter."),
+                ),
+                (0, _("No, I don't want to receive the newsletter.")),
+            ),
+            coerce=lambda x: bool(int(x)),
+            required=True,
+            label=_("Newsletter"),
+            help_text=_(
+                "If you decide to receive the newsletter, you will receive emails about current and relevant investigations, lawsuits and campaigns. You can cancel anytime."
+            ),
+            error_messages={"required": _("You have to decide.")},
+        )
+
+    def on_clean(self, form):
+        pass
+
+    def on_save(self, form, user):
+        if not form.cleaned_data.get("newsletter"):
+            return
+
+        try:
+            newsletter = Newsletter.objects.get(slug=settings.DEFAULT_NEWSLETTER)
+        except Newsletter.DoesNotExist:
+            return
+
+        # User is not confirmed yet, so create subscription
+        # tentatively, it will be subscribed
+        # via account activation signal when a user subscription is found
+        Subscriber.objects.get_or_create(
+            user=user, newsletter=newsletter, defaults={"reference": "user_extra"}
+        )
+
+
+class NewsletterFollowExtra(NewsletterUserExtra):
+    def on_save(self, form, user):
+        """
+        successful follow and newsletter in follow context
+        will create confirmed subscription
+        """
+        pass
+
+
+class UnsubscribeFeedbackForm(ModelForm):
+    class Meta:
+        model = UnsubscribeFeedback
+        fields = ["reason", "comment"]
+        widgets = {
+            "reason": BootstrapRadioSelect,
+            "comment": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": "3",
+                    "placeholder": _("Anything else you want to tell us?"),
+                }
+            ),
+        }

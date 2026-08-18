@@ -1,963 +1,991 @@
 [
 {
-    "model": "cms.treenode",
-    "pk": 1,
-    "fields": {
-        "path": "0002",
-        "depth": 1,
-        "numchild": 0,
-        "parent": null,
-        "site": 1
-    }
+ "model": "sites.site",
+ "pk": 1,
+ "fields": {
+  "domain": "fragdenstaat.at",
+  "name": "Frag den Staat Österreich"
+ }
 },
 {
-    "model": "cms.treenode",
-    "pk": 2,
-    "fields": {
-        "path": "0003",
-        "depth": 1,
-        "numchild": 1,
-        "parent": null,
-        "site": 1
-    }
+ "model": "account.user",
+ "pk": 1,
+ "fields": {
+  "password": "!",
+  "last_login": null,
+  "is_superuser": true,
+  "username": "dev",
+  "first_name": "Dev",
+  "last_name": "User",
+  "email": "dev@localhost",
+  "is_staff": true,
+  "is_active": true,
+  "date_joined": "2026-08-18T16:32:54.567Z",
+  "organization_name": "",
+  "organization_url": "",
+  "language": "de",
+  "private": false,
+  "address": "",
+  "terms": true,
+  "profile_text": "",
+  "profile_photo": "",
+  "is_trusted": false,
+  "is_blocked": false,
+  "date_deactivated": null,
+  "is_deleted": false,
+  "date_left": null,
+  "notes": "",
+  "groups": [],
+  "user_permissions": []
+ }
 },
 {
-    "model": "cms.treenode",
-    "pk": 3,
-    "fields": {
-        "path": "00030001",
-        "depth": 2,
-        "numchild": 0,
-        "parent": 2,
-        "site": 1
-    }
+ "model": "cms.page",
+ "pk": 21,
+ "fields": {
+  "path": "0001",
+  "depth": 1,
+  "numchild": 1,
+  "parent": null,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-30T16:56:33.027Z",
+  "changed_date": "2025-08-30T16:56:33.111Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": true,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.treenode",
-    "pk": 4,
-    "fields": {
-        "path": "0004",
-        "depth": 1,
-        "numchild": 1,
-        "parent": null,
-        "site": 1
-    }
+ "model": "cms.page",
+ "pk": 22,
+ "fields": {
+  "path": "0002",
+  "depth": 1,
+  "numchild": 3,
+  "parent": null,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-30T17:08:21.696Z",
+  "changed_date": "2025-08-30T17:08:21.698Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": false,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.treenode",
-    "pk": 5,
-    "fields": {
-        "path": "00040001",
-        "depth": 2,
-        "numchild": 0,
-        "parent": 4,
-        "site": 1
-    }
+ "model": "cms.page",
+ "pk": 23,
+ "fields": {
+  "path": "00010002",
+  "depth": 2,
+  "numchild": 0,
+  "parent": 21,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-30T23:12:40.752Z",
+  "changed_date": "2025-08-30T23:12:40.755Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": false,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.treenode",
-    "pk": 6,
-    "fields": {
-        "path": "0001",
-        "depth": 1,
-        "numchild": 0,
-        "parent": null,
-        "site": 1
-    }
+ "model": "cms.page",
+ "pk": 24,
+ "fields": {
+  "path": "00020001",
+  "depth": 2,
+  "numchild": 0,
+  "parent": 22,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-31T08:20:41.906Z",
+  "changed_date": "2025-08-31T08:20:41.910Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": false,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.treenode",
-    "pk": 7,
-    "fields": {
-        "path": "0005",
-        "depth": 1,
-        "numchild": 0,
-        "parent": null,
-        "site": 1
-    }
+ "model": "cms.page",
+ "pk": 25,
+ "fields": {
+  "path": "00020002",
+  "depth": 2,
+  "numchild": 0,
+  "parent": 22,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-31T08:27:33.571Z",
+  "changed_date": "2025-08-31T08:27:33.573Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": false,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 1,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:44:37.528Z",
-        "changed_date": "2020-06-03T15:56:53.131Z",
-        "publication_date": "2020-06-03T15:44:37.586Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "cms/blog_base.html",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": "FdsBlogApp",
-        "application_namespace": "blog",
-        "publisher_is_draft": true,
-        "publisher_public": 2,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 1,
-        "placeholders": [
-            2
-        ]
-    }
+ "model": "cms.page",
+ "pk": 26,
+ "fields": {
+  "path": "00020003",
+  "depth": 2,
+  "numchild": 0,
+  "parent": 22,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-31T08:58:16.644Z",
+  "changed_date": "2025-08-31T08:58:16.646Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": false,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 2,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:44:37.586Z",
-        "changed_date": "2020-06-03T15:56:56.679Z",
-        "publication_date": "2020-06-03T15:44:37.586Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "cms/blog_base.html",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": "FdsBlogApp",
-        "application_namespace": "blog",
-        "publisher_is_draft": false,
-        "publisher_public": 1,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 1,
-        "placeholders": [
-            3
-        ]
-    }
+ "model": "cms.page",
+ "pk": 27,
+ "fields": {
+  "path": "0003",
+  "depth": 1,
+  "numchild": 3,
+  "parent": null,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-31T09:05:33.942Z",
+  "changed_date": "2025-08-31T09:05:33.945Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": false,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 3,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:45:50.652Z",
-        "changed_date": "2020-06-03T15:45:50.695Z",
-        "publication_date": "2020-06-03T15:46:47.694Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": null,
-        "application_namespace": null,
-        "publisher_is_draft": true,
-        "publisher_public": 5,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 2,
-        "placeholders": [
-            4
-        ]
-    }
+ "model": "cms.page",
+ "pk": 28,
+ "fields": {
+  "path": "00030001",
+  "depth": 2,
+  "numchild": 0,
+  "parent": 27,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-31T09:06:45.800Z",
+  "changed_date": "2025-08-31T09:06:45.825Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": false,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 4,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:46:09.733Z",
-        "changed_date": "2020-06-03T15:46:38.235Z",
-        "publication_date": "2020-06-03T15:46:50.109Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": "FdsCmsSearchApp",
-        "application_namespace": "fds_cms",
-        "publisher_is_draft": true,
-        "publisher_public": 6,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 3,
-        "placeholders": [
-            5
-        ]
-    }
+ "model": "cms.page",
+ "pk": 29,
+ "fields": {
+  "path": "00030002",
+  "depth": 2,
+  "numchild": 0,
+  "parent": 27,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-31T09:07:13.268Z",
+  "changed_date": "2025-08-31T09:07:13.271Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": false,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 5,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:46:47.695Z",
-        "changed_date": "2020-06-03T15:46:47.695Z",
-        "publication_date": "2020-06-03T15:46:47.694Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": null,
-        "application_namespace": null,
-        "publisher_is_draft": false,
-        "publisher_public": 3,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 2,
-        "placeholders": [
-            6
-        ]
-    }
+ "model": "cms.page",
+ "pk": 30,
+ "fields": {
+  "path": "00030003",
+  "depth": 2,
+  "numchild": 0,
+  "parent": 27,
+  "site": [
+   "fragdenstaat.at"
+  ],
+  "created_by": "dev",
+  "changed_by": "dev",
+  "creation_date": "2025-08-31T09:07:46.308Z",
+  "changed_date": "2025-08-31T09:07:46.310Z",
+  "reverse_id": null,
+  "navigation_extenders": null,
+  "login_required": false,
+  "is_home": false,
+  "application_urls": null,
+  "application_namespace": null,
+  "is_page_type": false
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 6,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:46:50.109Z",
-        "changed_date": "2020-06-03T15:46:50.109Z",
-        "publication_date": "2020-06-03T15:46:50.109Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": "FdsCmsSearchApp",
-        "application_namespace": "fds_cms",
-        "publisher_is_draft": false,
-        "publisher_public": 4,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 3,
-        "placeholders": [
-            7
-        ]
-    }
+ "model": "cms.pagecontent",
+ "pk": 22,
+ "fields": {
+  "language": "de-at",
+  "title": "Info",
+  "page_title": "",
+  "menu_title": "Info",
+  "meta_description": "",
+  "redirect": "/info/ueber/",
+  "page": 22,
+  "creation_date": "2025-08-30T17:08:21.716Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-08-31T09:05:47.098Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "cms/page.html",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 7,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:47:27.672Z",
-        "changed_date": "2020-06-03T15:47:27.723Z",
-        "publication_date": "2020-06-03T15:47:55.160Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": null,
-        "application_namespace": null,
-        "publisher_is_draft": true,
-        "publisher_public": 9,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 4,
-        "placeholders": [
-            8
-        ]
-    }
+ "model": "cms.pagecontent",
+ "pk": 36,
+ "fields": {
+  "language": "de-at",
+  "title": "Nutzungsbedingungen",
+  "page_title": "",
+  "menu_title": "",
+  "meta_description": "",
+  "redirect": "",
+  "page": 26,
+  "creation_date": "2025-08-31T08:58:16.664Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-08-31T08:58:29.383Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "cms/page.html",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 8,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:47:49.170Z",
-        "changed_date": "2020-06-03T15:48:26.560Z",
-        "publication_date": "2020-06-03T15:47:57.626Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": "FdsDonationApp",
-        "application_namespace": "fds_donation",
-        "publisher_is_draft": true,
-        "publisher_public": 10,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 5,
-        "placeholders": [
-            9
-        ]
-    }
+ "model": "cms.pagecontent",
+ "pk": 42,
+ "fields": {
+  "language": "de-at",
+  "title": "Hilfe",
+  "page_title": "",
+  "menu_title": "",
+  "meta_description": "",
+  "redirect": "/hilfe/fragen-antworten/",
+  "page": 27,
+  "creation_date": "2025-08-31T09:05:33.969Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-08-31T09:17:45.728Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "INHERIT",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 9,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:47:55.161Z",
-        "changed_date": "2020-06-03T15:47:55.161Z",
-        "publication_date": "2020-06-03T15:47:55.160Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": null,
-        "application_namespace": null,
-        "publisher_is_draft": false,
-        "publisher_public": 7,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 4,
-        "placeholders": [
-            10
-        ]
-    }
+ "model": "cms.pagecontent",
+ "pk": 43,
+ "fields": {
+  "language": "de-at",
+  "title": "Privatsphäre",
+  "page_title": "",
+  "menu_title": "",
+  "meta_description": "",
+  "redirect": "",
+  "page": 29,
+  "creation_date": "2025-08-31T09:07:13.297Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-08-31T09:19:33.129Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "cms/page.html",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 10,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:47:57.626Z",
-        "changed_date": "2020-06-03T15:48:31.234Z",
-        "publication_date": "2020-06-03T15:47:57.626Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": "FdsDonationApp",
-        "application_namespace": "fds_donation",
-        "publisher_is_draft": false,
-        "publisher_public": 8,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 5,
-        "placeholders": [
-            11
-        ]
-    }
+ "model": "cms.pagecontent",
+ "pk": 46,
+ "fields": {
+  "language": "de-at",
+  "title": "Über uns",
+  "page_title": "",
+  "menu_title": "",
+  "meta_description": "",
+  "redirect": "",
+  "page": 24,
+  "creation_date": "2025-08-31T08:20:41.933Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-08-31T09:22:06.155Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "cms/page.html",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 11,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:49:56.014Z",
-        "changed_date": "2020-06-03T15:53:48.241Z",
-        "publication_date": "2020-06-03T15:50:18.984Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "cms/page.html",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": true,
-        "application_urls": null,
-        "application_namespace": null,
-        "publisher_is_draft": true,
-        "publisher_public": 12,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 6,
-        "placeholders": [
-            12
-        ]
-    }
+ "model": "cms.pagecontent",
+ "pk": 56,
+ "fields": {
+  "language": "de-at",
+  "title": "Datenschutzerklärung",
+  "page_title": "",
+  "menu_title": "",
+  "meta_description": "",
+  "redirect": "",
+  "page": 25,
+  "creation_date": "2025-08-31T08:27:33.599Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-09-01T20:35:39.467Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "cms/page.html",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 12,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T15:50:18.984Z",
-        "changed_date": "2020-06-03T15:59:52.216Z",
-        "publication_date": "2020-06-03T15:50:18.984Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "cms/page.html",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": true,
-        "application_urls": null,
-        "application_namespace": null,
-        "publisher_is_draft": false,
-        "publisher_public": 11,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 6,
-        "placeholders": [
-            13
-        ]
-    }
+ "model": "cms.pagecontent",
+ "pk": 59,
+ "fields": {
+  "language": "de-at",
+  "title": "Homepage",
+  "page_title": "",
+  "menu_title": "",
+  "meta_description": "",
+  "redirect": "",
+  "page": 21,
+  "creation_date": "2025-08-30T16:56:33.060Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-09-03T15:31:01.955Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "cms/page.html",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 13,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T16:04:34.138Z",
-        "changed_date": "2020-06-03T16:04:49.760Z",
-        "publication_date": "2020-06-03T16:04:53.455Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": "FdsCmsContactApp",
-        "application_namespace": "fds_cms_contact",
-        "publisher_is_draft": true,
-        "publisher_public": 14,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 7,
-        "placeholders": [
-            16
-        ]
-    }
+ "model": "cms.pagecontent",
+ "pk": 60,
+ "fields": {
+  "language": "de-at",
+  "title": "Fragen & Antworten",
+  "page_title": "",
+  "menu_title": "",
+  "meta_description": "",
+  "redirect": "",
+  "page": 28,
+  "creation_date": "2025-08-31T09:06:45.938Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-09-05T13:22:24.163Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "cms/page.html",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.page",
-    "pk": 14,
-    "fields": {
-        "created_by": "info@fragdenstaat.de",
-        "changed_by": "info@fragdenstaat.de",
-        "creation_date": "2020-06-03T16:04:53.455Z",
-        "changed_date": "2020-06-03T16:04:53.455Z",
-        "publication_date": "2020-06-03T16:04:53.455Z",
-        "publication_end_date": null,
-        "in_navigation": true,
-        "soft_root": false,
-        "reverse_id": null,
-        "navigation_extenders": null,
-        "template": "INHERIT",
-        "login_required": false,
-        "limit_visibility_in_menu": null,
-        "is_home": false,
-        "application_urls": "FdsCmsContactApp",
-        "application_namespace": "fds_cms_contact",
-        "publisher_is_draft": false,
-        "publisher_public": 13,
-        "languages": "de-at",
-        "xframe_options": 0,
-        "is_page_type": false,
-        "node": 7,
-        "placeholders": [
-            17
-        ]
-    }
+ "model": "cms.pagecontent",
+ "pk": 62,
+ "fields": {
+  "language": "de-at",
+  "title": "Behörden-Infos",
+  "page_title": "",
+  "menu_title": "",
+  "meta_description": "",
+  "redirect": "",
+  "page": 30,
+  "creation_date": "2025-08-31T09:07:46.327Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-12-10T22:39:48.270Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "cms/page.html",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 1,
-    "fields": {
-        "slot": "clipboard",
-        "default_width": null
-    }
+ "model": "cms.pagecontent",
+ "pk": 63,
+ "fields": {
+  "language": "de-at",
+  "title": "Spenden",
+  "page_title": "",
+  "menu_title": "",
+  "meta_description": "",
+  "redirect": "",
+  "page": 23,
+  "creation_date": "2025-08-30T23:12:40.775Z",
+  "created_by": "dev",
+  "changed_by": "dev",
+  "changed_date": "2025-12-17T09:44:48.187Z",
+  "in_navigation": true,
+  "soft_root": false,
+  "template": "cms/page.html",
+  "limit_visibility_in_menu": null,
+  "xframe_options": 0
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 2,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 1,
+ "fields": {
+  "slug": "homepage",
+  "path": "",
+  "language": "de-at",
+  "page": 21,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 3,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 2,
+ "fields": {
+  "slug": "info",
+  "path": "info",
+  "language": "de-at",
+  "page": 22,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 4,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 3,
+ "fields": {
+  "slug": "spenden",
+  "path": "spenden",
+  "language": "de-at",
+  "page": 23,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 5,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 4,
+ "fields": {
+  "slug": "ueber",
+  "path": "info/ueber",
+  "language": "de-at",
+  "page": 24,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 6,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 5,
+ "fields": {
+  "slug": "datenschutz",
+  "path": "info/datenschutz",
+  "language": "de-at",
+  "page": 25,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 7,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 6,
+ "fields": {
+  "slug": "nutzungsbedingungen",
+  "path": "info/nutzungsbedingungen",
+  "language": "de-at",
+  "page": 26,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 8,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 7,
+ "fields": {
+  "slug": "hilfe",
+  "path": "hilfe",
+  "language": "de-at",
+  "page": 27,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 9,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 8,
+ "fields": {
+  "slug": "fragen-antworten",
+  "path": "hilfe/fragen-antworten",
+  "language": "de-at",
+  "page": 28,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 10,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 9,
+ "fields": {
+  "slug": "privatsphaere",
+  "path": "hilfe/privatsphaere",
+  "language": "de-at",
+  "page": 29,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 11,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.pageurl",
+ "pk": 10,
+ "fields": {
+  "slug": "fuer-behoerden",
+  "path": "hilfe/fuer-behoerden",
+  "language": "de-at",
+  "page": 30,
+  "managed": true
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 12,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.placeholder",
+ "pk": 5,
+ "fields": {
+  "slot": "dropdown_banner",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "staticplaceholder"
+  ],
+  "object_id": 1
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 13,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.placeholder",
+ "pk": 26,
+ "fields": {
+  "slot": "top_banner",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "staticplaceholder"
+  ],
+  "object_id": 2
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 14,
-    "fields": {
-        "slot": "dropdown_banner",
-        "default_width": null
-    }
+ "model": "cms.placeholder",
+ "pk": 28,
+ "fields": {
+  "slot": "footer",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "staticplaceholder"
+  ],
+  "object_id": 3
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 15,
-    "fields": {
-        "slot": "dropdown_banner",
-        "default_width": null
-    }
+ "model": "cms.placeholder",
+ "pk": 33,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 22
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 16,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.placeholder",
+ "pk": 43,
+ "fields": {
+  "slot": "help_footer",
+  "default_width": null,
+  "content_type": null,
+  "object_id": null
+ }
 },
 {
-    "model": "cms.placeholder",
-    "pk": 17,
-    "fields": {
-        "slot": "content",
-        "default_width": null
-    }
+ "model": "cms.placeholder",
+ "pk": 49,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 36
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 1,
-    "fields": {
-        "language": "de-at",
-        "title": "Blog",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "blog",
-        "path": "blog",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 1,
-        "creation_date": "2020-06-03T15:44:37.533Z",
-        "published": true,
-        "publisher_is_draft": true,
-        "publisher_public": 2,
-        "publisher_state": 0
-    }
+ "model": "cms.placeholder",
+ "pk": 55,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 42
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 2,
-    "fields": {
-        "language": "de-at",
-        "title": "Blog",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "blog",
-        "path": "blog",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 2,
-        "creation_date": "2020-06-03T15:44:37.533Z",
-        "published": true,
-        "publisher_is_draft": false,
-        "publisher_public": 1,
-        "publisher_state": 0
-    }
+ "model": "cms.placeholder",
+ "pk": 56,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 43
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 3,
-    "fields": {
-        "language": "de-at",
-        "title": "Hilfe",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "hilfe",
-        "path": "hilfe",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 3,
-        "creation_date": "2020-06-03T15:45:50.654Z",
-        "published": true,
-        "publisher_is_draft": true,
-        "publisher_public": 5,
-        "publisher_state": 0
-    }
+ "model": "cms.placeholder",
+ "pk": 59,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 46
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 4,
-    "fields": {
-        "language": "de-at",
-        "title": "Suche",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "suche",
-        "path": "hilfe/suche",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 4,
-        "creation_date": "2020-06-03T15:46:09.736Z",
-        "published": true,
-        "publisher_is_draft": true,
-        "publisher_public": 6,
-        "publisher_state": 0
-    }
+ "model": "cms.placeholder",
+ "pk": 69,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 56
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 5,
-    "fields": {
-        "language": "de-at",
-        "title": "Hilfe",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "hilfe",
-        "path": "hilfe",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 5,
-        "creation_date": "2020-06-03T15:45:50.654Z",
-        "published": true,
-        "publisher_is_draft": false,
-        "publisher_public": 3,
-        "publisher_state": 0
-    }
+ "model": "cms.placeholder",
+ "pk": 72,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 59
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 6,
-    "fields": {
-        "language": "de-at",
-        "title": "Suche",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "suche",
-        "path": "hilfe/suche",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 6,
-        "creation_date": "2020-06-03T15:46:09.736Z",
-        "published": true,
-        "publisher_is_draft": false,
-        "publisher_public": 4,
-        "publisher_state": 0
-    }
+ "model": "cms.placeholder",
+ "pk": 73,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 60
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 7,
-    "fields": {
-        "language": "de-at",
-        "title": "Spenden",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "spenden",
-        "path": "spenden",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 7,
-        "creation_date": "2020-06-03T15:47:27.673Z",
-        "published": true,
-        "publisher_is_draft": true,
-        "publisher_public": 9,
-        "publisher_state": 0
-    }
+ "model": "cms.placeholder",
+ "pk": 75,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 62
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 8,
-    "fields": {
-        "language": "de-at",
-        "title": "Jetzt spenden",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "spende",
-        "path": "spenden/spende",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 8,
-        "creation_date": "2020-06-03T15:47:49.171Z",
-        "published": true,
-        "publisher_is_draft": true,
-        "publisher_public": 10,
-        "publisher_state": 0
-    }
+ "model": "cms.placeholder",
+ "pk": 76,
+ "fields": {
+  "slot": "content",
+  "default_width": null,
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 63
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 9,
-    "fields": {
-        "language": "de-at",
-        "title": "Spenden",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "spenden",
-        "path": "spenden",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 9,
-        "creation_date": "2020-06-03T15:47:27.673Z",
-        "published": true,
-        "publisher_is_draft": false,
-        "publisher_public": 7,
-        "publisher_state": 0
-    }
+ "model": "djangocms_versioning.version",
+ "pk": 2,
+ "fields": {
+  "created": "2025-08-30T17:08:21.722Z",
+  "modified": "2025-08-31T09:24:00.674Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "1",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 22,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 10,
-    "fields": {
-        "language": "de-at",
-        "title": "Jetzt spenden",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "spende",
-        "path": "spenden/spende",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 10,
-        "creation_date": "2020-06-03T15:47:49.171Z",
-        "published": true,
-        "publisher_is_draft": false,
-        "publisher_public": 8,
-        "publisher_state": 0
-    }
+ "model": "djangocms_versioning.version",
+ "pk": 16,
+ "fields": {
+  "created": "2025-08-31T08:58:29.395Z",
+  "modified": "2025-08-31T09:03:40.941Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "2",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 36,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 11,
-    "fields": {
-        "language": "de-at",
-        "title": "Startseite",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "home",
-        "path": "",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 11,
-        "creation_date": "2020-06-03T15:49:56.016Z",
-        "published": true,
-        "publisher_is_draft": true,
-        "publisher_public": 12,
-        "publisher_state": 0
-    }
+ "model": "djangocms_versioning.version",
+ "pk": 22,
+ "fields": {
+  "created": "2025-08-31T09:17:36.032Z",
+  "modified": "2025-08-31T09:18:00.242Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "2",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 42,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 12,
-    "fields": {
-        "language": "de-at",
-        "title": "Startseite",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "home",
-        "path": "",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 12,
-        "creation_date": "2020-06-03T15:49:56.016Z",
-        "published": true,
-        "publisher_is_draft": false,
-        "publisher_public": 11,
-        "publisher_state": 0
-    }
+ "model": "djangocms_versioning.version",
+ "pk": 23,
+ "fields": {
+  "created": "2025-08-31T09:19:33.174Z",
+  "modified": "2025-08-31T09:19:41.637Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "2",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 43,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 13,
-    "fields": {
-        "language": "de-at",
-        "title": "Beh\u00f6rden-Kontakt",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "behoerden-kontakt",
-        "path": "behoerden-kontakt",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 13,
-        "creation_date": "2020-06-03T16:04:34.142Z",
-        "published": true,
-        "publisher_is_draft": true,
-        "publisher_public": 14,
-        "publisher_state": 0
-    }
+ "model": "djangocms_versioning.version",
+ "pk": 26,
+ "fields": {
+  "created": "2025-08-31T09:22:06.206Z",
+  "modified": "2025-08-31T09:22:13.678Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "5",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 46,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
 },
 {
-    "model": "cms.title",
-    "pk": 14,
-    "fields": {
-        "language": "de-at",
-        "title": "Beh\u00f6rden-Kontakt",
-        "page_title": "",
-        "menu_title": "",
-        "meta_description": "",
-        "slug": "behoerden-kontakt",
-        "path": "behoerden-kontakt",
-        "has_url_overwrite": false,
-        "redirect": null,
-        "page": 14,
-        "creation_date": "2020-06-03T16:04:34.142Z",
-        "published": true,
-        "publisher_is_draft": false,
-        "publisher_public": 13,
-        "publisher_state": 0
-    }
+ "model": "djangocms_versioning.version",
+ "pk": 36,
+ "fields": {
+  "created": "2025-09-01T20:35:39.554Z",
+  "modified": "2025-09-01T20:40:33.239Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "3",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 56,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
 },
 {
-    "model": "cms.staticplaceholder",
-    "pk": 1,
-    "fields": {
-        "name": "",
-        "code": "dropdown_banner",
-        "draft": 14,
-        "public": 15,
-        "dirty": false,
-        "creation_method": "template",
-        "site": null
-    }
+ "model": "djangocms_versioning.version",
+ "pk": 39,
+ "fields": {
+  "created": "2025-09-03T15:31:02.187Z",
+  "modified": "2025-09-03T15:31:23.182Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "12",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 59,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
 },
 {
-    "model": "cms.urlconfrevision",
-    "pk": 1,
-    "fields": {
-        "revision": "e1b134e1-08ee-442d-8fe1-f79e7c9bc8c2"
-    }
+ "model": "djangocms_versioning.version",
+ "pk": 40,
+ "fields": {
+  "created": "2025-09-05T13:22:24.284Z",
+  "modified": "2025-09-05T13:26:13.500Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "3",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 60,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
+},
+{
+ "model": "djangocms_versioning.version",
+ "pk": 42,
+ "fields": {
+  "created": "2025-12-10T22:39:48.315Z",
+  "modified": "2025-12-10T22:40:03.125Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "5",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 62,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
+},
+{
+ "model": "djangocms_versioning.version",
+ "pk": 43,
+ "fields": {
+  "created": "2025-12-17T09:44:48.317Z",
+  "modified": "2025-12-17T09:45:37.307Z",
+  "created_by": [
+   "dev@localhost"
+  ],
+  "number": "7",
+  "content_type": [
+   "cms",
+   "pagecontent"
+  ],
+  "object_id": 63,
+  "state": "published",
+  "locked_by": null,
+  "source": null
+ }
 }
 ]

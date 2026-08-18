@@ -31,7 +31,6 @@ class Dev(FragDenStaatBase):
     def TEMPLATES(self):
         TEMP = super().TEMPLATES
         TEMP[0]["OPTIONS"]["debug"] = True
-        print('devtemplates', TEMP)
         return TEMP
 
 

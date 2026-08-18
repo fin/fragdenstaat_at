@@ -419,6 +419,59 @@ separate scratch DB per source — the script prints this on every switch to ups
 
 ---
 
+## 1d. Test suite resurrected — 2026-08-18
+
+**Before: zero tests could run. After: 10 passed, 1 skipped, 0 errors.**
+
+D7 put harness work before the code sync. That turned out to be more urgent than
+"adopt DE's pytest/Playwright setup": AT's own suite was not merely stale, it was
+**completely non-executing**, and had been since the Python 3.13 and django-cms 5
+moves. Five separate blockers, each hiding the next:
+
+| Order | Blocker | Fix |
+|---|---|---|
+| 1 | `time-machine==2.9.0` uses `uuid._load_system_functions`, gone in Py3.13 — failed at **pytest plugin load**, before collection | `time-machine>=2.16` (#15) |
+| 2 | `factory-boy==3.2.1` predates `Meta.skip_postgeneration_save`, used by froide's `UserFactory` — `conftest.py` failed to import | `factory-boy>=3.3` (#16) |
+| 3 | `tests/fixtures/cms.json` held **django-cms 3** models (`cms.treenode`, `cms.title`) | regenerated from the production extract (#17) |
+| 4 | `fds_cms/views.py` imported `cms.models.Title`, removed in cms 4 | → `PageContent` (#18) |
+| 5 | `tests/test_misc.py` imported `djangocms_text_ckeditor`, broken on cms 5 — killed **collection of the whole suite** | → `djangocms_text` (#19) |
+
+Plus `playwright install chromium`, which the devcontainer had never run.
+
+### Why this matters beyond the test suite
+
+- **#18 is a production defect the suite would have caught years ago.** The CMS
+  search view cannot be imported. It is latent only because `fds_cms.urls` is not
+  routed in production — routing it would 500 the site.
+- **The regenerated fixture is now real production content** (10 pages, versioning
+  rows, the scrubbed dev user) rather than 2021-era hand-made data. Tests exercise
+  the same page tree the site actually has.
+- **D7's ordering is vindicated.** Three of the five blockers were CMS-upgrade
+  casualties of exactly the kind P2/P3 will produce more of.
+
+### Running it
+
+```
+env -u DJANGO_SETTINGS_MODULE -u DJANGO_CONFIGURATION \
+  DATABASE_URL="postgis://fragdenstaat_at:fragdenstaat_at@db:5432/fragdenstaat_at" \
+  DJANGO_ELASTICSEARCH_HOSTS=elasticsearch:9200 \
+  .venv/bin/python -m pytest -q
+```
+
+⚠️ **Unset `DJANGO_SETTINGS_MODULE` and `DJANGO_CONFIGURATION` first.** Environment
+variables override `pytest.ini`, so a shell left over from a `manage.py` session
+silently runs the suite under `Dev` instead of `Test` — which is how #17 was
+initially misdiagnosed. Worth a `conftest.py` guard.
+
+### Still to do for P1b
+
+Adopt DE's harness proper: its `fragdenstaat_de/tests/` package, async Playwright,
+the sequential browser-test group, and the `database-cache` CI workflow. AT's suite
+is now a working baseline to migrate *from*, which it was not this morning.
+
+
+---
+
 ## 2. Apps present in **both** repos, with AT changes
 
 ### 2.1 `fds_cms`
@@ -1075,7 +1128,10 @@ Independent of the merge; several are live bugs today.
 | 14 | `fds_donation/cms_plugins.py` | `RegularDonorsProgressBarPlugin.get_donor_count()` iterates every `Donor` in Python (§2.2). |
 | 15 | `pyproject.toml` | 🔴 **The test suite could not run at all.** `time-machine==2.9.0` uses `uuid._load_system_functions`, removed in Python 3.13 — it fails at pytest *plugin load*, so every test errors before collection. **Fixed on this branch:** `time-machine>=2.16`. |
 | 16 | `pyproject.toml` | 🔴 Same class: `factory-boy==3.2.1` predates `Meta.skip_postgeneration_save`, which froide's `UserFactory` uses — `tests/conftest.py` fails to import, so nothing runs even with #15 fixed. **Fixed on this branch:** `factory-boy>=3.3`. |
-| 17 | `tests/test_web.py`, `tests/test_admin.py` | `fixtures = ["cms.json"]` fails with `CommandError: No fixture named 'cms' found`, despite `FIXTURE_DIRS` being set in `settings/test.py` (the path is built with an unnormalised `..`). Masked until now by #15/#16. |
+| 17 | `tests/fixtures/cms.json` | 🔴 The CMS fixture was written for **django-cms 3**: it contains `cms.treenode` and `cms.title`, both removed in cms 4. `test_web.py` and `test_admin.py` died with `Invalid model identifier: cms.treenode`. Masked until now by #15/#16. **Fixed on this branch:** regenerated from the production extract (`cms.page`/`pagecontent`/`pageurl`/`placeholder` + `djangocms_versioning.version` + the scrubbed dev user). *(An earlier draft blamed `FIXTURE_DIRS`; that was a misdiagnosis caused by leaked `DJANGO_CONFIGURATION=Dev` in the analysis shell — `FIXTURE_DIRS` is correct.)* |
+| 18 | `fds_cms/views.py` | 🔴 `from cms.models import Title` — removed in django-cms 4. The 2026 hand-port updated `documents.py` to `PageContent` but **missed `views.py`**, so `CMSPageSearch` raises `ImportError` on import: the CMS search view cannot run. Latent in production only because `fds_cms.urls` is not routed there. **Fixed on this branch** (`PageContent`), matching DE. Third casualty of the hand-port, after `listeners.py` (#1) and `apps.py` (#2). |
+| 19 | `tests/test_misc.py` | 🔴 Imports `djangocms_text_ckeditor.cms_plugins`, which fails on cms 5 (`No module named 'cms.utils.copy_plugins'`). A module-level import, so it broke **collection of the entire suite** even though the test itself is `@unittest.skip`-ped. **Fixed on this branch:** import from `djangocms_text`, the package actually in `INSTALLED_APPS`. |
+| 20 | `pyproject.toml` | `djangocms-text-ckeditor==5.1.1` is still pinned but is unused (settings use `djangocms_text`) **and** incompatible with cms 5. Dead weight; drop it under **D6**. |
 
 > *Human involvement: **low to fix, required to prioritise.** #1, #5, #7, #8 and #12
 > are user-visible or silently-wrong today and are worth fixing **before** the merge,
@@ -1111,7 +1167,7 @@ Independent of the merge; several are live bugs today.
 | **P3 step 16a — `--fake fds_cms 0005` on prod** (D9) | **½–1 day** | **🔴 blocks all deploys, merge or not** |
 | P0 inventory | ½ day | yes, trivially |
 | ~~P1 froide detach~~ **✅ done 2026-08-18** (§1c) | — | was blocking |
-| **P1b test harness adoption (D7)** | **~1 week** | **yes — D7 puts it before the code sync** |
+| **P1b test harness (D7)** — ⚠️ **partly done 2026-08-18: suite now green** (§1d) | ~3 days left | **yes — D7 puts it before the code sync** |
 | P2 rebuild AT layer (D1, D2, D3, D6) | 3–4 weeks | — |
 | P3 migrations (D8) | ~1 week + staging | risk now concentrated in the alias/versioning bumps |
 | P4 AT donation receipts | 2–4 weeks | independent track |

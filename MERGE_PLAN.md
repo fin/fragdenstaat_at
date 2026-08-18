@@ -250,6 +250,23 @@ shipped the older static-weight naming and no StixTwo at all. Vite passes an
 unresolvable `url()` straight through instead of failing, so the build stayed
 green and nothing surfaced it.
 
+#### The 32 differing files, categorised
+
+Not all 32 need to stay different — only ~11 do. Measured by inspecting each diff:
+
+| | Category | Files | Action |
+|---|---|---|---|
+| **A** | Formatting noise — missing trailing newline, `: number = 0` vs `= 0` | `styles/variables.scss`, `styles/main.scss`, `javascript/sentry.ts`, `javascript/magnifier.ts` | **Take DE.** Zero behaviour change; removes 4 files from the diff for free |
+| **B** | DE bugfixes AT never got | `javascript/fds_cms.js` (`room.close()` + stale-`cms_cookie` bust), `javascript/smooth-scroll.ts` (guard against cross-host/cross-path anchors), `javascript/misc/highlight-anchor.ts` (try/catch around an invalid selector), `javascript/slider.js` (AT replaced the error log with `/* */`) | **Take DE.** |
+| **C** | DE utilities/features AT simply lacks | `javascript/vegacharts.js` (dark-mode chart theme + tooltips), `styles/misc.scss` (`.hyphens-auto`, `.highlight-target`), `javascript/misc/reveal-more.ts`, `misc/shuffle-items.ts`, `styles/cards.scss`, `cms_documents.scss`, `cms_elements.scss`, `glider.scss`, `help.scss` | **Take DE**, then eyeball. Additive, but they touch rendering |
+| **D** | AT's visual identity | `styles/header.scss`, `homepage.scss`, `blog.scss`, `donations.scss`, `collapsible.scss`, `cms_utils.scss`, `vega.scss`, `type.scss` | **Keep AT.** This is the genuine 8-file divergence |
+| **E** | AT's deliberate module/import lists | `styles/base.scss` (`banner`/`legal_actions` commented out — apps AT lacks; DE added `easylang`), `javascript/misc.ts`, `javascript/main.ts` | **Keep AT's**, but merge DE's *new* entries selectively — AT is missing `datawrapper`, `autosubmit`, `inline-detailbox` |
+| **F** | Stale DE config AT must not keep | `javascript/misc/matomo.ts` | **Fix or delete.** AT's copy hardcodes `setDomains(['*.fragdenstaat.de'])` and `setSiteId('25')` — DE's Matomo property. Inert only because `misc.ts` has the import commented out; enabling analytics as-is would report AT traffic to DE |
+| **G** | Belongs with its Python app | `javascript/donation-form.ts` (the largest diff: DE refactored to a `DonationForm` class with amount validation, shipping setup, typed payment-confirm events) | **Defer to P2 step 4.** It is the client half of DE's 374 donation commits and expects DE's form fields |
+| **H** | Font tooling | `fonts/make_subsets.sh`, `fonts/requirements.txt` | **Take DE** — it generates the subsets AT now ships |
+
+So: **17 files can take DE's version** (A+B+C, plus H), **11 stay AT's** (D+E), one is a live-config bug to fix (F), and one waits for `fds_donation` (G).
+
 ---
 
 ## 4. Apps in DE, absent from AT

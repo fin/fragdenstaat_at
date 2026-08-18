@@ -17,9 +17,20 @@ This renders ``footer.html`` directly rather than fetching a page, so it needs
 no database, no CMS fixtures and no running services.  That is deliberate: the
 test stays usable while the rest of the stack is mid-port.
 
-Note: the live footer is produced by this template, **not** by the ``footer``
-CMS static placeholder, which holds an unrendered near-duplicate (its URLs are
-absolute, the template's are relative).  See MERGE_PLAN.md.
+⚠️ **Scope limit -- read before trusting this file.**  The production site does
+**not** render this template.  Verified against https://fragdenstaat.at/ on
+2026-08-18: the live footer comes from the ``footer`` **CMS static placeholder**
+(djangocms-frontend Grid plugins, absolute ``https://fragdenstaat.at/...`` URLs,
+``<u>`` tags, a responsive ``d-sm-none`` duplicate of the sponsor block).
+``templates/footer.html`` is the *dead* copy -- ``base.html`` renders the
+placeholder via ``{% fds_static_placeholder "footer" %}``.
+
+So these tests guard the template copy only.  They are still worth having: the
+template is what a DE-sourced override would collide with, and it is the copy
+that would become live if the placeholder were removed.  But they do **not**
+cover what visitors see.  Covering the real footer needs the static placeholder
+and its plugins in the fixture, which is deferred until **D10** decides whether
+those placeholders migrate to djangocms-alias.  See MERGE_PLAN.md 2.7.
 """
 
 import json
@@ -99,13 +110,17 @@ class FooterRegressionTest(SimpleTestCase):
                 f"footer lost image {image['src']} (have: {sorted(self.srcs)})",
             )
 
-    def test_legal_links_are_relative_not_absolute(self):
-        """The template uses {% content_url %}; the unused CMS static placeholder
-        stores absolute https://fragdenstaat.at/... URLs.  Absolute legal links
-        here would mean the placeholder copy has started winning."""
+    def test_template_copy_uses_content_url_not_hardcoded_domains(self):
+        """The template resolves legal links through ``{% content_url %}``.
+
+        The live placeholder copy hardcodes ``https://fragdenstaat.at/...``
+        instead, which is why it survived the ``.de``->``.at`` rename unscathed
+        but will not survive a domain change.  Keep the template copy
+        configuration-driven so it remains the better of the two.
+        """
         self.assertNotIn(
             "fragdenstaat.at/info/",
             self.html,
-            "absolute legal URLs in the footer: the duplicated CMS 'footer' "
-            "static placeholder may have started rendering -- reconcile the two",
+            "the template copy has grown hardcoded absolute URLs; it should use "
+            "{% content_url %} so it tracks FROIDE_CONFIG['content_urls']",
         )

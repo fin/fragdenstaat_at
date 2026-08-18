@@ -31,6 +31,7 @@ is recorded.
 | **D6** | Dependencies | **Adopt DE's curated `pyproject.toml` + `[dependency-groups]`,** minus apps AT will not run. |
 | **D7** | Tests | **Adopt DE's pytest + Playwright harness *before* the code sync.** |
 | **D8** | Migration lineage | **Keep AT's graphs; forward-port DE's models** as AT `0006, 0007…` for both `fds_cms` and `fds_donation`. |
+| **D10** | Static placeholders | ⚠️ **OPEN — blocks lifting the `django-cms<5.1` pin.** Migrate to djangocms-alias (recommended, during P3) or stay on cms 5.0.x. |
 | **D9** | `fds_cms/0005` | **Keep `0005`; `--fake` it on production.** Fresh and post-June-2026 dev DBs run it for real. ✅ **Verified end-to-end — §1b.** |
 
 ### What these choices commit you to
@@ -155,6 +156,34 @@ AT has `tests/` and a `.github/workflows/ci.yml`; DE@HEAD has moved to pytest +
 Playwright with a `fragdenstaat_de/tests/` package, a `database-cache` workflow and
 two translation workflows. Decide whether AT adopts DE's test harness before or
 after the code sync. Before is safer but slower to first value.
+
+### D10 — Static placeholders: migrate to djangocms-alias, or stay on cms 5.0? ⚠️ **OPEN**
+
+*Raised 2026-08-18 during D6. This is the one decision blocking the rest of P2.*
+
+**django-cms 5.1 removes `StaticPlaceholder` entirely** — no model, no admin. AT
+has four in live use (`footer`, `top_banner`, `dropdown_banner`, `help_footer`,
+plus `message_donation_banner` referenced from a template), and — per the
+correction in §2.7 — **the live site footer is one of them**. `fds_cms/admin.py`
+and `fds_cms/templatetags/fds_cms_tags.py` both import the removed model.
+
+DE has already completed this move: it has **zero** references to
+`StaticPlaceholder` and uses djangocms-alias `{% static_alias "code" %}`.
+
+- **(a) Migrate to djangocms-alias now.** Follow DE. Data migration converting 4
+  static placeholders and their plugin trees into Aliases, plus swapping the
+  template tag. Unblocks `django-cms>=5.1` and closes the last big gap to DE.
+  Touches live editorial content, so it needs a staging rehearsal.
+- **(b) Pin `django-cms>=5.0.5,<5.1` and defer.** ⬅ **currently in effect**, so the
+  branch stays working. Diverges from DE's `<6`, and the pin has to be lifted
+  eventually — cms 5.0.x will not be supported forever.
+
+> **Recommendation: (a), during P3**, where a staging rehearsal against the
+> extract is already planned — but it is a live-content migration, so it is the
+> user's call. The rest of the cms/alias/versioning upgrade is **already proven
+> safe** (§1e), which makes (a) less risky than it would have looked yesterday.
+
+---
 
 ### D8 — `fds_cms` migration lineage *(forced by the live database)*
 
@@ -472,6 +501,64 @@ is now a working baseline to migrate *from*, which it was not this morning.
 
 ---
 
+## 1e. D6 executed — dependency set adopted, upgrades verified — 2026-08-18
+
+AT's `pyproject.toml` was a flat dump of 200+ pinned transitive packages. It is now
+DE's curated direct-dependency list, minus the apps AT does not enable (verified
+against the **runtime** `INSTALLED_APPS`, not the source, since much of AT's
+settings file is commented out):
+
+> `froide-campaign`, `froide-food`, `froide-fax`, `froide-legalaction`,
+> `froide-exam`, `froide-crowdfunding`, `froide-govplan`,
+> `froide-evidencecollection`, `froide-pressconference`, `froide-election`,
+> `django-amenities`, `django-legal-advice-builder`, `osmium`, **`torch` +
+> `torchvision`** (only `fds_fximport`'s captcha solver needed those, and D3 keeps
+> it out — this alone drops ~2 GB from the image).
+
+`django-flowcontrol` and `mjml-python` are included *ahead of need*, because D3's
+`fds_newsletter`/`fds_mailing` require them.
+
+### What the upgrade actually moved
+
+| | before | after |
+|---|---|---|
+| django-cms | 5.0.2 | 5.0.10 *(5.1.1 blocked by **D10**)* |
+| djangocms-versioning | 2.3.1 | **2.7.0** |
+| djangocms-alias | 2.0.4 | **3.1.1** (major) |
+| django-countries | 7.5 | 9.0.0 |
+
+### The P3 "biggest data risk" turned out to be a non-event
+
+P3 step 18a called the alias/versioning major bumps a bigger data risk than the
+sync itself. Rehearsed against a fresh load of the production extract:
+
+```
+djangocms_alias.0005_dynamic_slot_names                        OK
+djangocms_alias.0006_alter_alias_id_alter_aliascontent_id…     OK
+djangocms_alias.0007_alter_category_options_alter_aliasplugin… OK
+djangocms_frontend.0003_slotmodel                              OK
+djangocms_versioning.0018_fix_typo                             OK
+… plus the froide catch-up …                                   OK
+```
+
+**Exit 0, no intervention, content intact** (10 pages, 103 plugins, 4 static
+placeholders). `manage.py check` clean, suite green (10 passed, 1 skipped).
+
+### Two traps worth knowing
+
+1. **`uv sync` clobbers the editable sibling installs.** froide, froide-payment and
+   django-filingcabinet are installed `-e` from `../`; a sync replaces them with git
+   checkouts and silently breaks `scripts/froide-source.sh`. Always re-run the three
+   `uv pip install -e ../<pkg>` lines afterwards, exactly as `devsetup.sh` does.
+2. **`uv lock` keeps satisfiable stale pins.** Dropping `django-countries==7.5` did
+   not upgrade it — nothing else constrained it, so the old resolution carried over
+   and `pkg_resources` (gone from modern setuptools) broke startup. Needed an
+   explicit `uv lock --upgrade-package`. Expect more of these; upgrade per package
+   as breakage appears rather than assuming the lock refreshed.
+
+
+---
+
 ## 2. Apps present in **both** repos, with AT changes
 
 ### 2.1 `fds_cms`
@@ -762,14 +849,22 @@ Schriftformerfordernis fax-signature prompt.
 **AT-only templates:**
 - `footer.html` — Forum Informationsfreiheit + OKF Deutschland credit + **Easyname
   server sponsorship**. Impressum/Nutzungsbedingungen/Datenschutz links.
-  ⚠️ **Duplicated, and the CMS copy is dead.** The database also holds a `footer`
-  CMS *static placeholder* with near-identical content (GridRow/GridColumn/Text
-  plugins). The live site renders the **template**, not the placeholder — proven by
-  the live footer's relative `/info/ueber/` links and hashed static filenames, which
-  only `{% content_url %}` and `{% static %}` produce; the placeholder stores
-  absolute `https://fragdenstaat.at/...` URLs and unhashed image paths. Anyone
-  editing the footer in the CMS today sees no effect. Reconcile or delete the
-  placeholder during P2; `tests/test_footer.py` pins the current behaviour.
+  ⚠️ **Duplicated — and it is the _template_ that is dead, not the CMS copy.**
+  *(Corrected 2026-08-18; an earlier draft of this document had it backwards.)*
+  The database also holds a `footer` CMS **static placeholder** built from
+  djangocms-frontend Grid/Text plugins. `base.html` renders **that** via
+  `{% fds_static_placeholder "footer" %}`, and the live page proves it: absolute
+  `https://fragdenstaat.at/info/…` links, `<u>` tags, a `d-sm-none` responsive
+  duplicate of the sponsor block — none of which `templates/footer.html` produces.
+  The template uses relative `{% content_url %}` links and a different column
+  layout, and appears nowhere in the served HTML.
+
+  Two consequences: editing `templates/footer.html` has **no effect on the site**,
+  and the live footer therefore **depends on static placeholders**, which
+  django-cms 5.1 removed — see **D10**. Also note the placeholder stores
+  *hash-stamped* static URLs (`nessus_easyname_logo.64f39f3e3594.png`) pasted into
+  the HTML, so the sponsor logos break on any `collectstatic` that changes those
+  files.
 - `foirequest/emails/presserecht/overdue_reply.txt` — **Austrian press-law
   (Informationsrecht der Presse) chase-up email.** Genuinely AT-specific law; no DE
   counterpart.
@@ -1183,7 +1278,7 @@ Independent of the merge; several are live bugs today.
 | P0 inventory | ½ day | yes, trivially |
 | ~~P1 froide detach~~ **✅ done 2026-08-18** (§1c) | — | was blocking |
 | **P1b test harness (D7)** — ⚠️ **partly done 2026-08-18: suite now green** (§1d) | ~3 days left | **yes — D7 puts it before the code sync** |
-| P2 rebuild AT layer (D1, D2, D3, D6) | 3–4 weeks | — |
+| P2 rebuild AT layer — **D6 ✅ done (§1e)**; D1/D2/D3 remain | 3–4 weeks | ⚠️ **D3 blocked behind D10** |
 | P3 migrations (D8) | ~1 week + staging | risk now concentrated in the alias/versioning bumps |
 | P4 AT donation receipts | 2–4 weeks | independent track |
 | P5 repeatable sync | 2 days | — |

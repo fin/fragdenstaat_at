@@ -31,7 +31,7 @@ is recorded.
 | **D6** | Dependencies | **Adopt DE's curated `pyproject.toml` + `[dependency-groups]`,** minus apps AT will not run. |
 | **D7** | Tests | **Adopt DE's pytest + Playwright harness *before* the code sync.** |
 | **D8** | Migration lineage | **Keep AT's graphs; forward-port DE's models** as AT `0006, 0007…` for both `fds_cms` and `fds_donation`. |
-| **D9** | `fds_cms/0005` | **Keep `0005`; `--fake` it on production.** Fresh and post-June-2026 dev DBs run it for real. |
+| **D9** | `fds_cms/0005` | **Keep `0005`; `--fake` it on production.** Fresh and post-June-2026 dev DBs run it for real. ✅ **Verified end-to-end — §1b.** |
 
 ### What these choices commit you to
 
@@ -218,6 +218,8 @@ already gone. `django-cms==5.0.2` (AT) vs `>=5.0.5,<6` (DE) is a patch bump.
 
 ## 1a. The live database — measured, not assumed
 
+*Static analysis. §1b then executed the critical findings against a real load of the extract; all of them reproduced.*
+
 *Added on review. Source: `../test_export_2026-06-14.sql` (produced by
 `../export_dev_db.py` run against `settings.production`), cross-checked against
 the migration heads of the packages actually installed in `.venv`.*
@@ -314,6 +316,63 @@ long since replaced by djangocms-frontend), `djangocms_text_ckeditor`,
 `campaign_campaign`, `letter_*`, `guide_*`, `proof_*`, `foisite_*` — with their
 migration rows still recorded, for apps no longer in `INSTALLED_APPS`. Harmless
 today, but a hazard the moment DE's code reintroduces one of those app labels.
+
+
+---
+
+## 1b. Verified against the extract — 2026-08-18
+
+*Everything in §1a was static analysis. This section is what was actually executed,
+on branch `sync/de-head-2026-08`, against `test_export_2026-06-14.sql` loaded into a
+scratch database (`fds_verify` on the devcontainer's `db` service).*
+
+**Setup.** The extract loads cleanly into PostGIS 16 — 229 tables, 628
+`django_migrations` rows. Two benign load errors: `transaction_timeout` (a pg17
+parameter absent in pg16) and one syntax error on a version comment. Neither
+affects the schema.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `fds_cms` recorded state | `0004`, `0005` unapplied — **as predicted** |
+| 2 | The six columns `0005` adds | all six present — **as predicted** |
+| 3 | `manage.py migrate fds_cms` | 🔴 **fails**: `ProgrammingError: column "attributes" of relation "fds_cms_borderedsectioncmsplugin" already exists` — **blocker reproduced** |
+| 4 | `manage.py migrate --fake fds_cms 0005` (**D9**) | ✅ `FAKED` — **the chosen fix works** |
+| 5 | Full `manage.py migrate` afterwards | ✅ **exit 0**, 23 migrations applied, no manual intervention |
+| 6 | Content intact after migrating | ✅ 10 pages, 103 plugins, 2269 public bodies |
+| 7 | `makemigrations --check` | drift in `account`, `publicbody`, `djangocms_frontend`, `contractor`, `sortabletable` — **all third-party; none in `fds_cms`, `fds_donation` or `theme`** |
+
+### What this changes
+
+- **D9 is no longer a proposal, it is a tested procedure.** Reproduce the failure,
+  apply the fake, migrate forward. Put steps 3–5 in the deploy runbook verbatim.
+- **The froide catch-up is a non-event.** Check 5 applied `account` 0039–0043,
+  `campaign` 0008–0009, `document` 0031–0032, `filingcabinet` 0032, `foirequest`
+  0073–0076, `georegion` 0014, `guide` 0008, `proof` 0002, `publicbody` 0051–0055
+  and the new `searchalert` app — **23 migrations, cleanly, in one command.** §1a
+  estimated ~20 from migration-file counting; measured is 23. P1's database risk is
+  now close to zero. *(Caveat: this is against the pinned `fin/froide`, not
+  `okfde/froide@main` — re-run check 5 after the D5 repin.)*
+- **AT's own models have zero drift** against the production schema (check 7). The
+  drift that exists is upstream packages whose shipped migrations lag their models —
+  a pre-existing annoyance, unrelated to the sync, and it will need a decision when
+  D6 changes those pins.
+- **Defect §6 #10 confirmed live:** every management command prints
+  `devtemplates [{...}]` to stdout before doing anything.
+
+### How to rebuild this environment
+
+```
+psql -h db -U fragdenstaat_at -d postgres -c "CREATE DATABASE fds_verify"
+psql -h db -U fragdenstaat_at -d fds_verify -c "CREATE EXTENSION postgis; CREATE EXTENSION hstore;"
+psql -h db -U fragdenstaat_at -d fds_verify -f ../test_export_2026-06-14.sql
+DATABASE_HOST=db DATABASE_NAME=fds_verify \
+  DJANGO_SETTINGS_MODULE=fragdenstaat_at.settings.development DJANGO_CONFIGURATION=Dev \
+  .venv/bin/python manage.py migrate
+```
+
+⚠️ **Parallel work must use separate scratch databases** (`fds_verify_<task>`), not
+this one — concurrent migrations against one database will corrupt each other's
+`django_migrations` state.
 
 
 ---

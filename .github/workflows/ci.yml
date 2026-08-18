@@ -79,3 +79,24 @@ jobs:
         options: -e "discovery.type=single-node" --expose 9200 --health-cmd "curl localhost:9200/_cluster/health" --health-interval 10s --health-timeout 5s --health-retries 10
         ports:
           - '9200:9200'
+
+  # Reports how far this repo has drifted from upstream fragdenstaat_de.
+  # Informational only (continue-on-error): a growing drift number is not
+  # a build failure, just a signal to check MERGE_PLAN.md.
+  de-drift:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: fragdenstaat_at
+      - uses: actions/checkout@v2
+        with:
+          repository: okfde/fragdenstaat_de
+          path: fragdenstaat_de
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.10'
+      - name: Run drift check (non-blocking)
+        working-directory: fragdenstaat_at
+        run: python scripts/de_drift.py --de-repo ../fragdenstaat_de --check-max-modified 260

@@ -1,6 +1,7 @@
 from decimal import Decimal
 
-from django.db.models import Sum
+from django.conf import settings
+from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
@@ -8,6 +9,7 @@ from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 
 from fragdenstaat_at.fds_cms.utils import get_plugin_children
+from froide_payment.models import Subscription
 
 from .models import (
     DefaultDonation,
@@ -256,26 +258,29 @@ class RegularDonorsProgressBarPlugin(CMSPluginBase):
         return 0
 
     def get_donor_count(self, instance):
-        qs = sum(
-            [
-                list(x.subscriptions.filter(canceled__isnull=True))
-                for x in Donor.objects.all()
-            ],
-            [],
-        )
+        # One row per (donor, subscription) pair via the Donor.subscriptions
+        # M2M, mirroring the previous per-donor loop (a subscription shared
+        # by several donors is counted once per donor, as before).
+        qs = Subscription.objects.filter(donor__isnull=False, canceled__isnull=True)
 
         if (
             instance.minimal_annual_contribution
             and instance.minimal_annual_contribution > 0
         ):
-            qs = [
-                x
-                for x in qs
-                if (x.plan.amount * 12 / x.plan.interval)
-                >= instance.minimal_annual_contribution
-            ]
+            # Annualise the subscription's contribution: plan.amount is
+            # charged every plan.interval months, so amount * 12 / interval
+            # is the equivalent yearly amount (e.g. 10 EUR every 3 months
+            # -> 40 EUR/year).
+            qs = qs.annotate(
+                annual_contribution=ExpressionWrapper(
+                    F("plan__amount") * 12 / F("plan__interval"),
+                    output_field=DecimalField(
+                        max_digits=12, decimal_places=settings.DEFAULT_DECIMAL_PLACES
+                    ),
+                )
+            ).filter(annual_contribution__gte=instance.minimal_annual_contribution)
 
-        return len(qs)
+        return qs.count()
 
     def get_donor_goal_perc(self, instance, donor_count):
         regular_donors_goal = instance.regular_donors_goal

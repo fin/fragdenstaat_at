@@ -382,13 +382,13 @@ design or legal judgement.
   - [x] DE's `fds_donation/tests/` (15 modules), landed with P2 step 4
   - [ ] DE's `database-cache` CI workflow
   - [ ] revisit parallelism now the suite is larger
-- [ ] **P2** — rebuild the AT layer *(6 of 8 steps done)*
+- [ ] **P2** — rebuild the AT layer *(7 of 8 done; only step 2 left, and it is [H])*
   - [x] 1. D3 execution — newsletter + mailing, no signup surface
   - [ ] 2. Settings — **[H]**, remainder is product judgement (§9.1)
   - [x] 3. `fds_cms` / `theme` / `fds_ogimage`
   - [x] 4. `fds_donation`
   - [x] 5. Frontend — 32 → 12 differing files
-  - [ ] 6. Templates — partial; footer-alias URLs and top-level `templates/` left
+  - [x] 6. Templates
   - [x] 7. Preserve the dev environment
   - [x] 8. Footer gate in force (now joined by the page-render harness)
 - [ ] **P3** — migrations
@@ -423,7 +423,7 @@ to amortise it.
 from 37 to 118. *Remaining:* DE's `database-cache` CI workflow, and revisiting
 parallelism now the suite is larger. **[R]**
 
-### P2 — rebuild the AT layer against DE@HEAD — ⚠️ 6 of 8 steps done
+### P2 — rebuild the AT layer against DE@HEAD — ⚠️ 7 of 8 done
 
 1. **D3 execution — ✅ done.** Both apps vendored from DE@HEAD (138 files) and
    wired, along with `flowcontrol`. `Donor.subscriber` restored as
@@ -555,17 +555,24 @@ parallelism now the suite is larger. **[R]**
    The 12 remaining are deliberate: AT's visual identity (8), its import lists
    (3), and `banner.scss`/`banner.ts` now shared with DE.
 
-6. [ ] **Templates.** ⚠️ **Partly done.**
-   - ✅ `base.html`'s `metadescription` rewritten for the Austrian IFG (**wants a
-     copy review** — §9.1).
+6. [x] **Templates.** ✅ **Done.**
+   - ✅ `base.html`'s `metadescription` rewritten for the Austrian IFG (**still
+     wants a copy review** — §9.1).
    - ✅ DE's `google-site-verification` token removed.
-   - ✅ `fds_cms` templates adopted from DE after a line-by-line recheck showed
+   - ✅ `fds_cms` templates adopted from DE, after a line-by-line recheck showed
      none contained Austrian content and ~half the diff was djlint reformatting.
-   - ❌ **Not done:** the hash-stamped static URLs in the footer alias (§9.5),
-     and re-deriving the **top-level** `templates/` overrides (`header.html` is
-     still 423 lines from DE's, and is AT's branding — likely correct as-is, but
-     unreviewed). **[H]**
-
+   - ✅ Footer-alias static URLs unhashed via `fds_cms/0009`.
+   - ✅ **Top-level `templates/` re-derivation assessed, and deliberately not
+     adopted.** `header.html` (346 lines) is genuinely AT's: DE links to
+     `gegenrechtsschutz.de`, `ueberbrueckungsfonds.de` and `/kontakt/beratung/`,
+     AT to `/hilfe` and `/info/ueber/`. The `foirequest/*` overrides are AT's
+     deliberate emptying of blocks for features it does not run. Both stay.
+   - ⏭️ The third-party plugin templates (`djangocms_picture/*`,
+     `djangocms_video/*`) **are** stale copies of DE's, but adopting them pulls in
+     `THUMBNAIL_ALIASES`, `THUMBNAIL_DEFAULT_ALIAS` and `FDS_THUMBNAIL_ENABLE_AVIF`
+     — image sizes, AVIF and CDN volume, i.e. §9.1 product decisions rather than
+     merge mechanics. AT's current template works (`thumbnail_dims` is registered),
+     so there is no defect to force the issue. Moved to §9.1.
 7. [x] **Preserve** `.devcontainer/`, `compose-dev.yaml`, `devsetup.sh`, `Makefile`,
    `export_dev_db.py`, `scripts/`, `tests/`, `.github/`. ✅ **Held** — all intact;
    `devsetup.sh` and `pytest.ini` gained deliberate changes, `scripts/` gained
@@ -658,7 +665,7 @@ Decide each, or consciously decline it:
 | `COOKIE_CONSENT_LOG_ENABLED`, `COOKIE_CONSENT_SECURE` | `django-cookie-consent` ships via D6 but is unconfigured and unused. Does AT want a consent banner? Interacts with whether AT reinstates analytics |
 | ~~`MATOMO_SITE_ID`~~ | **Resolved: Matomo is removed entirely.** The module, its commented import and the vestigial `_paq` calls in `top-banner.ts` are gone; nothing in the tree or the bundle references it. Introducing analytics is now a deliberate addition, and would need a decision about the host — DE's pointed at OKF *Deutschland's* instance |
 | `CMS_COLOR_SCHEME`, `CMS_COLOR_SCHEME_TOGGLE` | Dark mode. DE ships a toggle plugin; AT's theme has no dark palette yet, so this is a design decision first |
-| `THUMBNAIL_ALIASES`, `THUMBNAIL_DEFAULT_ALIAS`, `FDS_THUMBNAIL_ENABLE_AVIF` | Image sizes and whether to serve AVIF. Affects storage and CDN volume |
+| `THUMBNAIL_ALIASES`, `THUMBNAIL_DEFAULT_ALIAS`, `FDS_THUMBNAIL_ENABLE_AVIF` | Image sizes and whether to serve AVIF. Affects storage and CDN volume. **Also gates adopting DE's `djangocms_picture`/`djangocms_video` templates**, which are otherwise stale copies (P2 step 6) |
 | `LEAFLET_CONFIG` | Map defaults. DE's centre/zoom are German — needs Austrian values if AT ever enables maps |
 | `DEFAULT_CURRENCY_LABEL`, `DEFAULT_CURRENCY_SYMBOL` | Cosmetic; both sites are EUR |
 | `CREW_GROUP` | Name of the staff group froide treats as crew. Must match the group that actually exists in AT's database |

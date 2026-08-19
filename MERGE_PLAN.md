@@ -865,6 +865,57 @@ snippet and was written here from the German original, not by anyone who owns th
 messaging. And **add AT's own `google-site-verification` token** if AT uses Search
 Console; DE's was removed rather than replaced.
 
+#### Systematic settings comparison vs DE
+
+Compared class-scoped (AT's `FragDenStaatBase` against DE's `FragDenStaatBase` +
+`CMSSettingsMixin`; DE's `GegenrechtsschutzMixin`/`UbfMixin` are other sites DE
+runs and are not comparable). **AT 92 settings, DE 127, 40 DE-only.** Most of the
+40 belong to apps AT does not install (amenities, campaign, food, govplan,
+evidencecollection, Telnyx/fax, Paperless) or are already-settled choices (Matomo
+off, `CMS_COLOR_SCHEME*` — no dark mode). What is left:
+
+- [ ] **Rich-text editor differs.** `TEXT_EDITOR` defaults to **`"tiptap"`**
+  (`djangocms_text/editors.py`); DE sets it to `theme.editor.ckeditor4`. AT never
+  ported `theme/editor.py`, so **AT's editors get TipTap while DE's get
+  CKEditor4** — a visible difference in the admin, on CMS plugins ported from DE.
+  AT does carry a `CKEDITOR_SETTINGS` block (toolbar layout), which djangocms-text
+  still reads, but it configures CKEditor and is largely inert under TipTap.
+  Either port `theme/editor.py` and set `TEXT_EDITOR`, or drop `CKEDITOR_SETTINGS`
+  and accept TipTap deliberately. Right now AT has neither end tied off. **[H]**
+- [ ] **YouTube embeds are not cookie-less.** DE sets
+  `DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL` to `youtube-nocookie.com`; AT does not, so
+  embeds hit `youtube.com` and set cookies on load. AT installs `cookie_consent`,
+  which makes this a consent question, not a preference. **[H]**
+- [ ] **`flowcontrol` is installed but unconfigured.** DE sets
+  `FLOWCONTROL_CONTENT_TYPES` (`fds_donation.donor`, `fds_newsletter.subscriber`,
+  `account.user`) and `FLOWCONTROL_TEMPLATE_FILTERS`; AT sets neither, so flows
+  have nothing to attach to. Relevant now that D3 restored newsletter/mailing. **[R]**
+- [ ] **`datashow` is installed but uses the default storage.** DE defines an
+  `overwrite` backend in `STORAGES` and points `DATASHOW_STORAGE_BACKEND` at it;
+  AT has neither, so it falls back to `"default"` — functional, but re-uploading
+  a dataset leaves the old file behind under a suffixed name. **[R]**
+- [ ] **No `CELERY_TASK_ROUTES`.** DE routes tasks across queues; AT runs
+  everything on the default queue. Fine until a slow task blocks a fast one.
+  Relevant alongside the task rename in §9.3. **[R]**
+- [ ] Minor: `FILER_REMOVE_FILE_VALIDATORS`, `CMS_REDIRECT_TO_LOWERCASE_SLUG`,
+  `CMS_PAGE_CACHE` (AT `False`, DE `True` — worth revisiting for performance),
+  `CMS_RAW_ID_USERS` (AT `50`, DE `True`), and `SECRET_URLS` (AT exposes
+  `/admin`, DE randomises the path). **[R]**
+
+✅ **Checked and *not* a problem:** `VERSIONING_ALIAS_MODELS_ENABLED`. DE sets it
+explicitly to `True`, AT omits it — but djangocms-alias defaults it to
+`VersionableItem is not None`, i.e. enabled whenever djangocms-versioning is
+installed, which it is. AT's alias content is versioned exactly as DE's. This one
+looked alarming given D10 and turned out to be inherited behaviour.
+
+The intentional divergences, for the record: `LANGUAGE_CODE`/`LANGUAGES`/
+`PARLER_LANGUAGES`/`CMS_LANGUAGES` (single `de-at`, no fallback redirect),
+`SITE_NAME`, `SENDER_DOMAINS`, `DEFAULT_FROM_EMAIL`, `SITE_EMAIL`,
+`DONATION_PROJECTS` (`FOI` / Forum Informationsfreiheit),
+`DONATION_SITE_NAME_OVERRIDE`, `PAYMENT_VARIANTS`, `ROOT_URLCONF`,
+`ELASTICSEARCH_INDEX_PREFIX`, and `TEXT_ADDITIONAL_ATTRIBUTES` (AT allows
+`iframe src`, which DE's set omits — see §9.5).
+
 ### 9.2 Enabling `fds_ogimage`
 
 The app is kept on purpose; the external rendering service does not exist yet.

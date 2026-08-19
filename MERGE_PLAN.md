@@ -395,11 +395,11 @@ design or legal judgement.
   - [x] forward-port as `fds_cms/0008` and `fds_donation/0046`
   - [ ] **rehearse against a production dump with real donation rows**
 - [ ] **P4** — Austrian donation receipts *(not started; needs external tax/legal input)*
-- [ ] **P5** — repeatable sync
+- [x] **P5** — repeatable sync
   - [x] drift job wired into CI
-  - [ ] tighten `--check-max-modified` 260 → ~140
-  - [ ] record the new baseline commit
-  - [ ] delete commented-out DE code in `theme/views.py`, `theme/urls.py`
+  - [x] tighten `--check-max-modified` 260 → 140 (measured 127)
+  - [x] record the new baseline commit
+  - [x] delete commented-out DE code in `theme/views.py`, `theme/urls.py`
 - [ ] **P6** — translations *(deliberately last)*
 
 ### P1b — finish the test harness (D7) — ⚠️ mostly done
@@ -505,9 +505,18 @@ parallelism now the suite is larger. **[R]**
    and AT's `MIDDLEWARE` still named the old class — the suite dropped 118 → 79
    until corrected. `theme/translation.py` was a new module `cms_utils` imports.
 
-   ⚠️ **Unverified:** the new search analyzers against a live Elasticsearch. The
-   ES container is down in this environment, so the index could not be rebuilt.
-   Definitions construct and the preprocessor imports; relevance is unproven.
+   ✅ **Search verified** against a live ES 8.15.1: index rebuilds (8 pages),
+   `fds_analyzer` / `fds_search_analyzer` / `fds_search_quote_analyzer` all
+   present, and relevance is sound — *Datenschutz* → Datenschutzerklärung (3.2),
+   *Nutzungsbedingungen* → Nutzungsbedingungen (1.85).
+
+   ⚠️ **Inherited defect, worth reporting upstream:** DE's `decomp` filter sets
+   `no_sub_matches=True` with the comment *"Prevent 'formation' from being
+   detected as a subtoken of 'informationsfreiheit'"*. The option **is** applied
+   in the live index, but `Informationsfreiheit` still analyses to
+   `[informationsfreiheit, information, info, formation, format, form, freiheit,
+   frei]`. The precision fix does not do what it says on ES 8.15. Not a
+   regression — AT is no worse than DE — but the stated intent is unmet.
 
 4. [x] **`fds_donation`.** ✅ **Done.** DE@HEAD adopted (583 → 1359 model lines),
    schema forward-ported as a single AT migration `0046` per D8(b), keeping AT's
@@ -589,7 +598,7 @@ Design and build the Spendenabsetzbarkeit / FinanzOnline flow replacing the Germ
 ZWB pipeline. Until it lands, do not un-hide the `receipt` form field. Gated on
 external tax/legal input — **start immediately**, it is the long pole. **[H]**
 
-### P5 — repeatable sync — ⚠️ partly done
+### P5 — repeatable sync — ✅ done
 
 The drift job is wired into `ci.yml` (non-blocking, limit 260). **The limit is now
 far too loose** — measured today:
@@ -600,9 +609,13 @@ far too loose** — measured today:
 | modified | 240 | **134** |
 | de-only | 635 | 447 |
 
-Remaining: tighten `--check-max-modified` to ~140, record the baseline commit
-here, and delete the commented-out DE code that D2's configure-out makes
-redundant (`theme/views.py` and `theme/urls.py` are the main holdouts). **[A]**
+✅ **Done.** The gate is now `--check-max-modified 140` (measured: 127), and the
+commented-out DE code is gone from `theme/views.py` (68 comment lines → 0) and
+`theme/urls.py` (55 → 11, the survivors being real explanations). Per D2, git
+history is where dead code belongs.
+
+**Baseline:** compare against `fragdenstaat_de@938901ef` (2026-08-17). Re-measure
+with `python scripts/de_drift.py` rather than trusting numbers in prose.
 
 ### P6 — translations (D4/D5) — ❌ not started · **LAST**
 

@@ -99,4 +99,4 @@ jobs:
           python-version: '3.10'
       - name: Run drift check (non-blocking)
         working-directory: fragdenstaat_at
-        run: python scripts/de_drift.py --de-repo ../fragdenstaat_de --check-max-modified 260
+        run: python scripts/de_drift.py --de-repo ../fragdenstaat_de --check-max-modified 140

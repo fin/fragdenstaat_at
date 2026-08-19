@@ -393,7 +393,7 @@ design or legal judgement.
   - [x] 8. Footer gate in force (now joined by the page-render harness)
 - [ ] **P3** — migrations
   - [x] forward-port as `fds_cms/0008` and `fds_donation/0046`
-  - [ ] **rehearse against a production dump with real donation rows**
+  - [ ] **rehearse against a production dump with real donation rows** — see `docs/runbooks/live-db-verification.md`
 - [ ] **P4** — Austrian donation receipts *(not started; needs external tax/legal input)*
 - [x] **P5** — repeatable sync
   - [x] drift job wired into CI
@@ -708,9 +708,13 @@ Once it does, four things must change together — the last is easy to miss:
 
 ### 9.4 Verify before trusting
 
-- [ ] **Rehearse the migrations against a real production dump.** The dev extract is
-  schema-faithful but not content-faithful — it collapses draft/public, so
-  `fds_cms/0006` cannot be exercised against real divergence locally.
+- [ ] **Rehearse the migrations against a real production dump.**
+  📖 **Procedure: `docs/runbooks/live-db-verification.md`** — ten ordered steps
+  including the `fds_cms/0005` fake and how to check its precondition first, the
+  full 54-migration sequence, and what to do if anything else wants faking.
+  The dev extract is schema-faithful but not content-faithful — it collapses
+  draft/public, so `fds_cms/0006` cannot be exercised against real divergence
+  locally, and it holds no donation rows at all.
 - [ ] **Measure production row counts** for `foirequest_*`, `account_user`,
   `fds_donation_*`, `froide_payment_*`. They set the migration window; the 10 CMS
   pages do not.

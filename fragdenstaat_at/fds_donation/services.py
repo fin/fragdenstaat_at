@@ -1,22 +1,32 @@
 import logging
-from collections import Counter
 from datetime import timedelta
 from decimal import Decimal
 from typing import Optional, Tuple
+from urllib.parse import urlencode
 
-from django.contrib import auth
-from django.db import models
+from django.conf import settings
+from django.db import models, transaction
+from django.urls import reverse
 from django.utils import timezone
 
+from dateutil.relativedelta import relativedelta
+
+from froide.account.auth import try_login_user_without_mfa
 from froide.account.models import User
 from froide.account.services import AccountService
+from froide.helper.auth import is_crew
 from froide.helper.email_sending import mail_registry
+from froide.helper.utils import update_query_params
+
+from fragdenstaat_at.fds_newsletter.utils import subscribe_to_default_newsletter
 
 from .models import Donation, Donor
-from .utils import merge_donors, propose_donor_merge  # , subscribe_donor_newsletter
-
-# from fragdenstaat_at.fds_newsletter.utils import subscribe_to_default_newsletter
-
+from .tasks import process_recurrence_task
+from .utils import (
+    get_email_change_token,
+    merge_donor_list,
+    subscribe_donor_newsletter,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +98,20 @@ donation_reminder_email = mail_registry.register(
     ),
 )
 
+
+incomplete_donation_reminder_email = mail_registry.register(
+    "fds_donation/email/incomplete_donation_reminder",
+    (
+        "name",
+        "first_name",
+        "last_name",
+        "salutation",
+        "donor",
+        "donation",
+        "donate_url",
+    ),
+)
+
 sepa_notification_email = mail_registry.register(
     "fds_donation/email/sepa_notification",
     (
@@ -114,6 +138,29 @@ donation_gift_order_shipped_email = mail_registry.register(
 )
 
 
+donor_login_link_email = mail_registry.register(
+    "fds_donation/email/donor_login_link",
+    (
+        "donor",
+        "action_url",
+    ),
+)
+
+
+no_donor_with_email_email = mail_registry.register(
+    "fds_donation/email/no_donor_with_email",
+)
+
+
+donor_change_email_email = mail_registry.register(
+    "fds_donation/email/donor_change_email",
+    (
+        "donor",
+        "action_url",
+    ),
+)
+
+
 def get_or_create_donor(data, user=None, subscription=None):
     if user is not None:
         try:
@@ -134,7 +181,7 @@ def get_or_create_donor(data, user=None, subscription=None):
 
 def create_donor(data, user=None, subscription=None):
     email_confirmed = None
-    if user is not None and user.email:
+    if user is not None and user.email and user.is_active:
         if user.email.lower() == data["email"].lower():
             email_confirmed = user.date_joined
     recurring_amount = Decimal(0)
@@ -153,16 +200,16 @@ def create_donor(data, user=None, subscription=None):
         user=user,
         email_confirmed=email_confirmed,
         recurring_amount=recurring_amount,
-        contact_allowed=data.get("contact", False),
-        become_user=data.get("account", False),
-        receipt=data.get("receipt", False),
+        contact_allowed=data.get("contact", None),
+        become_user=data.get("account", None),
+        receipt=data.get("receipt", None),
     )
     if subscription:
         donor.subscriptions.add(subscription)
     logger.info("Donor created %s", donor.id)
-    # if donor.email_confirmed and donor.contact_allowed:
-    #     subscribe_to_default_newsletter(donor.email, user=user)
-    #     subscribe_donor_newsletter(donor)
+    if donor.email_confirmed and donor.contact_allowed:
+        subscribe_to_default_newsletter(donor.email, user=user)
+        subscribe_donor_newsletter(donor)
 
     return donor
 
@@ -282,7 +329,7 @@ def create_donation_from_payment(payment):
         payment=payment,
         method=payment.variant,
         recurring=order.is_recurring,
-        **extra_kwargs
+        **extra_kwargs,
     )
     logger.info("Donation created %s", donation.id)
     return donation
@@ -301,16 +348,11 @@ def assign_and_merge_donors(donor, user):
     return merge_donor_list([donor, other_donor])
 
 
-def merge_donor_list(donors):
-    merged_donor = propose_donor_merge(donors)
-    merged_donor.id = donors[0].id
-    candidates = [merged_donor, *donors[1:]]
-    return merge_donors(candidates, merged_donor.id)
-
-
 def confirm_donor_email(donor, request=None):
-    if request and request.user.is_staff:
-        # Don't trigger things as staff
+    if donor.email_confirmed:
+        return
+    if request and is_crew(request.user) and request.user != donor.user:
+        # Don't trigger things as staff for different user
         return
     is_auth = request and request.user.is_authenticated
 
@@ -322,16 +364,16 @@ def confirm_donor_email(donor, request=None):
     new_user = False
     user = None
     if not donor.user:
-        users = User.objects.filter(email__iexact=donor.email, is_active=True)
-        if len(users) > 1:
-            user = users[0]
-            new_user = True
-        else:
-            user = None
+        # Find an active user with email
+        user = User.objects.filter(
+            email_deterministic=donor.email, is_active=True
+        ).first()
+        new_user = bool(user)
         if user is not None:
             donor = assign_and_merge_donors(donor, user)
-            if request and is_auth:
-                auth.login(request, user)
+            if request and not is_auth:
+                # Login so user can access donation page
+                try_login_user_without_mfa(request, user)
 
         elif donor.become_user and not is_auth:
             # Create user
@@ -349,27 +391,26 @@ def confirm_donor_email(donor, request=None):
             logger.info("Donor user created %s for donor %s", user.id, donor.id)
             # Login new user
             if request:
-                auth.login(request, user)
+                try_login_user_without_mfa(request, user)
     else:
         user = donor.user
 
-    # DE opts a donor in whenever the confirmation link carries `?newsletter`.
-    # Deliberately not carried over (D3): it bypasses the donation form's opt-in
-    # entirely, so it would silently subscribe people the moment the subscribe
-    # calls below are re-enabled. Restore it only together with a real opt-in.
+    # AT override (D3): DE opts a donor in whenever the confirmation link carries
+    # `?newsletter`. Not carried over -- it bypasses the form's opt-in entirely,
+    # so it would subscribe people even with hide_contact set. Restore it only
+    # together with a real opt-in surface.
 
     if donor.contact_allowed:
         # Subscribe to normal and donor newsletter
         # TODO: subscribe email address / if different from user?
-        # subscribe_to_default_newsletter(
-        #     donor.email,
-        #     user=user,
-        #     name=donor.get_full_name(),
-        #     email_confirmed=True,
-        #     reference="donation",
-        # )
-        # subscribe_donor_newsletter(donor, email_confirmed=True)
-        pass
+        subscribe_to_default_newsletter(
+            donor.email,
+            user=user,
+            name=donor.get_full_name(),
+            email_confirmed=True,
+            reference="donation",
+        )
+        subscribe_donor_newsletter(donor, email_confirmed=True)
     if new_user:
         connect_payments_to_user(donor)
 
@@ -419,51 +460,7 @@ def get_bucket(days: int) -> Optional[Tuple[int, int]]:
 
 
 def detect_recurring_on_donor(donor):
-    monthly_amount = detect_recurring_monthly_amount(donor)
-    if monthly_amount:
-        donor.recurring_amount = monthly_amount
-        donor.save()
-        return True
-    return False
-
-
-def detect_recurring_monthly_amount(donor):
-    subs = donor.subscriptions.filter(canceled=None)
-    if subs:
-        return sum([s.plan.amount_year for s in subs]) / 12
-    donations = donor.donations.filter(received_timestamp__isnull=False)
-    donation_count = donations.count()
-    if donation_count < 2:
-        return Decimal(0)
-    donations = donations.order_by("-timestamp")
-    time_diffs = Counter()
-    amounts = Counter()
-    prev_donation = None
-    for donation in donations:
-        amounts[donation.amount] += 1
-        if prev_donation is None:
-            prev_donation = donation
-            continue
-        days_diff = (prev_donation.timestamp - donation.timestamp).days
-        bucket = get_bucket(days_diff)
-        if bucket is not None:
-            time_diffs[bucket] += 1
-        prev_donation = donation
-
-    if time_diffs:
-        most_common_period = time_diffs.most_common(1)[0]
-        most_common_period_count = most_common_period[1]
-        most_common_period_month = most_common_period[0][2]
-        fraction = most_common_period_count / donation_count
-        if fraction < 0.5:
-            # recurring donation fraction is too low (?)
-            return Decimal(0)
-        one_period_ago = timezone.now() - timedelta(days=31) * most_common_period_month
-        if donor.last_donation is None or donor.last_donation < one_period_ago:
-            # last donation is too long ago
-            return Decimal(0)
-        return amounts.most_common(1)[0][0] / most_common_period_month
-    return Decimal(0)
+    transaction.on_commit(lambda: process_recurrence_task.delay(donor.id))
 
 
 def send_donation_reminder_email(donation):
@@ -547,4 +544,153 @@ def send_donation_gift_order_shipped(gift_order):
         context=context,
         ignore_active=True,
         priority=True,
+    )
+
+
+REMIND_INCOMPLETE_AFTER_DAYS = 2
+DONATION_SPAM_COUNT = 6
+
+
+def day_start(dt):
+    return dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def get_incomplete_donations_to_remind(base_date=None):
+    if base_date is None:
+        base_date = timezone.now()
+    base_date = timezone.localtime(base_date)
+
+    start_date = day_start(base_date) - relativedelta(days=REMIND_INCOMPLETE_AFTER_DAYS)
+    end_date = start_date + relativedelta(days=1)
+
+    lookback_buffer = start_date - relativedelta(days=3)
+
+    donations = (
+        Donation.objects.filter(
+            completed=False,
+            received_timestamp__isnull=True,
+            timestamp__gte=start_date,
+            timestamp__lt=end_date,
+        )
+        .exclude(donor__email="")
+        .order_by("timestamp")
+        .select_related("donor", "payment")
+    )
+
+    donor_already = set()
+
+    for donation in donations:
+        if donation.donor_id in donor_already:
+            continue
+        donor_already.add(donation.donor.email.lower())
+
+        donor_q = models.Q(donor_id=donation.donor_id) | models.Q(
+            donor__email__iexact=donation.donor.email
+        )
+
+        donor_donation_count = (
+            Donation.objects.filter(timestamp__gte=lookback_buffer)
+            .filter(donor_q)
+            .count()
+        )
+        if donor_donation_count >= DONATION_SPAM_COUNT:
+            continue
+
+        # Have we received any donations from this donor since?
+        donation_from_donor_exists = (
+            Donation.objects.filter(
+                completed=True,
+                timestamp__gte=lookback_buffer,
+            )
+            .filter(donor_q)
+            .exists()
+        )
+        if donation_from_donor_exists:
+            continue
+        yield donation
+
+
+INCOMPLETE_DONATION_NOTE = "IncompleteDonationReminder:"
+
+
+def send_incomplete_donation_reminder(donation):
+    if INCOMPLETE_DONATION_NOTE in donation.note:
+        return
+    donor = donation.donor
+    if not donor.email:
+        return
+
+    params = {
+        "initial_amount": str(donation.amount),
+    }
+    if donation.payment and donation.payment.order:
+        if donation.payment.order.subscription:
+            params["initial_interval"] = str(
+                donation.payment.order.subscription.plan.interval
+            )
+
+    donate_url = update_query_params(donor.get_donate_url(), params)
+
+    context = {
+        "name": donor.get_full_name(),
+        "first_name": donor.first_name,
+        "last_name": donor.last_name,
+        "salutation": donor.get_salutation(),
+        "donor": donor,
+        "donation": donation,
+        "donate_url": donate_url,
+    }
+
+    incomplete_donation_reminder_email.send(
+        user=donor.user,
+        email=donor.email,
+        context=context,
+        ignore_active=True,
+        priority=True,
+    )
+    donation.email_sent = timezone.now()
+    donation.note += "{}: {}\n\n".format(
+        INCOMPLETE_DONATION_NOTE, donation.email_sent.isoformat()
+    )
+    donation.save(update_fields=["email_sent", "note"])
+    donor.email_confirmation_sent = donation.email_sent
+    donor.save()
+    return True
+
+
+def remind_incomplete_donations():
+    for donation in get_incomplete_donations_to_remind():
+        send_incomplete_donation_reminder(donation)
+
+
+def send_donor_login_link(donor: Donor | None, email: str, next_path=None):
+    if donor is not None:
+        donor_login_link_email.send(
+            user=donor.user,
+            email=email,
+            context={
+                "donor": donor,
+                "action_url": donor.get_login_url(next_path=next_path),
+            },
+            ignore_active=True,
+            priority=True,
+        )
+    else:
+        no_donor_with_email_email.send(
+            email=email,
+            ignore_active=True,
+            priority=True,
+        )
+
+
+def send_email_change_link(donor: Donor, email: str):
+    token = get_email_change_token(donor, email)
+    token_path = reverse(
+        "fds_donation:donor-confirm_email",
+        kwargs={"donor_id": donor.id, "token": token},
+    )
+    qs = urlencode({"email": email}, doseq=True)
+    action_url = f"{settings.SITE_URL}{token_path}?{qs}"
+    donor_change_email_email.send(
+        email, context={"donor": donor, "action_url": action_url}
     )

@@ -1,23 +1,32 @@
 from decimal import Decimal
 
-from django.conf import settings
-from django.db.models import DecimalField, ExpressionWrapper, F, Sum
+from django.db.models import Sum
 from django.urls import reverse
+from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 
-from fragdenstaat_at.fds_cms.utils import get_plugin_children
-from froide_payment.models import Subscription
+from froide.helper.auth import is_crew
 
+from fragdenstaat_at.fds_cms.utils import get_plugin_children
+from fragdenstaat_at.fds_mailing.cms_plugins import EmailRenderMixin, EmailTemplateMixin
+
+from .auth import get_donor_from_request
+from .forms import RecurrenceUpgradeForm
 from .models import (
+    RegularDonorsProgressBarCMSPlugin,
     DefaultDonation,
     DonationFormCMSPlugin,
+    DonationFormViewCount,
     DonationGiftFormCMSPlugin,
     DonationProgressBarCMSPlugin,
     Donor,
-    RegularDonorsProgressBarCMSPlugin,
+    DonorEvent,
+    EmailDonationButtonCMSPlugin,
+    RemoteDonationFormCMSPlugin,
+    UpgradeRecurrenceFormCMSPlugin,
 )
 
 
@@ -35,23 +44,59 @@ class DonationGiftFormPlugin(CMSPluginBase):
 
         context = super().render(context, instance, placeholder)
 
+        context["donor"] = get_donor_from_request(context["request"])
+
         context["category"] = instance.category
         context["next_url"] = instance.next_url
 
         if not instance.next_url and context.get("request"):
             context["next_url"] = context["request"].get_full_path()
 
-        initial = {}
-        if context.get("request") and context["request"].user.is_authenticated:
-            user = context["request"].user
-            initial = {
-                "name": user.get_full_name(),
-                "email": user.email,
-                "address": user.address,
-            }
-        context["form"] = DonationGiftForm(
-            request=context.get("request"), category=instance.category, initial=initial
-        )
+        if context["donor"]:
+            context["form"] = DonationGiftForm(
+                request=context["request"],
+                donor=context["donor"],
+                category=instance.category,
+            )
+        return context
+
+
+@plugin_pool.register_plugin
+class UpgradeRecurrencePlugin(CMSPluginBase):
+    model = UpgradeRecurrenceFormCMSPlugin
+    module = _("Donations")
+    name = _("Upgrade recurrence")
+    text_enabled = True
+    cache = False
+    allow_children = True
+    render_template = "fds_donation/cms_plugins/upgrade_recurrence.html"
+
+    def render(self, context, instance, placeholder):
+        context = super().render(context, instance, placeholder)
+
+        context["donor"] = get_donor_from_request(context["request"])
+        context["next_url"] = instance.next_url or context["request"].get_full_path()
+
+        if context["donor"]:
+            active_recurrence = context["donor"].get_current_recurrence()
+            if active_recurrence and active_recurrence.should_upgrade(
+                instance.days_since
+            ):
+                reference = instance.reference or context["request"].GET.get(
+                    "pk_campaign", ""
+                )
+                if not is_crew(context["request"].user):
+                    DonorEvent.objects.create(
+                        donor=context["donor"],
+                        reference=reference,
+                        kind=DonorEvent.Kind.PROMPT_UPGRADE_RECURRENCE,
+                    )
+
+                context["form"] = RecurrenceUpgradeForm(
+                    recurrence=active_recurrence,
+                    choice_count=instance.choice_count,
+                    initial={"reference": reference},
+                )
 
         return context
 
@@ -65,9 +110,10 @@ class DonationFormPlugin(CMSPluginBase):
     cache = False
     render_template = "fds_donation/forms/_form_wrapper.html"
 
-    def render(self, context, instance, placeholder):
+    def render(self, context, instance: DonationFormCMSPlugin, placeholder):
         context = super().render(context, instance, placeholder)
         request = context["request"]
+        DonationFormViewCount.objects.handle_request(request)
         context["object"] = instance
         context["form"] = instance.make_form(
             user=request.user,
@@ -75,6 +121,29 @@ class DonationFormPlugin(CMSPluginBase):
             reference=request.GET.get("pk_campaign", ""),
             keyword=request.GET.get("pk_keyword", request.META.get("HTTP_REFERER", "")),
             action=instance.form_action or reverse("fds_donation:donate"),
+        )
+        return context
+
+
+@plugin_pool.register_plugin
+class RemoteDonationFormPlugin(CMSPluginBase):
+    model = RemoteDonationFormCMSPlugin
+    module = _("Donations")
+    name = _("Remote Donation Form")
+    text_enabled = True
+    cache = False
+    render_template = "fds_donation/forms/remote_form.html"
+
+    def render(self, context, instance: RemoteDonationFormCMSPlugin, placeholder):
+        context = super().render(context, instance, placeholder)
+        request = context["request"]
+        context["object"] = instance
+        context["form"] = instance.make_form(
+            user=request.user,
+            request=request,
+            reference=request.GET.get("pk_campaign", ""),
+            keyword=request.GET.get("pk_keyword", ""),
+            action=instance.remote_url,
         )
         return context
 
@@ -113,6 +182,18 @@ class DonorLogicMixin:
         if self.should_render(context):
             children = get_plugin_children(instance)
             return "\n\n".join(render_plugin_text(context, c) for c in children).strip()
+        return ""
+
+    def render_web_html(self, context, instance):
+        from fragdenstaat_at.fds_mailing.utils import render_plugin_web_html
+
+        context = self.add_to_context(context)
+
+        if self.should_render(context):
+            children = get_plugin_children(instance)
+            return mark_safe(
+                "\n".join(render_plugin_web_html(context, c) for c in children).strip()
+            )
         return ""
 
 
@@ -164,8 +245,37 @@ class IsNotRecentDonor(DonorLogicMixin, CMSPluginBase):
         return not context.get("donor") or not context["donor"].recently_donated
 
 
+RECURRENCE_UPGRADE_ASK_DAYS = 180
+
+
 @plugin_pool.register_plugin
-class ConcactAllowedDonor(DonorLogicMixin, CMSPluginBase):
+class HasRecentlyUpgraded(DonorLogicMixin, CMSPluginBase):
+    name = _("Has recently upgraded")
+
+    def should_render(self, context):
+        if donor := context.get("donor"):
+            active_recurrence = donor.get_current_recurrence()
+            return active_recurrence and active_recurrence.should_upgrade(
+                RECURRENCE_UPGRADE_ASK_DAYS
+            )
+        return False
+
+
+@plugin_pool.register_plugin
+class HasNotRecentlyUpgraded(DonorLogicMixin, CMSPluginBase):
+    name = _("Has not recently upgraded")
+
+    def should_render(self, context):
+        if donor := context.get("donor"):
+            active_recurrence = donor.get_current_recurrence()
+            if not active_recurrence:
+                return True
+            return not active_recurrence.should_upgrade(RECURRENCE_UPGRADE_ASK_DAYS)
+        return True
+
+
+@plugin_pool.register_plugin
+class ContactAllowedDonor(DonorLogicMixin, CMSPluginBase):
     name = _("Is contact allowed donor")
 
     def should_render(self, context):
@@ -173,11 +283,27 @@ class ConcactAllowedDonor(DonorLogicMixin, CMSPluginBase):
 
 
 @plugin_pool.register_plugin
-class ConcactNotAllowedDonor(DonorLogicMixin, CMSPluginBase):
+class ContactNotAllowedDonor(DonorLogicMixin, CMSPluginBase):
     name = _("Is contact not allowed donor")
 
     def should_render(self, context):
         return not context.get("donor") or not context["donor"].contact_allowed
+
+
+@plugin_pool.register_plugin
+class IsFormalDonor(DonorLogicMixin, CMSPluginBase):
+    name = _("Formal donor")
+
+    def should_render(self, context):
+        return context.get("donor") and context["donor"].is_formal()
+
+
+@plugin_pool.register_plugin
+class IsInformalDonor(DonorLogicMixin, CMSPluginBase):
+    name = _("Informal donor")
+
+    def should_render(self, context):
+        return not context.get("donor") or not context["donor"].is_formal()
 
 
 @plugin_pool.register_plugin
@@ -186,7 +312,7 @@ class DonationProgressBarPlugin(CMSPluginBase):
     module = _("Donations")
     name = _("Donation Progress Bar")
     text_enabled = True
-    cache = False
+    cache = True
     render_template = "fds_donation/cms_plugins/donation_progress_bar.html"
 
     def get_percentage(self, amount, max):
@@ -195,18 +321,19 @@ class DonationProgressBarPlugin(CMSPluginBase):
         return 0
 
     def get_donated_amount(self, instance):
+        qs = DefaultDonation.objects
+
         if instance.received_donations_only:
-            qs = DefaultDonation.objects.estimate_received_donations(
-                instance.start_date
-            )
+            qs = qs.estimate_received_donations(instance.start_date)
         else:
-            qs = DefaultDonation.objects.filter(
-                completed=True, timestamp__gte=instance.start_date
-            )
+            qs = qs.filter(completed=True, timestamp__gte=instance.start_date)
+
+        if instance.purpose:
+            qs = qs.filter(purpose=instance.purpose)
 
         total_sum = qs.aggregate(amount=Sum("amount"))["amount"]
 
-        return total_sum or Decimal(0.0)
+        return (total_sum or Decimal(0.0)) + instance.initial_amount
 
     def get_donation_goal_perc(self, instance, donated_amount):
         donation_goal = instance.donation_goal
@@ -241,6 +368,41 @@ class DonationProgressBarPlugin(CMSPluginBase):
             )
 
         return context
+
+
+@plugin_pool.register_plugin
+class EmailDonationButtonPlugin(EmailTemplateMixin, EmailRenderMixin, CMSPluginBase):
+    model = EmailDonationButtonCMSPlugin
+    module = _("Email")
+    name = _("Donation Button")
+    allow_children = False
+    render_template_template = "email/mjml/donation_button.mjml"
+
+    def render(self, context, instance, placeholder):
+        instance.attributes.setdefault("color", "#ffffff")
+        instance.attributes.setdefault("background-color", "#ff5029")
+        return super().render(context, instance, placeholder)
+
+    def render_text(self, context, instance):
+        context = instance.get_context()
+        return """
+{action_label}
+{action_url}
+""".format(**context)
+
+    def render_web_html(self, context, instance):
+        context = instance.get_context()
+        style_keys = ["color", "background-color", "border"]
+        styles = []
+        for key in style_keys:
+            if key in instance.attributes:
+                styles.append(f"{key}: {instance.attributes[key]}")
+        return format_html(
+            '<p><a class="btn btn-primary btn-lg" style="{style}" href="{action_url}">{action_label}</a></p>',
+            action_url=context["action_url"],
+            action_label=context["action_label"],
+            style="; ".join(styles),
+        )
 
 
 @plugin_pool.register_plugin

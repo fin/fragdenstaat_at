@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 from decimal import Decimal
 
@@ -5,7 +6,6 @@ from django.conf import settings
 from django.db.models import Q
 
 import pandas as pd
-
 from froide_payment.models import Payment, PaymentStatus
 from froide_payment.provider.banktransfer import find_transfer_code
 
@@ -34,18 +34,46 @@ def find_donation(transfer_ident, row):
 
     donor = donation.donor
     if donor:
-        if not donor.attributes or "iban" not in donor.attributes:
-            donor.attributes = donor.attributes or {}
-            donor.attributes["iban"] = row["iban"]
-            donor.save()
+        update_iban_on_donor(donor, row["iban"], row["reference"])
     return donation
 
 
+def update_iban_on_donor(donor, iban, reference):
+    if not donor.attributes:
+        donor.attributes = donor.attributes or {}
+    if "ibans" not in donor.attributes:
+        donor.attributes["ibans"] = []
+    elif not isinstance(donor.attributes["ibans"], list):
+        donor.attributes["ibans"] = [donor.attributes["ibans"]]
+    if "iban" in donor.attributes:
+        if donor.attributes["iban"] not in donor.attributes["ibans"]:
+            donor.attributes["ibans"].append(donor.attributes["iban"])
+    if pd.notnull(iban):
+        if iban not in donor.attributes["ibans"]:
+            donor.attributes["ibans"].append(iban)
+        donor.attributes["iban"] = iban
+    donor.attributes["banktransfer_reference"] = reference
+    donor.save()
+
+
 def get_or_create_bank_transfer_donor(row):
-    if pd.notnull(row["iban"]):
-        donors = Donor.objects.filter(attributes__iban=row["iban"])
+    if pd.notnull(row["iban"]) and row["iban"]:
+        donors = Donor.objects.filter(
+            Q(identifier=row["iban"]) | Q(attributes__iban=row["iban"])
+        )
         if len(donors) > 0:
             return donors[0]
+
+    transfer_code = find_transfer_code(row["reference"])
+    if transfer_code is not None:
+        donation = Donation.objects.filter(
+            payment__transaction_id=transfer_code
+        ).first()
+        if donation:
+            donor = donation.donor
+            if donor:
+                update_iban_on_donor(donor, row["iban"], row["reference"])
+                return donor
 
     name = row["name"]
     names = name.strip().rsplit(" ", 1)
@@ -55,9 +83,11 @@ def get_or_create_bank_transfer_donor(row):
     ident = ""
     country = ""
     if pd.notnull(row["iban"]):
-        attrs = {"iban": row["iban"]}
+        attrs.update({"iban": row["iban"]})
         country = row["iban"][:2]
         ident = row["iban"]
+    if pd.notnull(row["reference"]):
+        attrs["banktransfer_reference"] = row["reference"]
     return Donor.objects.create(
         active=True,
         salutation="",
@@ -95,6 +125,8 @@ def import_banktransfer(transfer_ident, row, project):
     donation.amount = Decimal(str(row["amount"]))
     donation.amount_received = Decimal(str(row["amount"]))
     donation.received_timestamp = row["date_received"]
+    if row.get("purpose"):
+        donation.purpose = row["purpose"]
     if is_new:
         if pd.notnull(row["date"]) and row["date"]:
             donation.timestamp = row["date"]
@@ -112,61 +144,63 @@ def import_banktransfer(transfer_ident, row, project):
             payment.captured_amount = donation.amount
             payment.received_amount = donation.amount
             payment.received_timestamp = donation.received_timestamp
-            payment.change_status(PaymentStatus.CONFIRMED)
-            payment.save()
+            payment.change_status_and_save(PaymentStatus.CONFIRMED)
     return is_new
 
 
-BLOCK_LIST = set(["Stripe Payments UK Ltd", "Stripe Technology Europe Ltd", "Stripe"])
-# DEBIT_PATTERN = re.compile(r"\(FDS (\d+)\)")
+BLOCK_LIST = {"Stripe Payments UK Ltd", "Stripe Technology Europe Ltd", "Stripe"}
+DEBIT_PATTERN = re.compile(r" \(P(\d+)\)")
 
 
-# def update_direct_debit(row):
-#     match = DEBIT_PATTERN.search(row["reference"])
-#     try:
-#         payment = Payment.objects.get(transaction_id=match.group(1))
-#     except Payment.DoesNotExist:
-#         print('Payment does not exist for', row["reference"])
-#         return
-#     amount = Decimal(str(row["amount"]))
-#     payment.captured_amount = amount
-#     payment.received_amount = amount
-#     payment.received_timestamp = row["date_received"]
-#     payment.change_status(PaymentStatus.CONFIRMED)
-#     payment.save()
+def update_direct_debit(row):
+    match = DEBIT_PATTERN.search(row["reference"])
+    try:
+        payment = Payment.objects.get(id=int(match.group(1)))
+    except Payment.DoesNotExist:
+        return
+    amount = Decimal(str(row["amount"]))
+    payment.captured_amount = amount
+    payment.received_amount = amount
+    payment.received_timestamp = row["date_received"]
+    payment.change_status_and_save(PaymentStatus.CONFIRMED)
+
+
+# AT override: Erste Bank / George statement exports use different column names
+# and split the payment reference across two columns. DE's mapping is kept below
+# for reference, since this is the piece most likely to drift on a future sync.
+#
+#   DE: Betrag, Datum, Wertstellung, Name, Verwendungszweck, Konto, Bank, Purpose
+BANK_COLUMNS = {
+    "Betrag": "amount",
+    "Valutadatum": "date_received",
+    "Buchungsdatum": "date",
+    "Partnername": "name",
+    "Zahlungsreferenz": "reference",
+    "Partner IBAN": "iban",
+    "BIC/SWIFT": "bic",
+}
 
 
 def import_banktransfers(xls_file, project):
     df = pd.read_excel(
         xls_file,
         engine="xlrd" if xls_file.name.endswith(".xls") else "openpyxl",
+        # Keep references as text: they are identifiers, not numbers.
         dtype={"Zahlungsreferenz": str},
     )
-    df = df.rename(
-        columns={
-            "Betrag": "amount",
-            "Valutadatum": "date_received",
-            "Buchungsdatum": "date",
-            "Partnername": "name",
-            "Zahlungsreferenz": "reference",
-            "Partner IBAN": "iban",
-            "BIC/SWIFT": "bic",
-        }
-    )
-    # `|` binds tighter than `>=`, so the parentheses are load-bearing: without
-    # them this reads `amount >= (0 | contains(...))`, i.e. a comparison against a
-    # boolean, which silently dropped rows. `na=False` because `reference` is only
-    # filled in on the next statement.
-    df = df[
-        (df["amount"] >= 0) | df["reference"].str.contains("FDS", na=False)
-    ]
-    df["reference"] = (
-        df["reference"].fillna("").str.cat(df["Buchungs-Details"].fillna(""))
-    )
-
-    # df = df[df['reference'].str.contains('FDS')]
-    df = df.dropna(subset=["date_received"])
+    df = df.rename(columns=BANK_COLUMNS)
+    # George splits a long reference between "Zahlungsreferenz" and
+    # "Buchungs-Details"; join them so reference matching sees the whole string.
+    if "Buchungs-Details" in df.columns:
+        df["reference"] = (
+            df["reference"].fillna("").str.cat(df["Buchungs-Details"].fillna(""))
+        )
     df = df.dropna(subset=["name"])
+
+    df = df.dropna(subset=["date_received"])
+    df["reference"] = df["reference"].fillna("")
+    if "purpose" in df.columns:
+        df["purpose"] = df["purpose"].fillna("")
     df["date_received"] = df["date_received"].dt.tz_localize(settings.TIME_ZONE)
     if "date" in df.columns:
         df["date"] = df["date"].dt.tz_localize(settings.TIME_ZONE)
@@ -177,10 +211,9 @@ def import_banktransfers(xls_file, project):
     for i, row in df.iterrows():
         if row["name"] in BLOCK_LIST:
             continue
-        # if DEBIT_PATTERN.search(row["reference"]):
-        #     print('DEBIT MATCHED', row)
-        #     update_direct_debit(row)
-        #     continue
+        if DEBIT_PATTERN.search(row["reference"]):
+            update_direct_debit(row)
+            continue
         local_date = row["date_received"].date()
         transfer_ident = "{date}-{ref}-{iban}-{i}".format(
             date=local_date.isoformat(), ref=row["reference"], iban=row["iban"], i=i
@@ -215,7 +248,6 @@ def import_paypal(csv_file):
             "Ort": "city",
             "PLZ": "postcode",
             "Hinweis": "note",
-            "Auswirkung auf Guthaben": "Guthaben",
             "Absender E-Mail-Adresse": "paypal_email",
         }
     )
@@ -229,7 +261,7 @@ def import_paypal(csv_file):
         "subscription_id",
     )
 
-    df = df.query('Guthaben == "Haben"')
+    df = df.query('`Auswirkung auf Guthaben` == "Haben"')
     for c in make_empty:
         df[c] = df[c].fillna("")
 
@@ -335,7 +367,10 @@ def find_paypal_payment(row):
             variant="paypal",
             status=PaymentStatus.CONFIRMED,
         )
-        .filter(created__gte=row["date"] - buffer, created__lte=row["date"] + buffer)
+        .filter(
+            received_timestamp__gte=row["date"] - buffer,
+            received_timestamp__lte=row["date"] + buffer,
+        )
         .filter(cond)
     )
 

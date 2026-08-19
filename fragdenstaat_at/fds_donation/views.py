@@ -1,34 +1,151 @@
+from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import redirect
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, TemplateView, UpdateView
 from django.views.generic.edit import FormView
 
-from froide.helper.utils import get_redirect
+from froide_payment import RedirectNeeded
 
+from froide.helper.breadcrumbs import Breadcrumbs, BreadcrumbView
+from froide.helper.utils import (
+    get_redirect,
+    get_redirect_url,
+    is_ajax,
+    update_query_params,
+)
+
+from fragdenstaat_at.fds_donation.utils import validate_donor_token
+
+from .auth import get_donor_from_request, login_donor, logout_donor
+from .form_settings import DonationFormFactory, DonationSettingsForm
 from .forms import (
-    DonationFormFactory,
     DonationGiftForm,
     DonorDetailsForm,
+    DonorEmailForm,
+    DonorEmailLinkForm,
+    QuickDonationForm,
+    RecurrenceUpgradeForm,
     SimpleDonationForm,
 )
-from .models import Donor
-from .services import confirm_donor_email, merge_donor_list
+from .models import DonationFormViewCount, Donor, DonorEvent
+from .utils import (
+    merge_donor_with_same_confirmed_emails,
+    validate_email_change_token,
+)
 
 
 @require_POST
 def make_order(request, category):
-    form = DonationGiftForm(data=request.POST, category=category, request=request)
+    donor = get_donor_from_request(request)
+    if donor is None:
+        messages.add_message(
+            request,
+            messages.ERROR,
+            _(
+                "You need to be logged in as a donor to order a donation gift. "
+                "Please request a login link first."
+            ),
+        )
+        return redirect("fds_donation:donor-send-login-link")
+    form = DonationGiftForm(
+        data=request.POST, category=category, request=request, donor=donor
+    )
     if form.is_valid():
-        messages.add_message(request, messages.SUCCESS, "Danke für Deine Bestellung!")
-        form.save(request)
-        return get_redirect(request)
+        form.save()
+        messages.add_message(
+            request, messages.SUCCESS, _("Your order has been created.")
+        )
 
-    messages.add_message(request, messages.ERROR, "Form-Fehler!")
-    return get_redirect(request, next=request.META.get("HTTP_REFERER", "/"))
+        return get_redirect(request)
+    if form.errors:
+        error_message = "\n".join(form.errors.get("__all__", []))
+        messages.add_message(request, messages.ERROR, error_message)
+    return redirect(request.POST.get("form_path", "/"))
+
+
+@require_POST
+def upgrade_recurrence(request):
+    try:
+        result = handle_upgrade(request)
+    except RedirectNeeded as red_url:
+        next_url = request.POST.get("next")
+        request.session["next"] = next_url
+        url = str(red_url)
+        if is_ajax(request):
+            return HttpResponse(url)
+        return redirect(url)
+
+    if result is True:
+        if is_ajax(request):
+            return HttpResponse(
+                format_html(
+                    '<div class="alert alert-success">{}</div>'.format(
+                        _("Your recurrence has been updated.")
+                    )
+                )
+            )
+        messages.add_message(
+            request, messages.SUCCESS, _("Your recurrence has been updated.")
+        )
+    elif result is False:
+        messages.add_message(
+            request, messages.ERROR, _("Upgrade of recurrence failed.")
+        )
+    else:
+        messages.add_message(request, messages.ERROR, _("Form could not be processed."))
+
+    if is_ajax(request):
+        return HttpResponse(request.get_full_path())
+    return get_redirect(request)
+
+
+def handle_upgrade(request) -> bool | None:
+    donor = get_donor_from_request(request)
+    if donor is None:
+        return
+    recurrence = None
+    recurrence_id = request.POST.get("recurrence")
+    if recurrence_id is not None:
+        try:
+            recurrence_id = int(recurrence_id)
+        except ValueError:
+            return
+        recurrence = donor.recurrences.filter(id=recurrence_id).first()
+    if recurrence is None:
+        return
+
+    form = RecurrenceUpgradeForm(recurrence=recurrence, data=request.POST)
+    if not form.is_valid():
+        return
+    previous_amount = recurrence.amount
+    previous_amount_per_month = recurrence.amount_per_month
+    result = form.save()
+    if result:
+        DonorEvent.objects.create(
+            donor=donor,
+            kind=DonorEvent.Kind.UPGRADE_RECURRENCE,
+            reference=form.cleaned_data["reference"],
+            context={
+                "previous_interval": recurrence.interval,
+                "previous_amount": float(previous_amount),
+                "previous_amount_decimal": str(previous_amount),
+                "previous_amount_per_month": float(previous_amount_per_month),
+                "previous_amount_per_month_decimal": str(previous_amount_per_month),
+                "new_interval": recurrence.interval,
+                "new_amount": float(recurrence.amount),
+                "new_amount_decimal": str(recurrence.amount),
+                "new_amount_per_month": float(recurrence.amount_per_month),
+                "new_amount_per_month_decimal": str(recurrence.amount_per_month),
+                "request": dict(request.GET),
+            },
+        )
+    return result
 
 
 class DonationView(FormView):
@@ -36,6 +153,15 @@ class DonationView(FormView):
 
     def get_form_action(self):
         return reverse("fds_donation:donate")
+
+    def get(self, request, *args, **kwargs):
+        DonationFormViewCount.objects.handle_request(request)
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if is_ajax(request):
+            return quick_donation(request)
+        return super().post(request, *args, **kwargs)
 
     def get_form(self, form_class=None):
         """Return an instance of the form to be used in this view."""
@@ -49,7 +175,7 @@ class DonationView(FormView):
             user=self.request.user,
             request=self.request,
             action=self.get_form_action(),
-            **form_kwargs
+            **form_kwargs,
         )
         return form
 
@@ -57,6 +183,38 @@ class DonationView(FormView):
         order, related_obj = form.save()
         method = form.cleaned_data["payment_method"]
         return redirect(order.get_absolute_payment_url(method))
+
+
+def quick_donation(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+    form = DonationFormFactory().make_form(
+        form_class=QuickDonationForm,
+        data=request.POST,
+        user=request.user,
+        request=request,
+    )
+    if form.is_valid():
+        order, related_obj = form.save()
+
+        payment = order.get_or_create_payment(form.payment_method, request=request)
+        provider = payment.get_provider()
+        result = provider.start_quick_payment(payment)
+        result["successurl"] = settings.SITE_URL + payment.get_success_url()
+
+        return JsonResponse(result)
+    return JsonResponse(
+        {
+            "error": form.errors.as_text(),
+        },
+        status=400,
+    )
+
+
+def get_base_breadcrumb(donor):
+    return Breadcrumbs(
+        items=[(_("My donations"), reverse("fds_donation:donor"))], color="yellow-200"
+    )
 
 
 class DonationCompleteView(TemplateView):
@@ -74,80 +232,28 @@ class DonationCompleteView(TemplateView):
 class DonationFailedView(TemplateView):
     template_name = "fds_donation/donation_failed.html"
 
-
-class DonorMixin:
-    model = Donor
-    slug_field = "uuid"
-    slug_url_kwarg = "token"
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        response = self.should_redirect_user()
-        if response:
-            return response
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        response = self.should_redirect_user()
-        if response:
-            return response
-        return super().post(request, *args, **kwargs)
-
-    def should_redirect_user(self):
-        is_auth = self.request.user.is_authenticated
-        has_token = "token" in self.kwargs
-        is_same_user = self.object.user == self.request.user
-        if is_auth and has_token and is_same_user:
-            # User is logged in and donor user, redirect to user view
-            return redirect(self.get_user_url())
-        return None
-
-    def get_user_url(self):
-        return reverse("fds_donation:donor-user")
-
-    def get_object(self, queryset=None):
-        obj = super().get_object(queryset=queryset)
-        if not obj.email_confirmed:
-            confirm_donor_email(obj, request=self.request)
-
-        return obj
-
-
-class DonorView(DonorMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        donations = self.object.donations.all()
-        try:
-            last_donation = donations[0]
-        except IndexError:
-            last_donation = None
-        ctx.update(
-            {
-                "subscriptions": self.object.subscriptions.filter(canceled=None),
-                "donations": donations,
-                "last_donation": last_donation,
-            }
-        )
+        ctx["donate_url"] = reverse("fds_donation:donate")
         return ctx
 
 
-class DonorUserMixin:
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if self.object is None:
-            return self.no_donor_found(request)
-        return super().post(request, *args, **kwargs)
+def get_donor_and_warn(request):
+    donor = get_donor_from_request(request)
+    if request.user.is_authenticated and donor is not None:
+        if donor.user and donor.user != request.user:
+            messages.add_message(
+                request,
+                messages.WARNING,
+                _(
+                    "You are logged in with a different account than the one associated with this donor."
+                ),
+            )
+    return donor
 
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if self.object is None:
-            return self.no_donor_found(request)
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
 
-    def no_donor_found(self, request):
+def no_donor_found(request):
+    if request.user.is_authenticated:
         messages.add_message(
             request,
             messages.INFO,
@@ -158,23 +264,84 @@ class DonorUserMixin:
             ),
         )
         return redirect("/spenden/")
+    return redirect(
+        update_query_params(
+            reverse("fds_donation:donor-send-login-link"),
+            {"next": request.get_full_path()},
+        )
+    )
+
+
+class DonorMixin:
+    model = Donor
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object is None:
+            return no_donor_found(request)
+        return super().post(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object is None:
+            return no_donor_found(request)
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
     def get_object(self, queryset=None):
-        donors = Donor.objects.filter(
-            user=self.request.user, email_confirmed__isnull=False
+        return get_donor_and_warn(self.request)
+
+    def get_success_url(self):
+        return reverse("fds_donation:donor")
+
+
+class DonorView(DonorMixin, DetailView, BreadcrumbView):
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        donations = self.object.donations.filter(completed=True).select_related(
+            "recurrence", "donationgiftorder__donation_gift"
         )
-        if len(donors) == 0:
-            return None
-        if len(donors) == 1:
-            return donors[0]
-        return merge_donor_list(donors)
+        try:
+            last_donation = donations[0]
+        except IndexError:
+            last_donation = None
+
+        pending_banktransfers = [
+            d
+            for d in donations
+            if not d.received_timestamp and d.method == "banktransfer"
+        ]
+
+        donation_downloads = sorted(
+            {
+                dl
+                for d in donations
+                if hasattr(d, "donationgiftorder")
+                and (dl := d.donationgiftorder.get_donation_download())
+            }
+        )
+
+        ctx.update(
+            {
+                "recurrences": self.object.recurrences.filter(cancel_date=None),
+                "donations": donations,
+                "last_donation": last_donation,
+                "pending_banktransfers": pending_banktransfers,
+                "donation_downloads": donation_downloads,
+            }
+        )
+        return ctx
+
+    def render_to_response(self, context, **response_kwargs):
+        if not context["last_donation"]:
+            return redirect("fds_donation:donor-donate")
+        return super().render_to_response(context, **response_kwargs)
+
+    def get_breadcrumbs(self, context):
+        return get_base_breadcrumb(context["object"])
 
 
-class DonorUserView(LoginRequiredMixin, DonorUserMixin, DonorView):
-    pass
-
-
-class DonorChangeView(DonorMixin, UpdateView):
+class DonorChangeView(DonorMixin, UpdateView, BreadcrumbView):
     form_class = DonorDetailsForm
 
     def form_valid(self, form):
@@ -183,22 +350,51 @@ class DonorChangeView(DonorMixin, UpdateView):
         )
         return super().form_valid(form)
 
-    def get_user_url(self):
-        return reverse("fds_donation:donor-user-change")
+    def get_breadcrumbs(self, context):
+        return get_base_breadcrumb(context["object"]) + [
+            (_("Change your details"), context["object"].get_absolute_change_url())
+        ]
 
 
-class DonorChangeUserView(LoginRequiredMixin, DonorUserMixin, DonorChangeView):
-    pass
+class DonorChangeEmailView(DonorMixin, UpdateView, BreadcrumbView):
+    form_class = DonorEmailForm
+    template_name = "fds_donation/donor_change_email.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Remove instance, as form is not a model form
+        kwargs.pop("instance", None)
+        return kwargs
+
+    def form_valid(self, form):
+        result = form.send_confirmation_email(self.object)
+        if result:
+            messages.add_message(
+                self.request,
+                messages.SUCCESS,
+                _("We send you an email to confirm your new email address."),
+            )
+        return redirect("fds_donation:donor")
+
+    def get_breadcrumbs(self, context):
+        return get_base_breadcrumb(context["object"]) + [
+            (
+                _("Change your email address"),
+                reverse("fds_donation:donor-change_email"),
+            )
+        ]
 
 
-class DonorDonationActionView(DonorMixin, UpdateView):
+class DonorDonationActionView(DonorMixin, UpdateView, BreadcrumbView):
     form_class = SimpleDonationForm
     template_name = "fds_donation/donation_form.html"
 
-    def get_user_url(self):
-        return reverse("fds_donation:donor-user-donate")
-
     def get_form_kwargs(self):
+        form_kwargs = super().get_form_kwargs()
+        del form_kwargs["instance"]
+        return form_kwargs
+
+    def get_form(self, form_class=...):
         donor = self.object
         self.has_subscription = donor.has_active_subscription()
         if self.has_subscription:
@@ -206,25 +402,23 @@ class DonorDonationActionView(DonorMixin, UpdateView):
         else:
             form_settings = {"interval": "once_recurring"}
 
-        form_factory = DonationFormFactory(
-            reference="donation-update",
+        request_data = DonationFormFactory.from_request(self.request)
+        form_settings.update(request_data)
+        form = DonationSettingsForm(data=form_settings)
+        return form.make_donation_form(
+            form_class=self.form_class,
+            request=self.request,
+            user=self.request.user,
+            action=self.request.path,
+            **self.get_form_kwargs(),
         )
-        form_kwargs = super().get_form_kwargs()
-        del form_kwargs["instance"]
-        form_kwargs.update(
-            form_factory.get_form_kwargs(
-                form_settings=form_settings,
-                user=self.request.user,
-                action=self.request.path,
-            )
-        )
-        return form_kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "subscriptions": self.object.subscriptions.filter(canceled=None),
+                "recurrences": self.object.recurrences.filter(cancel_date=None),
+                "has_donation": self.object.donations.filter(completed=True).exists(),
             }
         )
         return context
@@ -239,8 +433,163 @@ class DonorDonationActionView(DonorMixin, UpdateView):
         messages.add_message(self.request, messages.ERROR, "Form-Fehler!")
         return super().form_invalid(form)
 
+    def get_breadcrumbs(self, context):
+        if context.get("has_donation", True):
+            return get_base_breadcrumb(context["object"]) + [
+                (_("Donate"), context["object"].get_absolute_donate_url())
+            ]
+        return []
 
-class DonorDonationActionUserView(
-    LoginRequiredMixin, DonorUserMixin, DonorDonationActionView
-):
-    pass
+
+def donor_login(request, donor_id, token, next_path):
+    query_string = request.META.get("QUERY_STRING", "")
+    query_string = ("?" + query_string) if query_string else ""
+    if request.method == "POST":
+        next_path = request.POST.get("next", next_path + query_string)
+        donor, valid = validate_donor_token(donor_id, token)
+        if not valid:
+            # Token expired or invalid
+            messages.add_message(
+                request,
+                messages.WARNING,
+                _("Your link has expired, please request a new one."),
+            )
+            return redirect("fds_donation:donor-send-login-link")
+        if donor.user and request.user.is_authenticated:
+            if donor.user != request.user:
+                messages.add_message(
+                    request,
+                    messages.ERROR,
+                    _("You cannot access this donor with the current account."),
+                )
+            return redirect(next_path)
+
+        login_donor(request, donor)
+
+        return redirect(next_path)
+
+    if next_path == "/":
+        # If no further path is given, try extracting next parameter
+        extra_params = dict(request.GET)
+        extra_params.pop("next", None)
+        next_path = get_redirect_url(request, default=next_path, params=extra_params)
+    else:
+        next_path = next_path + query_string
+
+    return render(
+        request,
+        "helper/auto_submit.html",
+        {
+            "form_action": request.get_full_path(),
+            "next": next_path,
+        },
+    )
+
+
+def donor_confirm_email(request, donor_id, token):
+    donor = get_donor_and_warn(request)
+    if donor is None:
+        messages.add_message(
+            request,
+            messages.ERROR,
+            _(
+                "In order to confirm your new email address, you need to be logged into the right donor profile."
+            ),
+        )
+
+        return no_donor_found(request)
+
+    email = request.GET.get("email")
+    if not email:
+        return redirect("fds_donation:donor")
+
+    requesting_donor, valid_email = validate_email_change_token(donor_id, token, email)
+    if valid_email is None:
+        # Token expired or invalid
+        messages.add_message(
+            request,
+            messages.WARNING,
+            _("Your link has expired, please request a new one."),
+        )
+        return redirect("fds_donation:donor")
+
+    if donor.id != requesting_donor.id:
+        messages.add_message(
+            request,
+            messages.WARNING,
+            _("The link you clicked did not come from this donor profile."),
+        )
+        return redirect("fds_donation:donor")
+
+    if request.method == "POST":
+        if valid_email != donor.email:
+            donor.email = valid_email
+            donor.email_confirmed = timezone.now()
+            donor.save(update_fields=["email", "email_confirmed"])
+            merge_donor_with_same_confirmed_emails(donor)
+
+            messages.add_message(
+                request,
+                messages.SUCCESS,
+                _("Your email has been changed."),
+            )
+        return redirect("fds_donation:donor")
+
+    return render(request, "account/go.html", {"form_action": request.get_full_path()})
+
+
+def can_change_donor(request):
+    return request.user.is_staff and request.user.has_perm("fds_donation.change_donor")
+
+
+def get_legacy_redirect(url_name):
+    def redirect_legacy_donor_view(request, token):
+        path = reverse(url_name)
+        if can_change_donor(request):
+            donor = get_object_or_404(Donor, uuid=token)
+            login_donor(request, donor, update_login=False)
+            messages.add_message(
+                request,
+                messages.INFO,
+                _("You are accessing the donor profile of {name} ({email})").format(
+                    name=donor.get_full_name(), email=donor.email
+                ),
+            )
+            return redirect(path)
+
+        return redirect(
+            update_query_params(
+                reverse("fds_donation:donor-send-login-link"), {"next": path}
+            )
+        )
+
+    return redirect_legacy_donor_view
+
+
+def send_donor_login_link(request):
+    if request.method == "POST":
+        form = DonorEmailLinkForm(request.POST)
+        if form.is_valid():
+            form.send_login_link()
+            messages.add_message(
+                request,
+                messages.SUCCESS,
+                _("We have sent you a link to access your donations."),
+            )
+            return redirect("/")
+    else:
+        form = DonorEmailLinkForm(
+            initial={
+                "next_path": get_redirect_url(
+                    request, default=reverse("fds_donation:donor")
+                )
+            }
+        )
+
+    return render(request, "fds_donation/donor_login_link_form.html", {"form": form})
+
+
+def donor_logout(request):
+    if request.method == "POST":
+        logout_donor(request)
+    return redirect("/")

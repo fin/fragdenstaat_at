@@ -32,6 +32,40 @@ class Test(FragDenStaatBase):
     DATABASES = values.DatabaseURLValue(
         "postgis://fragdenstaat_at:fragdenstaat_at@localhost:5436/fragdenstaat_at"
     )
+    # Adopted from DE's test settings alongside its fds_donation tests, which
+    # exercise every variant. The Stripe/PayPal ones need test keys from the
+    # environment; the tests that use them are marked and deselected by default
+    # (see pytest.ini), but the variants must still be declared or unrelated
+    # tests fail with "Payment variant does not exist".
+    PAYMENT_VARIANTS = {
+        "creditcard": (
+            "froide_payment.provider.StripeIntentProvider",
+            {
+                "public_key": env("STRIPE_TEST_PUBLIC_KEY"),
+                "secret_key": env("STRIPE_TEST_SECRET_KEY"),
+            },
+        ),
+        "sepa": (
+            "froide_payment.provider.StripeSEPAProvider",
+            {
+                "public_key": env("STRIPE_TEST_PUBLIC_KEY"),
+                "secret_key": env("STRIPE_TEST_SECRET_KEY"),
+            },
+        ),
+        "paypal": (
+            "froide_payment.provider.PaypalProvider",
+            {
+                "client_id": env("PAYPAL_TEST_CLIENT_ID"),
+                "secret": env("PAYPAL_TEST_SECRET"),
+                "endpoint": "https://api.sandbox.paypal.com",
+                "capture": True,
+                "webhook_id": None,
+            },
+        ),
+        "lastschrift": ("froide_payment.provider.LastschriftProvider", {}),
+        "banktransfer": ("froide_payment.provider.BanktransferProvider", {}),
+    }
+
     ELASTICSEARCH_INDEX_PREFIX = "fds_test"
     ELASTICSEARCH_DSL = {
         "default": {

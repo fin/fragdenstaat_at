@@ -1,54 +1,60 @@
 {% extends "admin/change_list.html" %}
-
 {% load i18n %}
-{% load donation_tags %}
-
-
 {% block object-tools-items %}
-  <li>
-    <a href="{% url 'admin:fds_donation-donation-export_csv' %}?{{ request.META.QUERY_STRING }}">
-      {% trans "Export CSV" %}
-    </a>
-  </li>
-  {{ block.super }}
+    <li>
+        <a href="{% url 'admin:fds_donation-donation-export_csv' %}?{{ request.META.QUERY_STRING }}">
+            {% trans "Export CSV" %}
+        </a>
+    </li>
+    {{ block.super }}
 {% endblock %}
-
-
 {% block result_list %}
-<p>
-  Summe: {{ cl.amount_sum }}&nbsp;EUR
-  <br/>Durchschnitt: {{ cl.amount_avg }}&nbsp;EUR
-  <br/>Median: {{ cl.amount_median }}&nbsp;EUR
-  <br/>Erhalten: {{ cl.amount_received_sum }}&nbsp;EUR
-  <br/>Anzahl Spender: {{ cl.donor_count }}
-  <br/>Wiederkehrend Monatssumme der Spendenden: {{ cl.recurring_donor_amount }}&nbsp;EUR
-</p>
-
-{% donations_by_month %}
-
-
-{{ block.super }}
+    <p>
+        Summe: {{ cl.amount_sum }}&nbsp;EUR
+        <br />
+        Durchschnitt: {{ cl.amount_avg }}&nbsp;EUR
+        <br />
+        Median: {{ cl.amount_median }}&nbsp;EUR
+        <br />
+        Erhalten: {{ cl.amount_received_sum }}&nbsp;EUR
+        <br />
+        Anzahl Spender: {{ cl.donor_count }}
+        <br />
+        Wiederkehrend Monatssumme der Spendenden: {{ cl.recurring_donor_amount }}&nbsp;EUR
+        <br />
+        Anzahl Dauerspenden: {{ cl.recurring_count }}
+        <br />
+        Anzahl gekündigte Dauerspenden: {{ cl.cancel_count }}
+        <br />
+        Monatssumme der Dauerspenden: {{ cl.recurring_monthly_amount }}&nbsp;EUR
+        <br />
+        Nicht gekündigte Monatssumme der Dauerspenden: {{ cl.recurring_monthly_active_amount }}&nbsp;EUR
+    </p>
+    {{ block.super }}
 {% endblock %}
-
 {% block content %}
-  {{ block.super }}
-  <div>
-    <h4>Überweisungen (XLS/XLSX)</h4>
-    <form enctype="multipart/form-data" method="post" action="{% url 'admin:fds_donation-donation-import_banktransfers' %}">{% csrf_token %}
-      <select name="project">
-        {% for project, name in cl.DONATION_PROJECTS %}
-          <option value="{{ project }}">{{ name }}</option>
-        {% endfor %}
-      </select>
-      <input type="file" name="file"/>
-      <input type="submit" value="Überweisungen importieren"/>
-    </form>
-  </div>
-  <div>
-    <h4>Paypal (CSV)</h4>
-    <form enctype="multipart/form-data" method="post" action="{% url 'admin:fds_donation-donation-import_paypal' %}">{% csrf_token %}
-      <input type="file" name="file"/>
-      <input type="submit" value="Paypal importieren"/>
-    </form>
-  </div>
+    {{ block.super }}
+    <div>
+        <h4>Überweisungen (XLS/XLSX)</h4>
+        <form enctype="multipart/form-data"
+              method="post"
+              action="{% url 'admin:fds_donation-donation-import_banktransfers' %}">
+            {% csrf_token %}
+            <select name="project">
+                {% for project, name in cl.DONATION_PROJECTS %}<option value="{{ project }}">{{ name }}</option>{% endfor %}
+            </select>
+            <input type="file" name="file" />
+            <input type="submit" value="Überweisungen importieren" />
+        </form>
+    </div>
+    <div>
+        <h4>Paypal (CSV)</h4>
+        <form enctype="multipart/form-data"
+              method="post"
+              action="{% url 'admin:fds_donation-donation-import_paypal' %}">
+            {% csrf_token %}
+            <input type="file" name="file" />
+            <input type="submit" value="Paypal importieren" />
+        </form>
+    </div>
 {% endblock %}

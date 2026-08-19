@@ -3,13 +3,18 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Max, Q, Sum
 from django.utils import timezone
 
 from froide_payment.models import PaymentStatus
 
-from .models import Donation, Donor
+from fragdenstaat_at.fds_newsletter.models import Subscriber
+
+from .forms import SubscriptionCancelFeedbackForm
+from .models import Donation, Donor, DonorEvent, Recurrence
 from .services import (
     create_donation_from_payment,
+    detect_recurring_on_donor,
     send_donation_email,
     send_sepa_notification,
 )
@@ -32,6 +37,8 @@ def payment_status_changed(sender=None, instance=None, **kwargs):
 
     if instance.status == PaymentStatus.CONFIRMED:
         obj.completed = True
+        # Set donation amount to what was actually captured by payment provider
+        obj.amount = instance.captured_amount
         if instance.received_amount:
             obj.amount_reveived = instance.received_amount
         if instance.received_timestamp:
@@ -44,7 +51,9 @@ def payment_status_changed(sender=None, instance=None, **kwargs):
         PaymentStatus.REJECTED,
         PaymentStatus.CANCELED,
     ):
-        obj.received_timestamp = None
+        if instance.captured_amount > 0 and obj.amount != instance.captured_amount:
+            obj.amount = instance.captured_amount
+        obj.received_timestamp = instance.received_timestamp
     elif instance.status in (PaymentStatus.PENDING, PaymentStatus.DEFERRED):
         obj.completed = True
         obj.received_timestamp = None
@@ -63,6 +72,7 @@ def payment_status_changed(sender=None, instance=None, **kwargs):
     else:
         received_now = False
 
+    detect_recurring_on_donor(obj.donor)
     process_new_donation(obj, received_now=received_now, domain_obj=domain_obj)
 
 
@@ -88,12 +98,46 @@ def process_new_donation(donation, received_now=False, domain_obj=None):
 def subscription_was_canceled(sender, **kwargs):
     if sender is None:
         return
+    Recurrence.objects.filter(subscription=sender).update(cancel_date=sender.canceled)
+    recurrence = Recurrence.objects.filter(subscription=sender).first()
+    if recurrence:
+        detect_recurring_on_donor(recurrence.donor)
 
-    from .services import detect_recurring_on_donor
 
-    donors = Donor.objects.filter(subscriptions=sender)
-    for donor in donors:
-        detect_recurring_on_donor(donor)
+def subscription_was_modified(sender, **kwargs):
+    if sender is None:
+        return
+    try:
+        recurrence = Recurrence.objects.get(subscription=sender)
+    except Recurrence.DoesNotExist:
+        return
+    amount_per_month = sender.plan.amount / sender.plan.interval
+    last_upgrade = None
+    if amount_per_month > recurrence.amount_per_month:
+        last_upgrade = timezone.now()
+        kind = DonorEvent.Kind.UPGRADE_RECURRENCE
+    elif amount_per_month < recurrence.amount_per_month:
+        kind = DonorEvent.Kind.DOWNGRADE_RECURRENCE
+    else:
+        kind = DonorEvent.Kind.MODIFY_RECURRENCE
+    DonorEvent.objects.create(
+        donor=recurrence.donor,
+        kind=kind,
+        context={
+            "previous_interval": recurrence.interval,
+            "previous_amount": float(recurrence.amount),
+            "previous_amount_decimal": str(recurrence.amount),
+            "previous_amount_per_month": float(recurrence.amount_per_month),
+            "previous_amount_per_month_decimal": str(recurrence.amount_per_month),
+            "new_interval": sender.plan.interval,
+            "new_amount": float(sender.plan.amount),
+            "new_amount_decimal": str(sender.plan.amount),
+            "new_amount_per_month": float(amount_per_month),
+            "new_amount_per_month_decimal": str(amount_per_month),
+            "request": {},
+        },
+    )
+    recurrence.update_from_subscription(last_upgrade=last_upgrade)
 
 
 def user_email_changed(sender, old_email=None, **kwargs):
@@ -106,6 +150,13 @@ def user_email_changed(sender, old_email=None, **kwargs):
         confirmed_email_donor.save()
     except Donor.DoesNotExist:
         pass
+
+
+def activate_user(sender, **kwargs):
+    user = sender
+    Donor.objects.filter(user=user, email_confirmed__isnull=True).update(
+        email_confirmed=timezone.now()
+    )
 
 
 def cancel_user(sender, user=None, **kwargs):
@@ -171,3 +222,64 @@ def export_user_data(user):
             ]
         ),
     )
+
+
+def remove_newsletter_subscriber(sender: Subscriber, **kwargs):
+    Donor.objects.filter(subscriber=sender).update(subscriber=None)
+
+
+def tag_subscriber_donor(sender: Subscriber, email=None, **kwargs):
+    add_tags = set()
+    remove_tags = set()
+    roughly_year = timedelta(days=370)
+    high_value = 120
+    a_year_ago = timezone.now() - roughly_year
+    donor = (
+        Donor.objects.filter(
+            Q(subscriber=sender) | Q(email__iexact=email, email_confirmed__isnull=False)
+        )
+        .annotate(
+            last_donation=Max(
+                "donations__timestamp",
+                filter=Q(donations__received_timestamp__isnull=False),
+            ),
+            amount_last_year=Sum(
+                "donations__amount",
+                filter=Q(donations__received_timestamp__gte=a_year_ago),
+            ),
+        )
+        .first()
+    )
+    if not donor:
+        return add_tags, remove_tags
+
+    add_tags.add("donor")
+
+    if donor.recurring_amount:
+        add_tags.add("donor:recurring")
+    else:
+        remove_tags.add("donor:recurring")
+
+    if donor.amount_last_year is not None and donor.amount_last_year >= high_value:
+        add_tags.add("donor:highvalue")
+    else:
+        remove_tags.add("donor:highvalue")
+
+    if donor.last_donation:
+        if donor.last_donation > a_year_ago:
+            add_tags.add("donor:active")
+        else:
+            add_tags.add("donor:inactive")
+            remove_tags.add("donor:active")
+    else:
+        remove_tags.add("donor:active")
+
+    return add_tags, remove_tags
+
+
+def save_subscription_cancel_feedback(sender, data=None, **kwargs):
+    if data is None:
+        return
+    form = SubscriptionCancelFeedbackForm(data=data)
+    if form.is_valid():
+        form.save(subscription=sender)

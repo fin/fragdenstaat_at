@@ -576,12 +576,19 @@ class FragDenStaatBase(German, Base):
     # unguarded, so without it saving a Mailing raises AttributeError.
     SENDER_DOMAINS = ["fragdenstaat.at"]
 
+    # Lets a donor reach their own subscription pages without a full account.
+    PAYMENT_SUBSCRIPTION_ACCESS_FUNC = (
+        "fragdenstaat_at.fds_donation.auth.check_subscription_access"
+    )
+
     # WebDAV target for the retention backup taken when a user schedules account
     # cancellation. Unset means the backup is skipped (see theme/tasks.py).
     FDS_LEGAL_BACKUP_URL = env("FDS_LEGAL_BACKUP_URL")
     FDS_LEGAL_BACKUP_CREDENTIALS = env("FDS_LEGAL_BACKUP_CREDENTIALS")
 
     DEFAULT_CURRENCY = "EUR"
+    DEFAULT_CURRENCY_LABEL = "Euro"
+    DEFAULT_CURRENCY_SYMBOL = "€"
     DEFAULT_DECIMAL_PLACES = 2
     PAYMENT_HOST = "localhost:8000"
     PAYMENT_USES_SSL = False

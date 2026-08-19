@@ -1,0 +1,19 @@
+{% load form_helper %}
+{% include "fds_donation/forms/_donation_form_chosen_gift.html" %}
+<div class="row">
+    <div class="col-12">{% render_field form.amount stacked=True %}</div>
+</div>
+{% if form.interval.is_hidden %}
+    {{ form.interval }}
+{% else %}
+    <div class="row">
+        <div class="col-12" data-group="interval">{% render_field form.interval inline=True %}</div>
+    </div>
+{% endif %}
+{% if form.purpose.is_hidden %}
+    {{ form.purpose }}
+{% else %}
+    <div class="row">
+        <div class="col-12">{% render_field form.purpose stacked=True %}</div>
+    </div>
+{% endif %}

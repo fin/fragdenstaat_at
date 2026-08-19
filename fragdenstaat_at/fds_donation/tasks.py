@@ -1,14 +1,23 @@
+import os
+from datetime import timedelta
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.mail import mail_managers
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from dateutil.relativedelta import relativedelta
-from fragdenstaat_at.theme.notifications import send_notification
 
 from froide.celery import app as celery_app
 
-TIME_ZERO = dict(hour=0, minute=0, second=0, microsecond=0)
+from fragdenstaat_at.theme.notifications import send_notification
+
+TIME_ZERO = {"hour": 0, "minute": 0, "second": 0, "microsecond": 0}
 
 
-@celery_app.task(name="fragdenstaat_de.fds_donation.new_donation")
+@celery_app.task(name="fragdenstaat_at.fds_donation.new_donation")
 def send_donation_notification(donation_id):
     from .models import Donation
 
@@ -26,7 +35,7 @@ def send_donation_notification(donation_id):
         send_notification("Neue Spende: {amount} EUR".format(amount=donation.amount))
 
 
-@celery_app.task(name="fragdenstaat_de.fds_donation.remind_unreceived_banktransfers")
+@celery_app.task(name="fragdenstaat_at.fds_donation.remind_unreceived_banktransfers")
 def remind_unreceived_banktransfers():
     """
     To be run on the 15th of each month
@@ -69,9 +78,9 @@ def remind_unreceived_banktransfers():
             send_donation_reminder_email(donation)
 
 
-@celery_app.task(name="fragdenstaat_de.fds_donation.remove_old_donations")
+@celery_app.task(name="fragdenstaat_at.fds_donation.remove_old_donations")
 def remove_old_donations():
-    from .models import Donation, Donor
+    from .models import Donation, Donor, Recurrence
 
     today = timezone.localtime(timezone.now())
     today = today.replace(**TIME_ZERO)
@@ -90,9 +99,10 @@ def remove_old_donations():
 
     # Remove donors without donations
     Donor.objects.filter(donations=None).delete()
+    Recurrence.objects.cleanup()
 
 
-@celery_app.task(name="fragdenstaat_de.fds_donation.send_jzwb")
+@celery_app.task(name="fragdenstaat_at.fds_donation.send_jzwb")
 def send_jzwb_mailing_task(donor_id, year, set_receipt_date=True, store_backup=True):
     from .export import send_jzwb_mailing
     from .models import Donor
@@ -109,7 +119,7 @@ def send_jzwb_mailing_task(donor_id, year, set_receipt_date=True, store_backup=T
     )
 
 
-@celery_app.task(name="fragdenstaat_de.fds_donation.backup_jzwb_pdf")
+@celery_app.task(name="fragdenstaat_at.fds_donation.backup_jzwb_pdf")
 def backup_jzwb_pdf_task(donor_id, year, ignore_receipt_date=None):
     from .export import backup_jzwb
     from .models import Donor
@@ -122,3 +132,103 @@ def backup_jzwb_pdf_task(donor_id, year, ignore_receipt_date=None):
         return
 
     backup_jzwb(donor, year, ignore_receipt_date=ignore_receipt_date)
+
+
+@celery_app.task(name="fragdenstaat_at.fds_donation.import_banktransfers")
+def import_banktransfers_task(filepath, project, user_id=None):
+    from .external import import_banktransfers
+
+    try:
+        count, new_count = import_banktransfers(filepath, project)
+    finally:
+        os.remove(filepath)
+
+    if user_id is not None:
+        user = get_user_model().objects.get(id=user_id)
+        user.send_mail(
+            _("Bank transfers imported for {project}").format(project=project),
+            _("Count: {count}\nNew: {new}").format(count=count, new=new_count),
+        )
+
+
+@celery_app.task(name="fragdenstaat_at.fds_donation.import_paypal")
+def import_paypal_task(filepath, user_id=None):
+    from .external import import_paypal
+
+    try:
+        count, new_count = import_paypal(filepath)
+    finally:
+        os.remove(filepath)
+
+    if user_id is not None:
+        user = get_user_model().objects.get(id=user_id)
+        user.send_mail(
+            _("Paypal imported"),
+            _("Count: {count}\nNew: {new}").format(count=count, new=new_count),
+        )
+
+
+@celery_app.task(name="fragdenstaat_at.fds_donation.check_late_recurring_donors_task")
+def check_late_recurring_donors_task():
+    from .recurrence import check_late_recurring_donors
+
+    check_late_recurring_donors()
+
+
+@celery_app.task(name="fragdenstaat_at.fds_donation.process_recurrence_task")
+def process_recurrence_task(donor_id):
+    from .models import Donor
+    from .recurrence import process_recurrence_on_donor
+
+    try:
+        donor = Donor.objects.get(id=donor_id)
+    except Donor.DoesNotExist:
+        return
+
+    process_recurrence_on_donor(donor)
+
+
+@celery_app.task(name="fragdenstaat_at.fds_donation.send_donation_tasks_update_mail")
+def send_donation_tasks_update_mail():
+    from froide_payment.models import PaymentStatus
+
+    from .models import Donation, DonationGiftOrder
+
+    messages = []
+
+    WEEK = timedelta(days=7) + timedelta(hours=1)
+    new_orders = DonationGiftOrder.objects.filter(
+        timestamp__gte=timezone.now() - WEEK, shipped__isnull=True
+    ).count()
+    if new_orders > 0:
+        order_admin = settings.SITE_URL + reverse(
+            "admin:fds_donation_donationgiftorder_changelist"
+        )
+        messages.append(
+            _("{count} new donation gift orders in the last week\n{url}").format(
+                count=new_orders, url=order_admin
+            )
+        )
+
+    deferred_donations = Donation.objects.filter(
+        payment__status=PaymentStatus.DEFERRED,
+    ).count()
+    if deferred_donations > 0:
+        deferred_admin = settings.SITE_URL + reverse(
+            "admin:fds_donation_deferreddonation_changelist"
+        )
+        messages.append(
+            _("{count} deferred donations\n{url}").format(
+                count=deferred_donations, url=deferred_admin
+            )
+        )
+
+    if messages:
+        mail_managers(_("Donation Admin Tasks"), "\n\n".join(messages))
+
+
+@celery_app.task(name="fragdenstaat_at.fds_donation.remind_incomplete_donations")
+def remind_incomplete_donations_task():
+    from .services import remind_incomplete_donations
+
+    remind_incomplete_donations()

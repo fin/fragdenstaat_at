@@ -443,12 +443,10 @@ and AT now matches DE exactly:
 Same stale-lock pattern as playwright and pytest-factoryboy: nothing pinned these
 down, the entries had simply never been upgraded.
 
-Until the rebuild, 102 decompounder-dependent tests **skip** rather than fail,
-naming the version and the fix. The gate is deliberately blunt — it skips whole
-parametrised sets, some of whose cases would pass anyway — because the
-alternative is a red suite for an environment reason. It clears itself on
-rebuild. ⚠️ Those 102 have not been observed passing on 8.19.3 here; they pass
-upstream on DE, and AT's `search.py` and fixtures are byte-identical copies.
+✅ **Rebuilt and confirmed.** The devcontainer now runs 8.19.3 and all 102
+decompounder tests pass — the capability gate in `theme/tests/conftest.py`
+cleared itself, as designed. It stays in place: it is the thing that turns "our
+search silently got worse" into a legible skip message.
 
 The Dockerfile also now pins the german-decompounder data to DE's commit instead
 of tracking `master` — those two files define how compounds split, so an upstream
@@ -456,7 +454,46 @@ change would silently move the expectations in `testdata/search_tokens.py`.
 
 - [ ] **Check the production Elasticsearch version.** If it is below 8.16, AT's
   search is quietly running without `no_sub_matches` today. Nothing errors; the
-  index is just noisier. **[R]**
+  index is just noisier. Dev is now on 8.19.3. **[R]**
+
+### Library drift beyond the test tooling
+
+**130 of 228 shared packages resolve to different versions than DE** — 97 where
+AT is behind, 33 ahead. Nearly all of the "behind" set is 2022-era: `packaging`
+22.0, `urllib3` 1.26.13, `faker` 15.3.4, `idna` 3.4, `pytest-django` 4.5.2. These
+are unconstrained transitive and dev dependencies that were locked around the
+January 2023 fork and never refreshed. Declared constraints are *identical*
+between the repos; this is purely lock staleness.
+
+Acted on, because it was on a live path:
+
+- [x] **`django-payments` 1.0.0 → 3.1.0.** froide-payment declares it
+  unconstrained and it is the library froide-payment is built on. AT sat two
+  majors behind DE while running `froide-payment@main`, which upstream develops
+  against 3.x. Left free it resolves to **4.1.0**, which no deployment we can
+  check has run against froide-payment, so `[tool.uv] constraint-dependencies`
+  now tracks DE's major (`>=3.1,<4`). Revisit when DE moves.
+
+Worth a decision, not yet acted on:
+
+- [ ] **`django` 5.2.6 → 5.2.15.** Nine patch releases behind inside the pinned
+  `>=5.2,<5.3` range. Django patch releases are where security fixes ship. **[R]**
+- [ ] **`urllib3` 1.26.13 → 2.7.0** — a whole major behind, and the 1.26 series
+  carries known advisories. **[R]**
+- [ ] **`pandas` 3.0.3 — AT is a major *ahead* of DE's 2.3.3.** pandas 3.0
+  changed defaults (copy-on-write, string dtypes), and AT parses bank statements
+  with it (`fds_donation/external.py`: `read_excel` for Erste/George `.xls`,
+  `read_csv` for PayPal). `tests/test_external.py` covers the import and passes,
+  which is real reassurance, but this is the one place where being ahead of DE
+  carries risk rather than benefit. **[R]**
+- [ ] AT's CMS stack is also ahead: `django-cms` 5.1.1 vs 5.0.7,
+  `djangocms-versioning` 2.7.0 vs 2.5.1, `djangocms-frontend` 2.5.1 vs 2.4.0. We
+  ported DE's CMS code onto a newer CMS than DE tests against. Nothing has broken,
+  but it explains oddities like the stale `page.placeholders` test. **[R]**
+
+A blanket `uv lock --upgrade` would close most of the remaining 97 and the suite
+(256 tests) would catch a lot of it, but it should be a deliberate step of its
+own, not folded into the merge.
 
 **3. Two AT-specific adaptations in the port**, both recorded in the files:
 `get_document_classes()` drops `ArticleDocument` and evidencecollection's

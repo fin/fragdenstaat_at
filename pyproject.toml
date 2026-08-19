@@ -165,6 +165,13 @@ dev = [
 
 [tool.uv]
 override-dependencies = ["numpy<2.4.0"]
+# django-payments comes in through froide-payment, which declares it
+# unconstrained. AT's lock had pinned it at 1.0.0 since the 2023 fork -- two
+# majors behind DE -- while froide-payment@main is developed against 3.x. Left
+# to resolve freely it jumps to 4.x, which no deployment we can check has run
+# against froide-payment. Track DE's major instead: that is the combination
+# upstream actually tests. Revisit when DE moves.
+constraint-dependencies = ["django-payments>=3.1,<4"]
 
 [build-system]
 requires = ["setuptools"]

@@ -510,6 +510,40 @@ class FragDenStaatBase(German, Base):
         "png",
         "svg",
     )
+
+
+    THUMBNAIL_DEFAULT_ALIAS = "default"
+    THUMBNAIL_ALIASES = {
+        "filer.Image": {
+            "colmd4": {"size": (260, 0)},
+            "colmd6": {"size": (380, 0)},
+            "smcontainer": {
+                "size": (520, 0)
+            },  # 516px = sm container - padding ; 2x small
+            THUMBNAIL_DEFAULT_ALIAS: {"size": (768, 0)},
+            "lgcontainer": {
+                "size": (940, 0)
+            },  # 936px = lg container - padding, but 940 exists already
+            "xlcontainer": {
+                "size": (1140, 0)
+            },  # 1116px = xl container - padding, but 1140 exists already
+            "xxlcontainer": {"size": (1296, 0)},
+            "lgcontainer@2x": {"size": (1872, 0)},
+            "xlcontainer@2x": {"size": (2232, 0)},
+            "xxlcontainer@2x": {"size": (2592, 0)},
+            "xxxl": {"size": (3840, 0)},
+        },
+        "": {
+            "ogimage": {
+                "size": (1200, 630),
+                "crop": True,
+                "replace_alpha": "#ffffff",
+            },
+        },
+    }
+    FDS_THUMBNAIL_ENABLE_AVIF = False
+
+
     META_SITE_PROTOCOL = "http"
     META_USE_SITES = True
 

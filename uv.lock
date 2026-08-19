@@ -8,6 +8,7 @@ resolution-markers = [
 ]
 
 [manifest]
+constraints = [{ name = "django-payments", specifier = ">=3.1,<4" }]
 overrides = [{ name = "numpy", specifier = "<2.4.0" }]
 
 [[package]]
@@ -1195,16 +1196,16 @@ wheels = [
 
 [[package]]
 name = "django-payments"
-version = "1.0.0"
+version = "3.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
     { name = "django-phonenumber-field", extra = ["phonenumberslite"] },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b8/ef/63787c3c6cd4c5bb341024f56e6411cf8935bc36e0f6ab20586dcfd4faf5/django-payments-1.0.0.tar.gz", hash = "sha256:d6764b1d3ec84f40c0a26227d6cb3639ed1b96fb6c567af5c6d0b88d79f83fee", size = 102901, upload-time = "2022-03-18T11:49:35.82Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/8c/181e8ece87c0d54f801b530e0bfaad8dfd040522d716214bbe5abef07300/django_payments-3.1.0.tar.gz", hash = "sha256:a5e150234314f245106c1ec1a79902264b4c1c4452c9b0e837df57587d5adc5e", size = 111904, upload-time = "2025-08-13T12:09:39.831Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/eb/3838c86681981a11b531228ff9e510729bf407306e92f812976252257e50/django_payments-1.0.0-py3-none-any.whl", hash = "sha256:ecadf75696601cdae392e08f9814dae44d156d7e1183369eb3749ed05c9ff226", size = 146160, upload-time = "2022-03-18T11:49:49.035Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/18/151858af47016d2e4648787458b09f6c814fdb29fe402c32f087055daf48/django_payments-3.1.0-py3-none-any.whl", hash = "sha256:47ed8bb199d2e5eff09cfe9af29392c47a06ed25cddf37a33d3b7c97f995e1d2", size = 150788, upload-time = "2025-08-13T12:09:32.707Z" },
 ]
 
 [package.optional-dependencies]

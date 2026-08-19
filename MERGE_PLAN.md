@@ -392,11 +392,9 @@ serial**, because each xdist worker builds its own database and setup dominates 
 38-test suite. Revisit once DE's donation tests land and the suite is large enough
 to amortise it.
 
-*Remaining:* DE's per-app `tests/` packages and their factories — chiefly
-`fds_donation/tests/` (13 modules incl. `test_recurrence`, `test_form`,
-`test_banktransfer`, `test_external`). These only pass against DE's donation code,
-so they land **with** P2 step 4 rather than before it, and are precisely the
-coverage that makes that step safe. Also DE's `database-cache` CI workflow. **[R]**
+✅ **DE's `fds_donation/tests/` landed with step 4** — 15 modules, taking the suite
+from 37 to 118. *Remaining:* DE's `database-cache` CI workflow, and revisiting
+parallelism now the suite is larger. **[R]**
 
 ### P2 — rebuild the AT layer against DE@HEAD · 3–4 weeks
 
@@ -459,10 +457,30 @@ coverage that makes that step safe. Also DE's `database-cache` CI workflow. **[R
    invisible. (`CKEDITOR_SETTINGS` was checked for the same failure and is fine:
    `djangocms_text` still reads it.)
 
-3. **`fds_cms` / `theme` / `fds_ogimage`.** Take DE's versions; re-apply
-   `HomepageHero`/`HomepageHow`, `export_fdscms`, AT template overrides. Adopt DE's
-   `cms_apps.py` apphook to restore CMS pages in site search. Delete the dead German
-   machinery identified in §3. **[R]**
+3. **`fds_cms` / `theme` / `fds_ogimage`.** ✅ **Done.**
+
+   - **`fds_cms`**: DE's modules and templates adopted, schema forward-ported as
+     AT `0008`. The 9 AT-only plugin classes re-applied. `datashow` and
+     `cookie_consent` registered. Verified by rendering all 10 real CMS pages.
+   - **`theme`**: DE's `search.py`, `apps.py`, `cms_utils.py`, `models.py`,
+     `utils.py`, `middleware.py`, `translation.py` adopted. Kept as AT's:
+     `admin.py` (minimal subset — DE's drags back `django-amenities`),
+     `tasks.py` (legal-backup guard), `views.py`, `urls.py`,
+     `context_processors.py` (DE's only difference was exposing
+     `MATOMO_SITE_ID`, and Matomo is gone from AT), and `update_georegion.py`
+     (deferred, §9.6).
+   - **`fds_ogimage`**: kept and made env-configurable; enabling checklist in §9.2.
+   - Dead German machinery removed (`amenity_updater`); `legal_backup` corrected
+     — it was never Klageautomat code and had never worked.
+
+   ⚠️ **Renames on DE's side are the trap here**, not conflicts.
+   `cms_utils.HostLanguageCookieMiddleware` became `LanguageUtilsMiddleware`,
+   and AT's `MIDDLEWARE` still named the old class — the suite dropped 118 → 79
+   until corrected. `theme/translation.py` was a new module `cms_utils` imports.
+
+   ⚠️ **Unverified:** the new search analyzers against a live Elasticsearch. The
+   ES container is down in this environment, so the index could not be rebuilt.
+   Definitions construct and the preprocessor imports; relevance is unproven.
 
 4. **`fds_donation`.** ✅ **Done.** DE@HEAD adopted (583 → 1359 model lines),
    schema forward-ported as a single AT migration `0046` per D8(b), keeping AT's
@@ -492,19 +510,37 @@ coverage that makes that step safe. Also DE's `database-cache` CI workflow. **[R
    code. Still unverified: behaviour against real donation rows, since the extract
    has none — that is the live-data rehearsal.
 
-5. **Frontend.** Adopt DE's `frontend/`, re-applying AT's `base.scss`,
-   `globalvars.scss`, StixTwo and dropdown tokens. **[R]**
+5. **Frontend.** ✅ **Done.** 32 → 12 differing files. Categories A–H applied
+   (see the table above): DE's version taken for formatting noise, bugfixes,
+   additive utilities and font tooling; AT keeps its palette, dark mode and
+   dropdown. Matomo removed entirely. Webfonts fixed — every `@font-face` was
+   404ing in production. `donation-form.ts` taken once step 4 landed.
 
-6. **Templates.** Re-derive AT overrides against DE@HEAD. Rewrite `base.html`'s
-   `metadescription` for the Austrian IFG. Drop DE's `google-site-verification`.
-   Fix the hash-stamped static URLs in the footer alias. **[H]** for copy,
-   **[A]** to locate.
+   The 12 remaining are deliberate: AT's visual identity (8), its import lists
+   (3), and `banner.scss`/`banner.ts` now shared with DE.
+
+6. **Templates.** ⚠️ **Partly done.**
+   - ✅ `base.html`'s `metadescription` rewritten for the Austrian IFG (**wants a
+     copy review** — §9.1).
+   - ✅ DE's `google-site-verification` token removed.
+   - ✅ `fds_cms` templates adopted from DE after a line-by-line recheck showed
+     none contained Austrian content and ~half the diff was djlint reformatting.
+   - ❌ **Not done:** the hash-stamped static URLs in the footer alias (§9.5),
+     and re-deriving the **top-level** `templates/` overrides (`header.html` is
+     still 423 lines from DE's, and is AT's branding — likely correct as-is, but
+     unreviewed). **[H]**
 
 7. **Preserve** `.devcontainer/`, `compose-dev.yaml`, `devsetup.sh`, `Makefile`,
-   `export_dev_db.py`, `scripts/`, `tests/`, `.github/` verbatim. **[A]**
+   `export_dev_db.py`, `scripts/`, `tests/`, `.github/`. ✅ **Held** — all intact;
+   `devsetup.sh` and `pytest.ini` gained deliberate changes, `scripts/` gained
+   `de_drift.py` and `froide-source.sh`.
 
-8. Run the footer gate (`tests/test_footer.py`) after every template or settings
-   step — it is the smallest markup exercising the AT identity end to end. **[A]**
+8. ✅ **In force.** The footer gate runs in the suite. It has since been joined by
+   a stronger check: **rendering all 10 real CMS pages from the extract**, which
+   caught four breakages that returned HTTP 200 and that the test suite missed
+   entirely (unregistered Column plugins, a missing `PublicBody` import, an
+   unregistered `thumbnail_dims` filter, and `get_soft_root` on a lazy `None`).
+   Use it after any template, plugin or middleware change.
 
 ### P3 — migrations (D8) · ~1 week + staging
 

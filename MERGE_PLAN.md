@@ -694,11 +694,24 @@ Once it does, four things must change together — the last is easy to miss:
 - [ ] **Measure production row counts** for `foirequest_*`, `account_user`,
   `fds_donation_*`, `froide_payment_*`. They set the migration window; the 10 CMS
   pages do not.
-- [ ] **Rebuild the container to verify the Elasticsearch 8.15.1 bump**, and re-run
-  `search_index --rebuild`. The ES container is currently **down** in this dev
-  environment, so the reworked analyzers from DE's `theme/search.py` are unproven
-  as well. Changed but
-  never rebuilt; re-run `search_index --rebuild` afterwards.
+- [ ] **Bump Elasticsearch 7.15 → 8.x, which needs the data volume wiped.** The
+  bump was attempted and **reverted**: ES 8 refuses to start on a data directory
+  written by anything older than 7.17 (7.17 → 8.x is the only supported direct
+  upgrade), so the container never came up and dev search broke. The dev index is
+  rebuilt from Postgres anyway, so the fix is to discard the volume rather than
+  migrate it:
+
+  ```
+  docker compose -f compose-dev.yaml down
+  docker volume rm fragdenstaat_at_es-data      # name may vary by project prefix
+  # set deps/elasticsearch/Dockerfile back to 8.15.1, then
+  docker compose -f compose-dev.yaml up -d --build elasticsearch
+  manage.py search_index --rebuild
+  ```
+
+  Worth doing: the pinned Python client is 8.15, so 7.15 is an unsupported
+  pairing — it interoperates today but is not a state to ship on. Production will
+  need the same version-path care, and there the data is **not** disposable.
 - [ ] **`RegularDonorsProgressBarPlugin` and the bank importer have no test cover** and
   were both changed. The plugin query was hand-checked against an extract whose
   donation tables are empty — that proves the SQL valid, not the arithmetic.

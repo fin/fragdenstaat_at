@@ -3,8 +3,6 @@ from django.conf.urls.i18n import i18n_patterns
 from django.contrib.sitemaps import views as sitemaps_views
 from django.urls import include, path
 
-from fragdenstaat_at.fds_cms.sitemaps import FdsCMSSitemap
-
 from froide.urls import (
     admin_urls,
     api_urlpatterns,
@@ -13,8 +11,9 @@ from froide.urls import (
     sitemaps,
 )
 
-from .views import FDSAnnotationView  # , glyphosat_download, meisterschaften_tippspiel
+from fragdenstaat_at.fds_cms.sitemaps import FdsCMSSitemap
 
+from .views import FDSAnnotationView  # , glyphosat_download, meisterschaften_tippspiel
 
 # Import early to register with api_router
 

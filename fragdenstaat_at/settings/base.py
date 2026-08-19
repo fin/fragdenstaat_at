@@ -44,6 +44,7 @@ class FragDenStaatBase(German, Base):
         ("de-at", _("Austrian")),
         # ('de', _('German')),
     )
+    USER_LANGUAGES = LANGUAGES
     LANGUAGE_CODE = "de-at"
     TESSERACT_LANGUAGE = "de"
 
@@ -822,3 +823,8 @@ class FragDenStaatBase(German, Base):
     DJANGOCMS_ICON_SETS = [
         ("fontawesome4", "fa", "Font Awesome 4", "4.7.0"),
     ]
+
+
+    COOKIE_CONSENT_LOG_ENABLED = False
+    COOKIE_CONSENT_SECURE = False
+

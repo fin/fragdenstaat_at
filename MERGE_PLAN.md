@@ -544,9 +544,13 @@ parallelism now the suite is larger. **[R]**
 
 ### P3 — migrations (D8) · ~1 week + staging
 
-Forward-port DE's `fds_cms` and `fds_donation` model changes as new AT migrations
-(`0008…`, `0045…`). No graph reconciliation is needed under D8(b). Verify migration
-*output*, not exit codes. Rehearse against a production-shaped dump. **[R]**
+✅ **Forward-porting done.** `fds_cms/0008` and `fds_donation/0046` carry DE's
+model changes; both applied cleanly to a fresh extract load with no drift after.
+No graph reconciliation was needed under D8(b).
+
+❌ **Remaining: rehearse against real data.** The extract has no donation rows, so
+`Recurrence` and the donation schema are unexercised. This is the outstanding
+assurance for the whole programme. **[R]**
 
 Note for the runbook: production needs a one-off
 `manage.py migrate --fake fds_cms 0005` (D9), and must **not** be faked on a
@@ -560,10 +564,18 @@ external tax/legal input — **start immediately**, it is the long pole. **[H]**
 
 ### P5 — repeatable sync · ~1 day
 
-The drift job is wired into `ci.yml` (non-blocking, limit 260). Remaining: tighten
-the limit as P2 lands and the modified count falls, record the new baseline commit
+The drift job is wired into `ci.yml` (non-blocking, limit 260). **The limit is now
+far too loose** — measured today:
+
+| | at start | now |
+|---|---|---|
+| identical | 42 | **336** |
+| modified | 240 | **134** |
+| de-only | 635 | 447 |
+
+Remaining: tighten `--check-max-modified` to ~140, record the baseline commit
 here, and delete the commented-out DE code that D2's configure-out makes
-redundant. **[A]**
+redundant (`theme/views.py` and `theme/urls.py` are the main holdouts). **[A]**
 
 ### P6 — translations (D4/D5) · ~1 week · **LAST**
 

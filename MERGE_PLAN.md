@@ -694,24 +694,15 @@ Once it does, four things must change together — the last is easy to miss:
 - [ ] **Measure production row counts** for `foirequest_*`, `account_user`,
   `fds_donation_*`, `froide_payment_*`. They set the migration window; the 10 CMS
   pages do not.
-- [ ] **Bump Elasticsearch 7.15 → 8.x, which needs the data volume wiped.** The
-  bump was attempted and **reverted**: ES 8 refuses to start on a data directory
-  written by anything older than 7.17 (7.17 → 8.x is the only supported direct
-  upgrade), so the container never came up and dev search broke. The dev index is
-  rebuilt from Postgres anyway, so the fix is to discard the volume rather than
-  migrate it:
+- [x] **Elasticsearch bumped 7.15 → 8.15.1.** ✅ Done, but note how: ES 8 refuses
+  to start on a data directory written by anything older than 7.17 (7.17 → 8.x is
+  the only supported direct upgrade), so the first attempt took dev search down
+  until the `es-data` volume was discarded. Safe in dev, since the index rebuilds
+  from Postgres.
 
-  ```
-  docker compose -f compose-dev.yaml down
-  docker volume rm fragdenstaat_at_es-data      # name may vary by project prefix
-  # set deps/elasticsearch/Dockerfile back to 8.15.1, then
-  docker compose -f compose-dev.yaml up -d --build elasticsearch
-  manage.py search_index --rebuild
-  ```
-
-  Worth doing: the pinned Python client is 8.15, so 7.15 is an unsupported
-  pairing — it interoperates today but is not a state to ship on. Production will
-  need the same version-path care, and there the data is **not** disposable.
+  ⚠️ **Production is not dev.** The same jump there needs a real upgrade path —
+  either 7.15 → 7.17 → 8.x with the data intact, or a full reindex from the
+  database during a planned window. Do not discard a production data volume.
 - [ ] **`RegularDonorsProgressBarPlugin` and the bank importer have no test cover** and
   were both changed. The plugin query was hand-checked against an extract whose
   donation tables are empty — that proves the SQL valid, not the arithmetic.

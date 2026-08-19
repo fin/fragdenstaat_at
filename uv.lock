@@ -980,15 +980,15 @@ wheels = [
 
 [[package]]
 name = "django-elasticsearch-dsl"
-version = "8.0"
+version = "8.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "elasticsearch-dsl" },
+    { name = "elasticsearch" },
     { name = "six" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e6/b5/3b03f3edaaab56d333e1ded33f047a0c1c48a96ff4bd284ef15254e1216a/django-elasticsearch-dsl-8.0.tar.gz", hash = "sha256:64ee0612ced6d57515a6b7f29f1a3e1c2eea1996a6226fc72079a95c067b27ca", size = 31447, upload-time = "2023-10-01T19:19:55.129Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/91/d6/5a79e4061ca0551a2b100ed66a2f0a897eb2ee1ad555b18bf7bfb4f4e2ed/django_elasticsearch_dsl-8.2.tar.gz", hash = "sha256:6ecbe9688db7b0314f12067b781aa02750c849438b3ddd513a01054c56e21661", size = 31480, upload-time = "2025-06-23T22:31:21.763Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/30/7c/5a2d818a5c9cd9719fa00e65c424f4653b0c9a46f8c78e0d540efb839683/django_elasticsearch_dsl-8.0-py2.py3-none-any.whl", hash = "sha256:423784a4af336d109c3763622f1edc4973664cb5154beb55b3ff9390c1e4525e", size = 20877, upload-time = "2023-10-01T19:19:53.097Z" },
+    { url = "https://files.pythonhosted.org/packages/75/50/43a0b89152ff5f4f136becd8102e073805661a8d76f59f569d806c2dc799/django_elasticsearch_dsl-8.2-py2.py3-none-any.whl", hash = "sha256:c674881f9f14ed7566a9eb384237c06812bffaf3c7a4ef387b8d7a66bb107689", size = 20940, upload-time = "2025-06-23T22:31:19.352Z" },
 ]
 
 [[package]]
@@ -1679,28 +1679,31 @@ wheels = [
 
 [[package]]
 name = "elasticsearch"
-version = "8.15.1"
+version = "8.19.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "elastic-transport" },
+    { name = "python-dateutil" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/87/eb/d69ca80a048601184a340df1670f667e5fd92862446cfbfc48d793fa5865/elasticsearch-8.15.1.tar.gz", hash = "sha256:40c0d312f8adf8bdc81795bc16a0b546ddf544cb1f90e829a244e4780c4dbfd8", size = 414690, upload-time = "2024-09-10T09:13:12.12Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/79/365e306017a9fcfbbefab1a3b588d2404bea8806b36766ff0f886509a20e/elasticsearch-8.19.3.tar.gz", hash = "sha256:e84dd618a220cac25b962790085045dd27ac72e01c0a5d81bd29a2d47a71f03f", size = 800298, upload-time = "2025-12-23T12:56:00.72Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/20/6f1d6977f68389116e40a0108a5bfd468f3a0cceabe90b522693834bb5ec/elasticsearch-8.15.1-py3-none-any.whl", hash = "sha256:02a0476e98768a30d7926335fc0d305c04fdb928eea1354c6e6040d8c2814569", size = 524643, upload-time = "2024-09-10T09:13:06.767Z" },
+    { url = "https://files.pythonhosted.org/packages/56/0f/ac126833c385b06166d41c486e4911f58ad7791fd1a53dd6e0b8d16ff214/elasticsearch-8.19.3-py3-none-any.whl", hash = "sha256:fe1db2555811192e8a1be78b01234d0a49d32b185ea7eeeb6f059331dee32838", size = 952820, upload-time = "2025-12-23T12:55:56.796Z" },
 ]
 
 [[package]]
 name = "elasticsearch-dsl"
-version = "8.15.2"
+version = "8.18.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "elastic-transport" },
     { name = "elasticsearch" },
     { name = "python-dateutil" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d8/5f/29b9cf652a32cbb4c594e5d7c4b74f81b3db5165a8cd13ca1743144416f9/elasticsearch_dsl-8.15.2.tar.gz", hash = "sha256:3a8ea7791c57710b5072045ab6b87ac90db6e2a7e6f6d29fea30f26c9536b182", size = 95633, upload-time = "2024-09-04T08:31:13.924Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/6d/00cbeee412a2dc825f0df18c98463a2e0b423b86800fba6c50ea2c627962/elasticsearch_dsl-8.18.0.tar.gz", hash = "sha256:763465dba9eae166add10567e924c65730aa122819b08bfe9a077e91b13b30d1", size = 31886, upload-time = "2025-04-16T11:54:14.412Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/c9/a2cc69be2d84d58210da84faa5e1a8f17d8ddbcc6a3adbaa0fde4c1f464d/elasticsearch_dsl-8.15.2-py3-none-any.whl", hash = "sha256:46db368f2d43446f6a306dae1293b15f4f5e42939940469507c2c58d95ce4902", size = 104362, upload-time = "2024-09-04T08:31:11.577Z" },
+    { url = "https://files.pythonhosted.org/packages/77/a9/b200790a22585aeb023d88bd8b9fb222820e2976ce4239d401670116ae3c/elasticsearch_dsl-8.18.0-py3-none-any.whl", hash = "sha256:0522c5bb20c7abae69855109e650bf1166d486cbf706b5e1b29c28936a9102a3", size = 10406, upload-time = "2025-04-16T11:54:12.677Z" },
 ]
 
 [[package]]

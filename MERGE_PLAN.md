@@ -429,6 +429,20 @@ pins **8.19.3**, matching DE. 8.15 → 8.19 is within one major version, so the
 existing `es-data` volume is compatible (unlike the 7.15 → 8.x bump, which had to
 be reverted).
 
+Both repos keep the server image and the Python client on the *same* version —
+AT's 8.15.1 image was not arbitrary, it matched AT's pinned client. Bumping the
+image alone would have broken that convention, so the client stack moved with it
+and AT now matches DE exactly:
+
+| | before | after / DE |
+|---|---|---|
+| `elasticsearch` | 8.15.1 | **8.19.3** |
+| `elasticsearch-dsl` | 8.15.2 | **8.18.0** |
+| `django-elasticsearch-dsl` | 8.0 | **8.2** |
+
+Same stale-lock pattern as playwright and pytest-factoryboy: nothing pinned these
+down, the entries had simply never been upgraded.
+
 Until the rebuild, 102 decompounder-dependent tests **skip** rather than fail,
 naming the version and the fix. The gate is deliberately blunt — it skips whole
 parametrised sets, some of whose cases would pass anyway — because the

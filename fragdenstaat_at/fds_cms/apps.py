@@ -18,6 +18,21 @@ class FdsCmsConfig(AppConfig):
 
         from . import listeners  # noqa
 
+        # AT ships no dark mode: darkmode.scss is never imported, so the
+        # compiled CSS has no dark theme, and the toggle would flip an attribute
+        # almost nothing responds to. DE's DarkModeToggle arrived with its
+        # fds_cms; unregister it here rather than editing cms_plugins.py, so that
+        # file stays identical to DE's and can keep being pulled from it.
+        # Delete this block if AT ever builds a dark palette.
+        from cms.plugin_pool import plugin_pool
+
+        from .cms_plugins import DarkModeToggle
+
+        try:
+            plugin_pool.unregister_plugin(DarkModeToggle)
+        except Exception:  # already absent, e.g. on a later DE version
+            pass
+
         account_merged.connect(merge_user)
 
         thumbnail_created.disconnect(thumbnail_created_callback)

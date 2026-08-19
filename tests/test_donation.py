@@ -11,6 +11,9 @@ def django_db_setup(django_db_setup, django_db_blocker):
         call_command("loaddata", "cms.json")
 
 
+# Pinned to one xdist worker: it drives a real browser against live_server,
+# so it cannot share a worker with tests that mutate the same DB rows.
+@pytest.mark.xdist_group(name="sequential")
 @pytest.mark.django_db
 def test_donation_page(page, live_server, django_db_setup):
     mail.outbox = []

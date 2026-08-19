@@ -72,6 +72,11 @@ class FragDenStaatBase(German, Base):
                 # Required by fds_newsletter/fds_mailing (D3): their flow
                 # actions register against flowcontrol's model registry.
                 "flowcontrol",
+                # Required by fds_cms: its DatashowTable plugin models a
+                # datashow.Dataset FK, and its video/embed plugins gate on a
+                # cookie_consent.CookieGroup.
+                "datashow",
+                "cookie_consent",
                 "fragdenstaat_at.fds_newsletter.apps.NewsletterConfig",
                 "fragdenstaat_at.fds_cms.apps.FdsCmsConfig",
                 "fragdenstaat_at.fds_donation.apps.FdsDonationConfig",

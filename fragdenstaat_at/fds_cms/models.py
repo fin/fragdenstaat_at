@@ -1,13 +1,22 @@
+from urllib.parse import quote
+
 from django.conf import settings
+from django.core import validators
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import NoReverseMatch
+from django.utils.cache import add_never_cache_headers
 from django.utils.translation import gettext_lazy as _
 
+from cms.cache import page as cms_cache_page_module
 from cms.extensions import PageExtension
 from cms.extensions.extension_pool import extension_pool
 from cms.models.fields import PageField
 from cms.models.pluginmodel import CMSPlugin
-from djangocms_frontend.fields import AttributesField, TagTypeField
+from datashow.models import Dataset, Table
+from djangocms_attributes_field.fields import AttributesField
+from djangocms_frontend.fields import TagTypeField
+from djangocms_frontend.settings import TAG_CHOICES
 from filer.fields.file import FilerFileField
 from filer.fields.image import FilerImageField
 from filingcabinet.models import DocumentPortal, PageAnnotation
@@ -17,10 +26,62 @@ from froide.document.models import Document, DocumentCollection
 from froide.foirequest.models import FoiProject, FoiRequest
 from froide.publicbody.models import Category, Classification, Jurisdiction, PublicBody
 
+from fragdenstaat_at.theme.colors import (
+    BACKDROP,
+    BACKGROUND,
+    BORDER_COLORS,
+    get_css_color_variable,
+)
+
+
+def monkey_patch_cms_cache():
+    """
+    This is a monkey patch to fix caching messages, workaround for django-cms/django-cms#5725
+    """
+    _inner_set_page_cache = cms_cache_page_module.set_page_cache
+    _inner_get_page_cache = cms_cache_page_module.get_page_cache
+
+    def can_cache_page(request):
+        return not hasattr(request, "_messages") or len(request._messages) == 0
+
+    def set_page_cache(response):
+        request = response._request
+        if not can_cache_page(request):
+            add_never_cache_headers(response)
+            return response
+        return _inner_set_page_cache(response)
+
+    def get_page_cache(request):
+        if not can_cache_page(request):
+            return None
+        return _inner_get_page_cache(request)
+
+    cms_cache_page_module.set_page_cache = set_page_cache
+    cms_cache_page_module.get_page_cache = get_page_cache
+
+
+monkey_patch_cms_cache()
+
+
+def validate_space_separated_urls(value):
+    if not value:
+        return
+    if ";" in value:
+        # Prevent adding different policy directives.
+        raise ValidationError("Use space separated URLs, no semicolons allowed.")
+    if len(value.splitlines()) > 1:
+        # Prevent header injection.
+        raise ValidationError("No line breaks allowed.")
+    for url in value.split(" "):
+        if not url.startswith("https://"):
+            raise ValidationError("Invalid URL: %s" % url)
+
 
 @extension_pool.register
 class FdsPageExtension(PageExtension):
-    search_index = models.BooleanField(default=True)
+    search_index = models.BooleanField(
+        _("Show in search results and search engines"), default=True
+    )
     image = FilerImageField(
         null=True,
         blank=True,
@@ -28,12 +89,50 @@ class FdsPageExtension(PageExtension):
         on_delete=models.SET_NULL,
         verbose_name=_("image"),
     )
+    breadcrumb_ancestor = PageField(
+        null=True,
+        blank=True,
+        help_text=_(
+            "If present, this page will be displayed as the ancestor in the breadcrumbs."
+        ),
+        verbose_name=_("Ancestor"),
+        related_name="breadcrumb_ancestor",
+    )
+    ancestor_only_upwards = models.BooleanField(
+        _("Only show the breadcrumb ancestor on this page, but not its children"),
+        default=True,
+    )
+    breadcrumb_background = models.CharField(
+        _("Breadcrumbs background"),
+        choices=BACKGROUND,
+        default="",
+        max_length=50,
+        blank=True,
+    )
+    breadcrumb_overlay = models.BooleanField(
+        _(
+            "Lay the breadcrumbs over the page content. Works well with hero image headers."
+        ),
+        default=False,
+    )
+    frame_ancestors = models.CharField(
+        _("Space separated list of allowed frame ancestor URLs."),
+        max_length=255,
+        blank=True,
+        validators=[validate_space_separated_urls],
+    )
+
+    def get_frame_ancestors(self):
+        # Split by generic whitespace
+        return self.frame_ancestors.split()
 
 
 class PageAnnotationCMSPlugin(CMSPlugin):
     page_annotation = models.ForeignKey(
         PageAnnotation, related_name="+", on_delete=models.CASCADE
     )
+    title = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
     zoom = models.BooleanField(default=True)
 
     def __str__(self):
@@ -53,7 +152,14 @@ class DocumentCollectionEmbedCMSPlugin(CMSPlugin):
     collection = models.ForeignKey(
         DocumentCollection, related_name="+", on_delete=models.CASCADE
     )
-    settings = models.TextField(default="{}")
+    deep_urls = models.BooleanField(
+        default=False,
+        blank=True,
+        help_text=_(
+            "The embed will use deep URLs to link to the document pages and directories. "
+            "Only enable this when no other embeds are on the same page."
+        ),
+    )
 
     def __str__(self):
         return "Embed %s" % (self.collection,)
@@ -110,6 +216,7 @@ class DocumentPagesCMSPlugin(CMSPlugin):
 class PrimaryLinkCMSPlugin(CMSPlugin):
     TEMPLATES = [
         ("", _("Default template")),
+        ("tile.html", _("Social tile template")),
         ("featured.html", _("Featured template")),
         ("campaign.html", _("Campaign template")),
     ]
@@ -167,6 +274,10 @@ class PrimaryLinkCMSPlugin(CMSPlugin):
         return link
 
 
+def get_foirequest_list_template_choices():
+    return FoiRequestListCMSPlugin.TEMPLATES
+
+
 class FoiRequestListCMSPlugin(CMSPlugin):
     """
     CMS Plugin for displaying FoiRequests
@@ -175,6 +286,8 @@ class FoiRequestListCMSPlugin(CMSPlugin):
     TEMPLATES = [
         ("", _("Default template")),
         ("foirequest/cms_plugins/list_follow.html", _("Follow template")),
+        ("foirequest/cms_plugins/map_regions.html", _("Map region template")),
+        ("foirequest/cms_plugins/map_points.html", _("Map points template")),
     ]
 
     resolution = models.CharField(
@@ -220,7 +333,7 @@ class FoiRequestListCMSPlugin(CMSPlugin):
         _("template"),
         blank=True,
         max_length=250,
-        choices=TEMPLATES,
+        choices=get_foirequest_list_template_choices,
         help_text=_("template used to display the plugin"),
     )
 
@@ -263,7 +376,9 @@ class OneClickFoiRequestCMSPlugin(CMSPlugin):
 
 class VegaChartCMSPlugin(CMSPlugin):
     title = models.CharField(max_length=255, blank=True)
-    description = models.TextField(blank=True)
+    description = models.TextField(
+        blank=True, help_text=_("Formatting with Markdown is supported.")
+    )
 
     vega_json = models.TextField(
         default="",
@@ -288,56 +403,58 @@ class SVGImageCMSPlugin(CMSPlugin):
         return self.title
 
 
-BACKGROUND = (
-    [
-        ("", _("None")),
-        ("primary", _("Primary")),
-        ("secondary", _("Secondary")),
-        ("info", _("Info")),
-        ("light", _("Light")),
-        ("dark", _("Dark")),
-        ("success", _("Success")),
-        ("warning", _("Warning")),
-        ("danger", _("Danger")),
-        ("purple", _("Purple")),
-        ("pink", _("Pink")),
-        ("yellow", _("Yellow")),
-        ("cyan", _("Cyan")),
-        ("gray", _("Gray")),
-        ("gray-dark", _("Gray Dark")),
-        ("white", _("White")),
-    ]
-    + [("gray-{}".format(i), "Gray {}".format(i)) for i in range(100, 1000, 100)]
-    + [
-        ("blue-10", _("Blue 10")),
-        ("blue-20", _("Blue 20")),
-        ("blue-30", _("Blue 30")),
-    ]
-    + [("blue-{}".format(i), "Blue {}".format(i)) for i in range(100, 900, 100)]
-    + [("yellow-{}".format(i), "Yellow {}".format(i)) for i in range(100, 400, 100)]
-)
-
-
 class DesignContainerCMSPlugin(CMSPlugin):
-    TEMPLATES = [
-        ("", _("Default template")),
-        ("cms/plugins/designs/speech_bubble.html", _("Speech bubble")),
-    ]
-
-    template = models.CharField(
-        _("Template"), choices=TEMPLATES, default="", max_length=50, blank=True
-    )
     background = models.CharField(
         _("Background"), choices=BACKGROUND, default="", max_length=50, blank=True
     )
-    extra_classes = models.CharField(max_length=255, blank=True)
+    backdrop = models.CharField(
+        _("Backdrop"), choices=BACKDROP, max_length=5, default="", blank=True
+    )
+
     container = models.BooleanField(default=True)
     padding = models.BooleanField(default=True)
+
+    tag_type = TagTypeField(choices=TAG_CHOICES)
+    root_attributes = AttributesField()
+    container_attributes = AttributesField()
+
+    def has_backdrop(self):
+        return self.backdrop != ""
 
 
 class ShareLinksCMSPlugin(CMSPlugin):
     title = models.CharField(max_length=255)
-    url = models.URLField(blank=True)
+    url = models.URLField(
+        blank=True, help_text=_("Defaults to the current page's URL.")
+    )
+    icons_only = models.BooleanField(_("Only show icons"), default=False)
+
+    image = FilerImageField(
+        null=True,
+        blank=True,
+        default=None,
+        on_delete=models.SET_NULL,
+        verbose_name=_("image"),
+        help_text=_(
+            "Only available with the Native Share API. If sharing doesn't work, the image will be downloaded instead."
+        ),
+    )
+
+    bluesky = models.BooleanField("BlueSky", default=True)
+    mastodon = models.BooleanField("Mastodon", default=True)
+    facebook = models.BooleanField("Facebook", default=False)
+    email = models.BooleanField(_("Email"), default=False)
+    clipboard = models.BooleanField(_("Copy to clipboard"), default=True)
+    native_share = models.BooleanField(
+        _("Native share"), default=True, help_text=_("Great on mobile devices.")
+    )
+    native_text = models.CharField(
+        _("Native share button label"), blank=True, max_length=50, default=""
+    )
+    native_links = models.BooleanField(
+        _("Link instead of button"),
+        default=False,
+    )
 
     def __str__(self):
         return self.title
@@ -378,12 +495,7 @@ class CardCMSPlugin(CMSPlugin):
         _("Border"),
         max_length=50,
         default="gray",
-        choices=(
-            ("none", _("None")),
-            ("blue", _("Blue")),
-            ("gray", _("Gray")),
-            ("yellow", _("Yellow")),
-        ),
+        choices=BORDER_COLORS,
     )
     shadow = models.CharField(
         _("Shadow"),
@@ -567,6 +679,9 @@ class RevealMoreCMSPlugin(CMSPlugin):
     def text(self):
         return self.reveal_text or str(_("Show more..."))
 
+    def css_color_variable(self):
+        return get_css_color_variable(self.color)
+
     def __str__(self):
         return self.text()
 
@@ -577,11 +692,7 @@ class BorderedSectionCMSPlugin(CMSPlugin):
         _("Border"),
         max_length=50,
         default="gray",
-        choices=(
-            ("blue", _("Blue")),
-            ("gray", _("Gray")),
-            ("yellow", _("Yellow")),
-        ),
+        choices=BORDER_COLORS,
     )
     spacing = models.CharField(
         _("Spacing"),
@@ -613,7 +724,100 @@ class BorderedSectionCMSPlugin(CMSPlugin):
 
 
 class DropdownBannerCMSPlugin(CMSPlugin):
-    animation = models.BooleanField(_("Slide banner with animation"), default=True)
+    ANIMATION_CHOICES = (("up", _("Up")), ("down", _("Down")))
+    animation = models.CharField(
+        _("Animation when closing banner"),
+        choices=ANIMATION_CHOICES,
+        max_length=10,
+        default="up",
+        blank=True,
+    )
     dark = models.BooleanField(
         _("Banner is dark-themed, button should therefore be light"), default=False
     )
+
+
+class PretixEmbedCMSPlugin(CMSPlugin):
+    shop_url = models.CharField()
+    js_url = models.CharField()
+    additional_settings = models.CharField(default="", blank=True)
+
+
+class DatashowDatasetTheme(models.Model):
+    dataset = models.OneToOneField(
+        Dataset, on_delete=models.CASCADE, related_name="theme"
+    )
+
+    image = FilerImageField(
+        null=True,
+        blank=True,
+        default=None,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("image"),
+    )
+    banner = FilerImageField(
+        null=True,
+        blank=True,
+        default=None,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("banner image"),
+    )
+
+    def __str__(self):
+        return "Theme for %s" % self.dataset
+
+
+class DatashowTableCMSPlugin(CMSPlugin):
+    table = models.ForeignKey(Table, on_delete=models.CASCADE)
+    query = models.TextField(blank=True)
+    limit = models.SmallIntegerField(default=10)
+
+    def __str__(self):
+        return self.table.label
+
+
+class PagePreviewCMSPlugin(CMSPlugin):
+    page = PageField()
+
+    def __str__(self):
+        return str(self.page)
+
+
+class OpenSearchCMSPlugin(CMSPlugin):
+    search_endpoint = models.URLField()
+    urltemplate = models.URLField()
+    filterconfig = models.JSONField(default=dict)
+
+
+class ExternalPixelCMSPlugin(CMSPlugin):
+    cookie_group = models.ForeignKey(
+        "cookie_consent.CookieGroup",
+        on_delete=models.CASCADE,
+        help_text=_("Cookie groups to which this pixel belongs."),
+    )
+    pixel_urls = models.TextField(help_text=_("URLs to the external pixels."))
+
+    def get_pixel_urls(self, request=None):
+        urls = [s.strip() for s in self.pixel_urls.splitlines()]
+        if request and request.GET.get("amount"):
+            amount = quote(request.GET.get("amount"))
+            return [url.replace("{amount}", amount) for url in urls]
+        return urls
+
+
+class DatawrapperCMSPlugin(CMSPlugin):
+    title = models.CharField(max_length=255)
+    dw_url = models.URLField(
+        validators=[
+            validators.URLValidator(regex=r"https:\/\/datawrapper\.dwcdn\.net\/.*")
+        ],
+        help_text=_("Enter the “Visualization only” link from Datawrapper."),
+        verbose_name=_("Datawrapper URL"),
+    )
+
+
+class SearchAlertCMSPlugin(CMSPlugin):
+    button_label = models.CharField(max_length=255, blank=True)
+    query = models.CharField(max_length=255, blank=True)

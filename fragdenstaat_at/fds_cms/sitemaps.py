@@ -5,6 +5,9 @@ from cms.sitemaps import CMSSitemap
 
 class FdsCMSSitemap(CMSSitemap):
     def items(self):
+        """
+        Copy from CMSSitemap and filter further by fds page extension
+        """
         return (
             super()
             .items()

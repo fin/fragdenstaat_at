@@ -1,0 +1,24 @@
+{% load i18n %}
+{% load static %}
+{% load sekizai_tags %}
+{% load leaflet_tags %}
+<div data-foirequest-cms-map="{{ instance.id }}"
+     class="my-3 overflow-hidden">
+    <div id="foirequest_map_plugin_{{ instance.id }}" style="height: 600px;"></div>
+</div>
+{% addtoblock "css" %}
+{% leaflet_css %}
+{% endaddtoblock %}
+{% addtoblock "css" %}
+<link rel="stylesheet" href="{% static 'css/foirequest_map.css' %}">
+{% endaddtoblock %}
+{% addtoblock "js" %}
+{% leaflet_js %}
+{% endaddtoblock %}
+{% addtoblock "js" %}
+<script type="module" src="{% static 'js/foirequest_map.js' %}"></script>
+{% endaddtoblock %}
+{% addtoblock "js" %}
+{% block map_data %}
+{% endblock map_data %}
+{% endaddtoblock %}

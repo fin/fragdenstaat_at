@@ -9,9 +9,6 @@ from froide.helper.search import search_registry
 
 from .templatetags.fds_cms_tags import get_soft_root
 
-# Only DE's search apphook is ported. Its other four (contact, plain API,
-# datashow, scanner app) point at modules AT does not have.
-
 
 def make_add_search(page_pk):
     def add_search(request):
@@ -39,9 +36,46 @@ class FdsCmsSearchApp(CMSApp):
     app_name = "fds_cms"
 
     def get_urls(self, page=None, language=None, **kwargs):
-        # There is no ready() hook for apphooks, so registration piggybacks on
-        # get_urls being called for each page the hook is attached to.
+        # FIXME: This is a hack to add a search registry entry
+        # for all installed CMS search apps.
+        # There doesn't seem to be a 'ready' hook, so we use this.
         if page is not None and language == settings.LANGUAGE_CODE:
             name = f"cms-search-{page.pk}"
             search_registry.register(make_add_search(page.pk), name)
         return ["fragdenstaat_at.fds_cms.urls"]
+
+
+@apphook_pool.register
+class FdsCmsContactApp(CMSApp):
+    name = "FragDenStaat-CMS-Kontakt"
+    app_name = "fds_cms_contact"
+
+    def get_urls(self, page=None, language=None, **kwargs):
+        return ["fragdenstaat_at.fds_cms.contact"]
+
+
+@apphook_pool.register
+class FdsCmsPlainAPIApp(CMSApp):
+    name = "FragDenStaat-CMS-Plain API"
+    app_name = "fds_cms_plainapi"
+
+    def get_urls(self, page=None, language=None, **kwargs):
+        return ["fragdenstaat_at.fds_cms.urls_plainapi"]
+
+
+@apphook_pool.register
+class DatashowCMSApp(CMSApp):
+    name = "Datashow CMS App"
+    app_name = "datashow"
+
+    def get_urls(self, page=None, language=None, **kwargs):
+        return ["datashow.urls"]
+
+
+@apphook_pool.register
+class ScannerAppDeepLinkCMSApp(CMSApp):
+    name = "Scanner App Deep Link CMS App"
+    app_name = "scannerapp"
+
+    def get_urls(self, page=None, language=None, **kwargs):
+        return ["fragdenstaat_at.fds_cms.urls_scannerapp"]

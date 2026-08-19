@@ -1,16 +1,25 @@
 from django.contrib import admin
 
 from cms.extensions import PageExtensionAdmin
+from filer.admin import FolderAdmin
+from filer.models import Folder
 
-from .models import FdsPageExtension
+from .models import DatashowDatasetTheme, FdsPageExtension
 
 
+@admin.register(FdsPageExtension)
 class FdsPageExtensionAdmin(PageExtensionAdmin):
     pass
 
 
-admin.site.register(FdsPageExtension, FdsPageExtensionAdmin)
+@admin.register(DatashowDatasetTheme)
+class DatashowDatasetThemeAdmin(admin.ModelAdmin):
+    raw_id_fields = ["dataset"]
 
-# The CustomStaticPlaceholderAdmin that used to live here is gone: django-cms
-# 5.1 removed StaticPlaceholder (see fds_cms/migrations/0006). Static content is
-# now djangocms-alias Aliases, which ship their own admin.
+
+class FdsFolderAdmin(FolderAdmin):
+    owner_search_fields = ["first_name", "last_name"]
+
+
+admin.site.unregister(Folder)
+admin.site.register(Folder, FdsFolderAdmin)

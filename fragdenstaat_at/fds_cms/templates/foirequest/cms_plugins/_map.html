@@ -1,0 +1,30 @@
+{% load i18n %}
+{% with plugin_id=instance.id|stringformat:"i" %}
+    {% with data_id="foirequest_map_plugin_data_"|add:plugin_id %}
+        {{ mapdata|json_script:data_id }}
+        <template id="foirequest_map_plugin_template_{{ instance.id }}">
+            <div class="bg-body text-body p-3 shadow">
+                <b>{% trans "Status" %}</b>
+                <ul class="foirequest-map-legend list-unstyled mb-0">
+                    <li>
+                        <i class="bg-success"></i> {% trans "Successful" %}
+                    </li>
+                    <li>
+                        <i class="bg-danger"></i> {% trans "Refused" %}
+                    </li>
+                    <li>
+                        <i class="bg-warning"></i> {% trans "Overdue" %}
+                    </li>
+                    <li>
+                        <i class="bg-secondary"></i> {% trans "Awaiting response / Other" %}
+                    </li>
+                </ul>
+                {% if mapdata.missing_count > 0 %}
+                    <hr>
+                    <i class="fa fa-info-circle text-info"></i>
+                    {% blocktrans count counter=mapdata.missing_count %}{{ counter }} request without geo data{% plural %}{{ counter }} requests without geo data{% endblocktrans %}
+                {% endif %}
+            </div>
+        </template>
+    {% endwith %}
+{% endwith %}

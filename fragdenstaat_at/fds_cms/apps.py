@@ -1,14 +1,12 @@
-import logging
-from io import BytesIO
-
 from django.apps import AppConfig
-from django.core.files.base import ContentFile
-from django.urls import NoReverseMatch, reverse
-from django.utils.translation import gettext_lazy as _
+
+from easy_thumbnails.optimize import thumbnail_created_callback
+from easy_thumbnails.signals import thumbnail_created
 
 
-
-logger = logging.getLogger(__name__)
+class FdsCmsNoConfig(AppConfig):
+    name = "fragdenstaat_at.fds_cms"
+    verbose_name = "FragDenStaat CMS (no config)"
 
 
 class FdsCmsConfig(AppConfig):
@@ -21,6 +19,9 @@ class FdsCmsConfig(AppConfig):
         from . import listeners  # noqa
 
         account_merged.connect(merge_user)
+
+        thumbnail_created.disconnect(thumbnail_created_callback)
+        thumbnail_created.connect(async_optimize_thumbnail)
 
         # Monkey-patch Page.get_absolute_url to include site domain
 
@@ -45,3 +46,11 @@ def merge_user(sender, old_user=None, new_user=None, **kwargs):
     from .models import FoiRequestListCMSPlugin
 
     FoiRequestListCMSPlugin.objects.filter(user=old_user).update(user=new_user)
+
+
+def async_optimize_thumbnail(sender, **kwargs):
+    from .tasks import optimize_thumbnail_task
+
+    optimize_thumbnail_task.delay(
+        sender.name, sender.file, sender.storage, sender.thumbnail_options
+    )

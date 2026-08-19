@@ -1,17 +1,25 @@
 import json
+import urllib.parse
 
-from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
+from cms.models import Page
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
-from .utils import concat_classes
+from datashow.models import Dataset
+from datashow.table import RowQueryset
+from djangocms_picture.cms_plugins import PicturePlugin as BasePicturePlugin
 
 from froide.foirequest.models import FoiRequest
-from froide.helper.utils import get_redirect_url
+# AT-only: HomepageHeroPlugin counts public bodies.
 from froide.publicbody.models import PublicBody
+from froide.helper.auth import is_crew
+from froide.helper.utils import get_redirect_url
 
-# from .contact import ContactForm
+from fragdenstaat_at.fds_cms.forms import DesignContainerForm
+
+from .contact import ContactForm
 from .models import (
     BorderedSectionCMSPlugin,
     CardCMSPlugin,
@@ -21,23 +29,31 @@ from .models import (
     CardInnerCMSPlugin,
     CardLinkCMSPlugin,
     CollapsibleCMSPlugin,
+    DatashowTableCMSPlugin,
+    DatawrapperCMSPlugin,
     DesignContainerCMSPlugin,
     DocumentCollectionEmbedCMSPlugin,
     DocumentEmbedCMSPlugin,
     DocumentPagesCMSPlugin,
     DocumentPortalEmbedCMSPlugin,
     DropdownBannerCMSPlugin,
+    ExternalPixelCMSPlugin,
     FoiRequestListCMSPlugin,
     ModalCMSPlugin,
     OneClickFoiRequestCMSPlugin,
+    OpenSearchCMSPlugin,
     PageAnnotationCMSPlugin,
+    PagePreviewCMSPlugin,
+    PretixEmbedCMSPlugin,
     PrimaryLinkCMSPlugin,
     RevealMoreCMSPlugin,
+    SearchAlertCMSPlugin,
     ShareLinksCMSPlugin,
     SliderCMSPlugin,
     SVGImageCMSPlugin,
     VegaChartCMSPlugin,
 )
+from .utils import concat_classes
 
 
 @plugin_pool.register_plugin
@@ -52,6 +68,10 @@ class PageAnnotationPlugin(CMSPluginBase):
     def render(self, context, instance, placeholder):
         context = super().render(context, instance, placeholder)
         context["instance"] = instance
+        context["title"] = instance.title or instance.page_annotation.title
+        context["description"] = (
+            instance.description or instance.page_annotation.description
+        )
         context["object"] = instance.page_annotation
 
         return context
@@ -122,6 +142,7 @@ class DocumentCollectionEmbedPlugin(CMSPluginBase):
         ctx = get_document_collection_context(
             instance.collection,
             context["request"],
+            deep_urls=instance.deep_urls,
         )
         context.update(ctx)
         context["instance"] = instance
@@ -224,7 +245,11 @@ class FoiRequestListPlugin(CMSPluginBase):
         """
         Update the context with plugin's data
         """
-        foirequests = FoiRequest.published.all()
+        request = context.get("request")
+        if request is not None and is_crew(request.user):
+            foirequests = FoiRequest.objects.all()
+        else:
+            foirequests = FoiRequest.published.all()
 
         FILTER_KEYS = (
             "user",
@@ -299,80 +324,21 @@ class SetPasswordFormPlugin(CMSPluginBase):
     render_template = "account/includes/set_password_now.html"
 
 
-# @plugin_pool.register_plugin
-# class PublicBodyFeedbackPlugin(CMSPluginBase):
-#     module = _("Contact")
-#     name = _("Contact Form")
-#     text_enabled = True
-#     render_template = "fds_cms/feedback.html"
-
-#     def render(self, context, instance, placeholder):
-#         """
-#         Update the context with plugin's data
-#         """
-
-#         context = super().render(context, instance, placeholder)
-#         context["form"] = ContactForm()
-#         return context
-
-
 @plugin_pool.register_plugin
-class HomepageHeroPlugin(CMSPluginBase):
-    module = _("Homepage")
-    name = _("Homepage Hero")
-    render_template = "snippets/homepage_hero.html"
+class PublicBodyFeedbackPlugin(CMSPluginBase):
+    module = _("Contact")
+    name = _("Contact Form")
+    text_enabled = True
+    render_template = "fds_cms/feedback.html"
 
     def render(self, context, instance, placeholder):
-        context = super(HomepageHeroPlugin, self).render(context, instance, placeholder)
-        context.update(
-            {
-                "foicount": FoiRequest.objects.get_send_foi_requests().count(),
-                "pbcount": PublicBody.objects.get_list().count(),
-            }
-        )
+        """
+        Update the context with plugin's data
+        """
+
+        context = super().render(context, instance, placeholder)
+        context["form"] = ContactForm(request=context["request"])
         return context
-
-
-@plugin_pool.register_plugin
-class HomepageHowPlugin(CMSPluginBase):
-    module = _("Homepage")
-    name = _("Homepage How")
-    render_template = "snippets/homepage_how.html"
-
-
-@plugin_pool.register_plugin
-class RowPlugin(CMSPluginBase):
-    module = _("Structure")
-    name = _("Row")
-    render_template = "cms/plugins/row.html"
-    allow_children = True
-
-
-class ColumnPlugin(CMSPluginBase):
-    module = _("Structure")
-    allow_children = True
-
-
-# Generate Column Plugin classes and register them
-COLUMNS = [
-    (3, _("Three")),
-    (4, _("Four")),
-    (6, _("Six")),
-    (8, _("Eight")),
-    (9, _("Nine")),
-    (12, _("Twelve")),
-]
-for col_count, col_name in COLUMNS:
-    plugin_pool.register_plugin(
-        type(
-            "Column%sPlugin" % col_count,
-            (ColumnPlugin,),
-            {
-                "name": _("Column " + str(col_name)),
-                "render_template": "cms/plugins/col_%d.html" % col_count,
-            },
-        )
-    )
 
 
 @plugin_pool.register_plugin
@@ -427,41 +393,13 @@ class SVGImagePlugin(CMSPluginBase):
 
 
 @plugin_pool.register_plugin
-class ContainerPlugin(CMSPluginBase):
-    module = _("Structure")
-    name = _("Container")
-    render_template = "cms/plugins/container.html"
-    allow_children = True
-
-
-@plugin_pool.register_plugin
-class ContainerFluidPlugin(CMSPluginBase):
-    module = _("Structure")
-    name = _("Container Fluid")
-    render_template = "cms/plugins/container_fluid.html"
-    allow_children = True
-
-
-@plugin_pool.register_plugin
-class ContainerGreyPlugin(CMSPluginBase):
-    module = _("Structure")
-    name = _("Container Grey")
-    render_template = "cms/plugins/container_grey.html"
-    allow_children = True
-
-
-@plugin_pool.register_plugin
 class DesignContainerPlugin(CMSPluginBase):
     model = DesignContainerCMSPlugin
     module = _("Structure")
     name = _("Design Container")
-    default_template = "cms/plugins/container_design.html"
     allow_children = True
-
-    def get_render_template(self, context, instance, placeholder):
-        if instance.template:
-            return instance.template
-        return self.default_template
+    render_template = "cms/plugins/container_design.html"
+    form = DesignContainerForm
 
     def render(self, context, instance, placeholder):
         context = super().render(context, instance, placeholder)
@@ -469,32 +407,32 @@ class DesignContainerPlugin(CMSPluginBase):
         return context
 
 
-CONTAINER_PLUGINS = [
-    "ContainerPlugin",
-    "ContainerFluidPlugin",
-    "ContainerGreyPlugin",
-    "DesignContainerPlugin",  # TODO: remove this one
-]
-
-
 @plugin_pool.register_plugin
 class ShareLinksPlugin(CMSPluginBase):
     model = ShareLinksCMSPlugin
     module = _("Elements")
     name = _("Share Links")
-    render_template = "fds_cms/share_buttons.html"
+    render_template = "snippets/share_buttons.html"
     text_enabled = True
     cache = True
 
     def render(self, context, instance, placeholder):
         context = super().render(context, instance, placeholder)
-        url = ""
-        if "request" in context:
-            req = context["request"]
-            url = req.build_absolute_uri()
-        context["object"] = instance
-        context["url"] = instance.url or url
+
+        context["id"] = instance.pk
+        context["url"] = instance.url
         context["text"] = instance.title
+        context["image"] = instance.image
+        context["bluesky"] = instance.bluesky
+        context["mastodon"] = instance.mastodon
+        context["facebook"] = instance.facebook
+        context["email"] = instance.email
+        context["clipboard"] = instance.clipboard
+        context["native_share"] = instance.native_share
+        context["native_text"] = instance.native_text
+        context["icons_only"] = instance.icons_only
+        context["links"] = instance.native_links
+
         return context
 
 
@@ -576,7 +514,7 @@ class FdsCardPlugin(CMSPluginBase):
         classes = []
 
         if instance.border != "none":
-            classes.append(f"border-{instance.border}")
+            classes.append(f"border border-2 border-{instance.border}")
 
         if instance.shadow == "always":
             classes.append(f"shadow-{instance.border}")
@@ -585,6 +523,10 @@ class FdsCardPlugin(CMSPluginBase):
 
         if instance.background:
             classes.append(f"bg-{instance.background}")
+
+            # ensure full opacity text on body-secondary/tertiary
+            if "body" in instance.background:
+                classes.append("text-body")
 
         if instance.attributes.get("class"):
             classes += instance.attributes["class"].split(" ")
@@ -621,12 +563,9 @@ class FdsCardPlugin(CMSPluginBase):
         return "p-3"
 
     def color(self, instance):
-        if instance.border == "blue":
-            return "bg-blue-20"
-        elif instance.border == "gray":
-            return "bg-gray-300"
-        elif instance.border == "yellow":
-            return "bg-yellow-200"
+        if instance.border:
+            return f"text-bg-{instance.border}"
+        return ""
 
 
 @plugin_pool.register_plugin
@@ -641,10 +580,7 @@ class FdsCardInnerPlugin(CMSPluginBase):
 
     def render(self, context, instance, placeholder):
         classes = []
-        try:
-            parent_model, parent_instance = instance.parent.get_plugin_instance()
-        except ObjectDoesNotExist:
-            return super().render(context, instance, placeholder)
+        parent_model, parent_instance = instance.parent.get_plugin_instance()
 
         if parent_model is not None:
             classes.append(parent_instance.padding(parent_model))
@@ -682,11 +618,7 @@ class FdsCardHeaderPlugin(CMSPluginBase):
         return super().render(context, instance, placeholder)
 
 
-THUMBNAIL_SIZES = {
-    "sm": ("100x0", "100x0"),
-    "lg": ("280x0", "200x0"),
-    "lg-wide": ("400x0", "400x0"),
-}
+THUMBNAIL_SIZES = {"sm": "100x0", "lg": "280x0", "lg-wide": "0x100"}
 
 
 @plugin_pool.register_plugin
@@ -763,14 +695,8 @@ class BorderedSectionPlugin(CMSPluginBase):
     cache = True
 
     def render(self, context, instance, placeholder):
-        context["color"] = self.color(instance)
         context["padding"] = self.padding(instance)
         return super().render(context, instance, placeholder)
-
-    def color(self, instance):
-        colormap = {"yellow": "yellow-300", "blue": "blue-700", "gray": "gray-900"}
-
-        return colormap[instance.border]
 
     def padding(self, instance):
         if instance.spacing == "lg":
@@ -778,6 +704,233 @@ class BorderedSectionPlugin(CMSPluginBase):
         elif instance.spacing == "md":
             return "p-3 p-md-4"
         return "p-3"
+
+
+class PicturePlugin(BasePicturePlugin):
+    def render(self, context, instance, placeholder):
+        # Overwrite render method to remove original's
+        # thumbnail generation in img_srcset_data property
+
+        if instance.alignment:
+            classes = "align-{} ".format(instance.alignment)
+            classes += instance.attributes.get("class", "")
+            # Set the class attribute to include the alignment html class
+            # This is done to leverage the attributes_str property
+            instance.attributes["class"] = classes
+        # assign link to a context variable to be performant
+        context["picture_link"] = instance.get_link()
+        context["picture_size"] = instance.get_size(
+            width=context.get("width") or 0,
+            height=context.get("height") or 0,
+        )
+
+        # Note: Skipping base plugin render method
+        return super(BasePicturePlugin, self).render(context, instance, placeholder)
+
+
+plugin_pool.unregister_plugin(BasePicturePlugin)
+plugin_pool.register_plugin(PicturePlugin)
+
+
+@plugin_pool.register_plugin
+class PretixPlugin(CMSPluginBase):
+    model = PretixEmbedCMSPlugin
+    name = _("Pretix Shop-Embed")
+    render_template = "fds_cms/pretix.html"
+    allow_children = False
+
+
+@plugin_pool.register_plugin
+class DatashowDatasetsPlugin(CMSPluginBase):
+    module = _("Datashow")
+    name = _("Datasets")
+    render_template = "fds_cms/datashow/datasets.html"
+
+    def render(self, context, instance, placeholder):
+        context["datasets"] = Dataset.objects.filter(listed=True)
+        return super().render(context, instance, placeholder)
+
+
+@plugin_pool.register_plugin
+class DatashowTablePlugin(CMSPluginBase):
+    model = DatashowTableCMSPlugin
+    module = _("Datashow")
+    name = _("Table")
+    render_template = "fds_cms/datashow/table.html"
+    raw_id_fields = ("table",)
+
+    def render(self, context, instance, placeholder):
+        context["table"] = instance.table
+        context["dataset"] = instance.table.dataset
+        query_data = dict(urllib.parse.parse_qsl(instance.query))
+        try:
+            context["object_list"] = RowQueryset(instance.table, formdata=query_data)[
+                : instance.limit
+            ]
+        except FileNotFoundError:
+            # If the file is not accessible, just return an empty list
+            # to not break the rest of the page.
+            context["object_list"] = []
+        columns = instance.table.get_formatted_columns()
+        # Force disable sorting for all columns
+        for column, _css in columns:
+            column.sortable = False
+        context["columns"] = columns
+        return super().render(context, instance, placeholder)
+
+
+@plugin_pool.register_plugin
+class PagePreviewPlugin(CMSPluginBase):
+    model = PagePreviewCMSPlugin
+    module = _("Elements")
+    name = _("Page Preview")
+    render_template = "fds_cms/page_preview.html"
+
+    def render(self, context, instance, placeholder):
+        page = instance.page
+        context["page"] = page
+
+        try:
+            context["image"] = page.fdspageextension.image
+        except Page.fdspageextension.RelatedObjectDoesNotExist:
+            context["image"] = None
+            print("NO IMAGE")
+
+        context["title"] = page.get_title()
+        context["description"] = page.get_meta_description()
+
+        return super().render(context, instance, placeholder)
+
+
+@plugin_pool.register_plugin
+class OpenSearchPlugin(CMSPluginBase):
+    model = OpenSearchCMSPlugin
+    module = _("Elements")
+    name = _("OpenSearch Searchbox")
+    render_template = "fds_cms/opensearch.html"
+
+    def render(self, context, instance, placeholder):
+        context["i18n"] = json.dumps(
+            {
+                "noResults": gettext("No results"),
+                "search": gettext("Search"),
+            }
+        )
+        context["filterconfig"] = json.dumps(instance.filterconfig)
+        return super().render(context, instance, placeholder)
+
+
+@plugin_pool.register_plugin
+class ExternalPixelPlugin(CMSPluginBase):
+    model = ExternalPixelCMSPlugin
+    module = _("Social Media")
+    name = _("External Pixel")
+    render_template = "fds_cms/external_pixel.html"
+
+    def render(self, context, instance, placeholder):
+        request = context["request"]
+        context["pixel_urls"] = instance.get_pixel_urls(request)
+        context["cookie_group"] = instance.cookie_group
+        context["cookie_groups"] = [instance.cookie_group]
+        return super().render(context, instance, placeholder)
+
+
+@plugin_pool.register_plugin
+class DatawrapperPlugin(CMSPluginBase):
+    model = DatawrapperCMSPlugin
+    module = _("Elements")
+    name = _("Datawrapper Embed")
+    render_template = "fds_cms/datawrapper.html"
+
+
+@plugin_pool.register_plugin
+class LanguageSwitcherPlugin(CMSPluginBase):
+    module = _("Elements")
+    name = _("Language Switcher")
+    render_template = "snippets/language_switcher.html"
+    cache = False  # the language switcher handles caching itself
+
+
+@plugin_pool.register_plugin
+class DarkModeToggle(CMSPluginBase):
+    module = _("Elements")
+    name = _("Dark Mode Toggle")
+    render_template = "snippets/darkmode_toggle.html"
+
+
+@plugin_pool.register_plugin
+class SearchAlertPlugin(CMSPluginBase):
+    model = SearchAlertCMSPlugin
+    module = _("Elements")
+    name = _("Search Alert")
+    text_enabled = True
+    render_template = "fds_cms/searchalert.html"
+
+
+# ---------------------------------------------------------------------------
+# AT-only plugins. The Row/Column/Container/SubMenu set is pre-djangocms-frontend
+# scaffolding that DE deleted; AT still has 17 live instances of it (MERGE_PLAN
+# 1a), so it stays until those are migrated onto the modern grid.
+# ---------------------------------------------------------------------------
+
+@plugin_pool.register_plugin
+class RowPlugin(CMSPluginBase):
+    module = _("Structure")
+    name = _("Row")
+    render_template = "cms/plugins/row.html"
+    allow_children = True
+
+
+class ColumnPlugin(CMSPluginBase):
+    module = _("Structure")
+    allow_children = True
+
+
+# Generated and registered dynamically: live content uses Column4/6/8, and a
+# missing registration raises KeyError when the page renders.
+COLUMNS = [
+    (3, _("Three")),
+    (4, _("Four")),
+    (6, _("Six")),
+    (8, _("Eight")),
+    (9, _("Nine")),
+    (12, _("Twelve")),
+]
+for col_count, col_name in COLUMNS:
+    plugin_pool.register_plugin(
+        type(
+            "Column%sPlugin" % col_count,
+            (ColumnPlugin,),
+            {
+                "name": _("Column " + str(col_name)),
+                "render_template": "cms/plugins/col_%d.html" % col_count,
+            },
+        )
+    )
+
+
+@plugin_pool.register_plugin
+class ContainerPlugin(CMSPluginBase):
+    module = _("Structure")
+    name = _("Container")
+    render_template = "cms/plugins/container.html"
+    allow_children = True
+
+
+@plugin_pool.register_plugin
+class ContainerFluidPlugin(CMSPluginBase):
+    module = _("Structure")
+    name = _("Container Fluid")
+    render_template = "cms/plugins/container_fluid.html"
+    allow_children = True
+
+
+@plugin_pool.register_plugin
+class ContainerGreyPlugin(CMSPluginBase):
+    module = _("Structure")
+    name = _("Container Grey")
+    render_template = "cms/plugins/container_grey.html"
+    allow_children = True
 
 
 @plugin_pool.register_plugin
@@ -792,3 +945,27 @@ class PageSubMenuPlugin(CMSPluginBase):
     module = _("Menu")
     name = _("Page Sub Menu")
     render_template = "cms/plugins/page_submenu.html"
+
+
+@plugin_pool.register_plugin
+class HomepageHeroPlugin(CMSPluginBase):
+    module = _("Homepage")
+    name = _("Homepage Hero")
+    render_template = "snippets/homepage_hero.html"
+
+    def render(self, context, instance, placeholder):
+        context = super(HomepageHeroPlugin, self).render(context, instance, placeholder)
+        context.update(
+            {
+                "foicount": FoiRequest.objects.get_send_foi_requests().count(),
+                "pbcount": PublicBody.objects.get_list().count(),
+            }
+        )
+        return context
+
+
+@plugin_pool.register_plugin
+class HomepageHowPlugin(CMSPluginBase):
+    module = _("Homepage")
+    name = _("Homepage How")
+    render_template = "snippets/homepage_how.html"

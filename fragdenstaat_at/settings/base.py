@@ -546,7 +546,7 @@ class FragDenStaatBase(German, Base):
         "cms.middleware.user.CurrentUserMiddleware",
         "cms.middleware.page.CurrentPageMiddleware",
         "cms.middleware.toolbar.ToolbarMiddleware",
-        "fragdenstaat_at.theme.cms_utils.HostLanguageCookieMiddleware",
+        "fragdenstaat_at.theme.cms_utils.LanguageUtilsMiddleware",
     ]
 
     CACHES = {
@@ -669,6 +669,7 @@ class FragDenStaatBase(German, Base):
                 text_analyzer="fragdenstaat_at.theme.search.get_text_analyzer",
                 search_analyzer="fragdenstaat_at.theme.search.get_search_analyzer",
                 search_quote_analyzer="fragdenstaat_at.theme.search.get_search_quote_analyzer",
+                query_preprocessor="fragdenstaat_at.theme.search.QueryPreprocessor",
                 dryrun_domain="test.fragdenstaat.at",
                 allow_pseudonym=True,
                 api_activated=True,

@@ -1,10 +1,10 @@
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import mail_managers
-
-# from django.shortcuts import redirect
+from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import trans_real
@@ -70,15 +70,20 @@ def detect_troll_pre_request_creation(request, **kwargs):
 registry.register("pre_request_creation", detect_troll_pre_request_creation)
 
 
-# def inject_status_change(request, **kwargs):
-#     data = kwargs['data']
-#     foirequest = data['foirequest']
-#     form = data['form']
-#     data = form.cleaned_data
-#     if data['resolution'] in ('successful', 'partially_successful'):
-#         next_url = foirequest.get_absolute_url()
-#         params = urlencode({'pk_keyword': next_url, 'pk_campaign': 'request-successful'})
-#         return redirect('/spenden/erfolgreiche-anfrage/?' + params)
+def inject_status_change(request, **kwargs):
+    data = kwargs["data"]
+    foirequest = data["foirequest"]
+    if request.user != foirequest.user:
+        # Only show when request author takes action
+        return
+    form = data["form"]
+    data = form.cleaned_data
+    if data["resolution"] in ("successful", "partially_successful"):
+        next_url = foirequest.get_absolute_url()
+        params = urlencode(
+            {"pk_keyword": next_url, "pk_campaign": "request-successful"}
+        )
+        return redirect("/spenden/erfolgreiche-anfrage/?" + params)
 
-# Disable status change inject
-# registry.register('post_status_set', inject_status_change)
+
+registry.register("post_status_set", inject_status_change)

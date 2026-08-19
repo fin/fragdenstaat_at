@@ -125,7 +125,7 @@ django-flowcontrol integration, gift-order shipping with Internetmarke export,
 IBAN in donor export, refund handling, a real test suite. Migrations 44 → 79.
 
 *Germany-specific, needs Austrian replacement:*
-1. **`zwb.html` — the Zuwendungsbestätigung.** AT wrapped the entire body in
+1. [x] **`zwb.html` — the Zuwendungsbestätigung.** AT wrapped the entire body in
    `{% comment %}`, so it renders a **blank PDF**. The German form is the §50 EStDV
    Muster with an OKF Berlin letterhead. Austria's equivalent is
    **Spendenabsetzbarkeit** with mandatory **FinanzOnline** electronic reporting
@@ -375,7 +375,34 @@ enables security by default; `xpack.security.enabled=false` is already set in
 Marked **[A]** automatable / cheap, **[R]** needs review, **[H]** genuine
 design or legal judgement.
 
-### P1b — finish the test harness (D7) · ~2 days
+### Status board
+
+- [x] **P1b** — test harness *(config + DE's donation tests: 37 → 118 passing)*
+  - [x] pytest config: markers, `--reuse-db`, warning filters, xdist grouping
+  - [x] DE's `fds_donation/tests/` (15 modules), landed with P2 step 4
+  - [ ] DE's `database-cache` CI workflow
+  - [ ] revisit parallelism now the suite is larger
+- [ ] **P2** — rebuild the AT layer *(6 of 8 steps done)*
+  - [x] 1. D3 execution — newsletter + mailing, no signup surface
+  - [ ] 2. Settings — **[H]**, remainder is product judgement (§9.1)
+  - [x] 3. `fds_cms` / `theme` / `fds_ogimage`
+  - [x] 4. `fds_donation`
+  - [x] 5. Frontend — 32 → 12 differing files
+  - [ ] 6. Templates — partial; footer-alias URLs and top-level `templates/` left
+  - [x] 7. Preserve the dev environment
+  - [x] 8. Footer gate in force (now joined by the page-render harness)
+- [ ] **P3** — migrations
+  - [x] forward-port as `fds_cms/0008` and `fds_donation/0046`
+  - [ ] **rehearse against a production dump with real donation rows**
+- [ ] **P4** — Austrian donation receipts *(not started; needs external tax/legal input)*
+- [ ] **P5** — repeatable sync
+  - [x] drift job wired into CI
+  - [ ] tighten `--check-max-modified` 260 → ~140
+  - [ ] record the new baseline commit
+  - [ ] delete commented-out DE code in `theme/views.py`, `theme/urls.py`
+- [ ] **P6** — translations *(deliberately last)*
+
+### P1b — finish the test harness (D7) — ⚠️ mostly done
 
 *Config adopted.* `pytest.ini` now registers DE's markers (`stripe`, `paypal`,
 `elasticsearch`, `xdist_group`), excludes externally-keyed tests by default,
@@ -396,7 +423,7 @@ to amortise it.
 from 37 to 118. *Remaining:* DE's `database-cache` CI workflow, and revisiting
 parallelism now the suite is larger. **[R]**
 
-### P2 — rebuild the AT layer against DE@HEAD · 3–4 weeks
+### P2 — rebuild the AT layer against DE@HEAD — ⚠️ 6 of 8 steps done
 
 1. **D3 execution — ✅ done.** Both apps vendored from DE@HEAD (138 files) and
    wired, along with `flowcontrol`. `Donor.subscriber` restored as
@@ -429,7 +456,7 @@ parallelism now the suite is larger. **[R]**
    recipients" while the `bulk_create` was commented out. It created nothing and
    said it had.
 
-2. **Settings.** Rewrite `settings/base.py` as DE@HEAD's file plus an explicit AT
+2. [ ] **Settings.** Rewrite `settings/base.py` as DE@HEAD's file plus an explicit AT
    override block — configuration, not commented-out code (D2). Resolve the items
    flagged in §3. **[H]**
 
@@ -457,7 +484,7 @@ parallelism now the suite is larger. **[R]**
    invisible. (`CKEDITOR_SETTINGS` was checked for the same failure and is fine:
    `djangocms_text` still reads it.)
 
-3. **`fds_cms` / `theme` / `fds_ogimage`.** ✅ **Done.**
+3. [x] **`fds_cms` / `theme` / `fds_ogimage`.** ✅ **Done.**
 
    - **`fds_cms`**: DE's modules and templates adopted, schema forward-ported as
      AT `0008`. The 9 AT-only plugin classes re-applied. `datashow` and
@@ -482,7 +509,7 @@ parallelism now the suite is larger. **[R]**
    ES container is down in this environment, so the index could not be rebuilt.
    Definitions construct and the preprocessor imports; relevance is unproven.
 
-4. **`fds_donation`.** ✅ **Done.** DE@HEAD adopted (583 → 1359 model lines),
+4. [x] **`fds_donation`.** ✅ **Done.** DE@HEAD adopted (583 → 1359 model lines),
    schema forward-ported as a single AT migration `0046` per D8(b), keeping AT's
    45-migration lineage rather than DE's 79. Applied cleanly to an extract load,
    no drift after. Brings `Recurrence` (recurring donations move off
@@ -510,7 +537,7 @@ parallelism now the suite is larger. **[R]**
    code. Still unverified: behaviour against real donation rows, since the extract
    has none — that is the live-data rehearsal.
 
-5. **Frontend.** ✅ **Done.** 32 → 12 differing files. Categories A–H applied
+5. [x] **Frontend.** ✅ **Done.** 32 → 12 differing files. Categories A–H applied
    (see the table above): DE's version taken for formatting noise, bugfixes,
    additive utilities and font tooling; AT keeps its palette, dark mode and
    dropdown. Matomo removed entirely. Webfonts fixed — every `@font-face` was
@@ -519,7 +546,7 @@ parallelism now the suite is larger. **[R]**
    The 12 remaining are deliberate: AT's visual identity (8), its import lists
    (3), and `banner.scss`/`banner.ts` now shared with DE.
 
-6. **Templates.** ⚠️ **Partly done.**
+6. [ ] **Templates.** ⚠️ **Partly done.**
    - ✅ `base.html`'s `metadescription` rewritten for the Austrian IFG (**wants a
      copy review** — §9.1).
    - ✅ DE's `google-site-verification` token removed.
@@ -530,19 +557,19 @@ parallelism now the suite is larger. **[R]**
      still 423 lines from DE's, and is AT's branding — likely correct as-is, but
      unreviewed). **[H]**
 
-7. **Preserve** `.devcontainer/`, `compose-dev.yaml`, `devsetup.sh`, `Makefile`,
+7. [x] **Preserve** `.devcontainer/`, `compose-dev.yaml`, `devsetup.sh`, `Makefile`,
    `export_dev_db.py`, `scripts/`, `tests/`, `.github/`. ✅ **Held** — all intact;
    `devsetup.sh` and `pytest.ini` gained deliberate changes, `scripts/` gained
    `de_drift.py` and `froide-source.sh`.
 
-8. ✅ **In force.** The footer gate runs in the suite. It has since been joined by
+8. [x] ✅ **In force.** The footer gate runs in the suite. It has since been joined by
    a stronger check: **rendering all 10 real CMS pages from the extract**, which
    caught four breakages that returned HTTP 200 and that the test suite missed
    entirely (unregistered Column plugins, a missing `PublicBody` import, an
    unregistered `thumbnail_dims` filter, and `get_soft_root` on a lazy `None`).
    Use it after any template, plugin or middleware change.
 
-### P3 — migrations (D8) · ~1 week + staging
+### P3 — migrations (D8) — ⚠️ forward-port done, rehearsal outstanding
 
 ✅ **Forward-porting done.** `fds_cms/0008` and `fds_donation/0046` carry DE's
 model changes; both applied cleanly to a fresh extract load with no drift after.
@@ -556,13 +583,13 @@ Note for the runbook: production needs a one-off
 `manage.py migrate --fake fds_cms 0005` (D9), and must **not** be faked on a
 database lacking those columns.
 
-### P4 — Austrian donation receipts · 2–4 weeks · independent track
+### P4 — Austrian donation receipts — ❌ not started · 2–4 weeks · independent
 
 Design and build the Spendenabsetzbarkeit / FinanzOnline flow replacing the German
 ZWB pipeline. Until it lands, do not un-hide the `receipt` form field. Gated on
 external tax/legal input — **start immediately**, it is the long pole. **[H]**
 
-### P5 — repeatable sync · ~1 day
+### P5 — repeatable sync — ⚠️ partly done
 
 The drift job is wired into `ci.yml` (non-blocking, limit 260). **The limit is now
 far too loose** — measured today:
@@ -577,7 +604,7 @@ Remaining: tighten `--check-max-modified` to ~140, record the baseline commit
 here, and delete the commented-out DE code that D2's configure-out makes
 redundant (`theme/views.py` and `theme/urls.py` are the main holdouts). **[A]**
 
-### P6 — translations (D4/D5) · ~1 week · **LAST**
+### P6 — translations (D4/D5) — ❌ not started · **LAST**
 
 Deliberately last: relocating `de_AT` before P2 means re-syncing the catalogue every
 time a label changes. froide keeps carrying it until then.
@@ -639,12 +666,12 @@ Console; DE's was removed rather than replaced.
 The app is kept on purpose; the external rendering service does not exist yet.
 Once it does, four things must change together — the last is easy to miss:
 
-1. Set `FDS_OGIMAGE_URL` (env), in DE's shape:
+1. [ ] Set `FDS_OGIMAGE_URL` (env), in DE's shape:
    `https://<host>/api/{hash}?path={path}`.
-2. Add `fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig` to `INSTALLED_APPS`.
-3. Uncomment the `fds_ogimage.urls` include in `theme/urls.py` — the service
+2. [ ] Add `fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig` to `INSTALLED_APPS`.
+3. [ ] Uncomment the `fds_ogimage.urls` include in `theme/urls.py` — the service
    fetches the pages it screenshots from these routes.
-4. **Restore the two template overrides that were deleted.**
+4. [ ] **Restore the two template overrides that were deleted.**
    `templates/account/profile.html` and `templates/foirequest/show.html` used to
    call `{% ogimage_url %}`, but with the tag commented out they emitted an empty
    `og:image` on every profile and request page, so the overrides were removed in
@@ -652,40 +679,43 @@ Once it does, four things must change together — the last is easy to miss:
 
 ### 9.3 One-off production steps
 
-- **`manage.py migrate --fake fds_cms 0005`** (D9). Must **not** be run on a
+- [ ] **`manage.py migrate --fake fds_cms 0005`** (D9). Must **not** be run on a
   database that lacks those columns — check `information_schema` first.
-- **Celery task rename** — the five `fragdenstaat_de.fds_donation.*` names. Drain
+- [ ] **Celery task rename** — the five `fragdenstaat_de.fds_donation.*` names. Drain
   and deploy per `docs/runbooks/celery-task-rename.md`; not a code edit.
-- **Confirm `remind_unreceived_banktransfers` is in the beat config.** It is
+- [ ] **Confirm `remind_unreceived_banktransfers` is in the beat config.** It is
   documented "run on the 15th" but nothing in the repo schedules it.
 
 ### 9.4 Verify before trusting
 
-- **Rehearse the migrations against a real production dump.** The dev extract is
+- [ ] **Rehearse the migrations against a real production dump.** The dev extract is
   schema-faithful but not content-faithful — it collapses draft/public, so
   `fds_cms/0006` cannot be exercised against real divergence locally.
-- **Measure production row counts** for `foirequest_*`, `account_user`,
+- [ ] **Measure production row counts** for `foirequest_*`, `account_user`,
   `fds_donation_*`, `froide_payment_*`. They set the migration window; the 10 CMS
   pages do not.
-- **Rebuild the container to verify the Elasticsearch 8.15.1 bump.** Changed but
+- [ ] **Rebuild the container to verify the Elasticsearch 8.15.1 bump**, and re-run
+  `search_index --rebuild`. The ES container is currently **down** in this dev
+  environment, so the reworked analyzers from DE's `theme/search.py` are unproven
+  as well. Changed but
   never rebuilt; re-run `search_index --rebuild` afterwards.
-- **`RegularDonorsProgressBarPlugin` and the bank importer have no test cover** and
+- [ ] **`RegularDonorsProgressBarPlugin` and the bank importer have no test cover** and
   were both changed. The plugin query was hand-checked against an extract whose
   donation tables are empty — that proves the SQL valid, not the arithmetic.
 
 ### 9.5 Known live defects to fix before or with the deploy
 
-- **The footer alias hardcodes hash-stamped static URLs** (four sponsor logos).
+- [ ] **The footer alias hardcodes hash-stamped static URLs** (four sponsor logos).
   They are orphans from a deployment that used manifest storage; production no
   longer hashes. They resolve today, but `collectstatic --clear` or any edit to
   those source images breaks them.
-- **`zwb.html` renders a blank PDF** and the donation receipt field is hidden.
+- [ ] **`zwb.html` renders a blank PDF** and the donation receipt field is hidden.
   Leave hidden until P4 lands the Austrian FinanzOnline flow.
-- **Attach the CMS search apphook to a page.** `FdsCmsSearchApp` is ported and
+- [ ] **Attach the CMS search apphook to a page.** `FdsCmsSearchApp` is ported and
   registers, but an apphook does nothing until it is attached to a CMS page in
   the admin (DE attaches it to its help section). Until then CMS pages stay
   missing from site search.
-- **If mailing is ever enabled, a working unsubscribe route is legally required.**
+- [ ] **If mailing is ever enabled, a working unsubscribe route is legally required.**
   Three DE test modules are currently ignored for exactly this reason.
 
 ### 9.6 Deferred: georegion loading

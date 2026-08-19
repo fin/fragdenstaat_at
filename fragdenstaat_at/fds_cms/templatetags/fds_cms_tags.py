@@ -68,6 +68,13 @@ def get_responsive_filer_image(filer_image, column_classes):
 
 @register.filter
 def get_soft_root(page):
+    # AT override: tolerate a missing page. The CMS search view can be reached
+    # outside an apphook page, where request.current_page is None. Note the
+    # truthiness test rather than `is None`: current_page is a SimpleLazyObject
+    # wrapping None, so an identity check passes straight through and the
+    # attribute access below raises mid-render.
+    if not page:
+        return None
     if page.soft_root:
         return page
     soft_root = (

@@ -15,7 +15,7 @@ import './magnifier.ts'
 import './misc.ts'
 import './slider.js'
 import './smooth-scroll.ts'
-import './top-banner.ts'
+import './banner'
 
 if (document.body.dataset.sentry !== undefined) {
   void import('./sentry').then((mod) => {

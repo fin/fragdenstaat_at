@@ -1,5 +1,6 @@
-<a href="{{ instance.link }}" class="action-link me-3 {{ instance.attributes.class }}" {{ instance.attributes_str }}>
-  {% if instance.icon %}<i class="fa fa-{{ instance.icon }}"></i>
-  {% elif instance.arrow %}→ {% endif %}
-  {{ instance.title }}
+<a href="{{ instance.link }}"
+   class="action-link me-3 {% if instance.arrow and not instance.icon %}arrow{% endif %} {{ instance.attributes.class }}"
+   {{ instance.attributes_str }}>
+    {% if instance.icon %}<i class="fa fa-{{ instance.icon }}"></i>{% endif %}
+    {{ instance.title }}
 </a>

@@ -1,10 +1,9 @@
 import os
 
 import pytest
+import pytest_asyncio
 
 from froide.account.factories import UserFactory
-
-os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
 
 # Environment variables silently take priority over pytest.ini's
 # DJANGO_SETTINGS_MODULE/DJANGO_CONFIGURATION (see pytest-django's
@@ -50,9 +49,12 @@ def request_throttle_settings(settings):
     settings.FROIDE_CONFIG = froide_config
 
 
-@pytest.fixture()
-def page(browser):
-    context = browser.new_context(locale="en")
-    page = context.new_page()
+# Async to match pytest-playwright-asyncio (see pyproject.toml). Overrides the
+# plugin's `page` only to pin locale="en", so a developer's browser locale cannot
+# change which strings the assertions see.
+@pytest_asyncio.fixture(loop_scope="session")
+async def page(browser):
+    context = await browser.new_context(locale="en")
+    page = await context.new_page()
     yield page
-    page.close()
+    await page.close()

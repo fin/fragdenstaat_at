@@ -88,6 +88,15 @@ dependencies() {
     pushd "$name"
 
     uv sync --all-extras
+
+    # uv sync --all-extras covers the dev dependency group, so pytest-asyncio and
+    # friends come along. The Stripe CLI cannot: it is a system binary installed
+    # by .devcontainer/Dockerfile. Warn rather than fail -- it is only needed for
+    # `pytest -m stripe`, which is deselected by default.
+    if ! command -v stripe >/dev/null 2>&1; then
+      echo "note: stripe CLI not found. Stripe tests (pytest -m stripe) need it;" >&2
+      echo "      rebuild the devcontainer to pick it up from .devcontainer/Dockerfile." >&2
+    fi
     source .venv/bin/activate
 
     if [[ $name == "froide" ]]; then

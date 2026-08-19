@@ -377,9 +377,10 @@ design or legal judgement.
 
 ### Status board
 
-- [x] **P1b** — test harness *(config + DE's donation tests: 37 → 118 passing)*
+- [x] **P1b** — test harness *(config + DE's donation tests: 37 → 119 passing, 1 xfail)*
   - [x] pytest config: markers, `--reuse-db`, warning filters, xdist grouping
   - [x] DE's `fds_donation/tests/` (15 modules), landed with P2 step 4
+  - [x] align test tooling with DE — see "Dependency audit" below *(119 passing)*
   - [ ] DE's `database-cache` CI workflow
   - [ ] revisit parallelism now the suite is larger
 - [ ] **P2** — rebuild the AT layer *(7 of 8 done; only step 2 left, and it is [H])*
@@ -401,6 +402,59 @@ design or legal judgement.
   - [x] record the new baseline commit
   - [x] delete commented-out DE code in `theme/views.py`, `theme/urls.py`
 - [ ] **P6** — translations *(deliberately last)*
+
+### Dependency audit — AT vs DE
+
+Compared declared dependencies *and* resolved lock versions against DE.
+
+**Runtime, DE has / AT lacks (15).** All deliberate D6 omissions, re-verified:
+the eleven `froide-*` apps AT does not enable, plus `django-amenities`,
+`django-legal-advice-builder`, `osmium`, and `torch`/`torchvision`. No action.
+
+**Runtime, AT has / DE lacks (6).** `daphne`, `django-leaflet`,
+`django-localflavor`, `django-tinymce`, `drf-spectacular`, `xlrd`. These are
+mostly AT declaring explicitly what DE inherits transitively through froide —
+harmless, and arguably more honest than DE. `xlrd` is a genuine AT need (the
+Erste/George `.xls` bank import). No version conflicts: **every dependency the
+two declare in common carries an identical constraint.**
+
+**Dev.** DE has `prek` (AT installs it as a system tool in the devcontainer, not
+as a dev dep) and `pywatchman` (optional). AT adds `beautifulsoup4` (froide's
+test package, installed `--no-deps`) and `polib` (`sync_froide_translations.py`).
+
+**The real finding was in the lock, not the manifest.** AT's declared constraints
+looked fine while resolved versions had drifted years behind DE's, silently:
+
+| package | AT (was) | DE | consequence |
+|---|---|---|---|
+| `playwright` | **1.18.1** | 1.60.0 | 4 years stale. No `get_by_role` — every DE browser test `AttributeError`s. |
+| `pytest-factoryboy` | **2.5.1** | 2.8.1 | Calls `__pytest_wrapped__`; **collection of `fds_donation/tests/` died outright.** |
+| `pytest-playwright` | sync | `-asyncio` | Wrong plugin entirely — DE's browser tests are `async def`. |
+
+Nothing pinned any of these; the lock entries had simply never been upgraded.
+Both packages now carry an explicit floor with the reason in `pyproject.toml`, so
+a future `uv lock` cannot silently walk back. Also fixed: AT set
+`DJANGO_ALLOW_ASYNC_UNSAFE` in `tests/conftest.py`, which only covers `tests/` —
+DE sets it in `settings/test.py`, which covers everything. AT now matches.
+
+Because `pytest-playwright` and `pytest-playwright-asyncio` both define a `page`
+fixture and cannot coexist, AT's own browser test (`tests/test_donation.py`) and
+the `page` fixture in `tests/conftest.py` were converted to async.
+
+**Two AT-vs-DE divergences surfaced once the tests actually ran** — both were
+masked while collection was broken:
+
+- DE's donation form has three "Nein, danke." opt-outs; D3 removes the
+  contact/newsletter one, so AT has two and DE's `get_by_text(...).nth(1)/.nth(2)`
+  pointed at the wrong controls. Rewritten to address `#id_receipt_0` and
+  `#id_account_1` by id, in all three of `test_banktransfer`, `test_stripe`,
+  `test_paypal`.
+- **AT addresses donors formally, DE informally.** AT's catalogue translates the
+  thank-you as *"Vielen Dank für Ihre Spende!"*; DE's tests assert *"…für Deine
+  Spende!"*. 11 assertions corrected. Worth remembering as a general rule when
+  porting DE tests or copy: **Sie, not Du.**
+
+Then §9.8 — the `Plan.slug` blocker — fell out of the recurring test.
 
 ### P1b — finish the test harness (D7) — ⚠️ mostly done
 
@@ -672,7 +726,7 @@ Decide each, or consciously decline it:
 | `FDS_LEGAL_BACKUP_URL`, `FDS_LEGAL_BACKUP_CREDENTIALS` | **Now honoured.** A WebDAV target for the retention backup taken when a user cancels their account. Unset means no backup is kept — decide whether AT needs one, since it is a data-protection commitment either way |
 | `CMS_REDIRECT_TO_LOWERCASE_SLUG` | URL normalisation. Changing it on a live site changes canonical URLs — check for SEO impact |
 | `VERSIONING_ALIAS_MODELS_ENABLED` | Whether Aliases are versioned. Now relevant, since D10 moved static content into Aliases |
-| `FILER_REMOVE_FILE_VALIDATORS`, `DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL`, `APP_SITE_URL`, `PAYMENT_SUBSCRIPTION_ACCESS_FUNC` | Small; adopt with the app that needs them |
+| `FILER_REMOVE_FILE_VALIDATORS`, `DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL`, `APP_SITE_URL`, ~~`PAYMENT_SUBSCRIPTION_ACCESS_FUNC`~~ | Small; adopt with the app that needs them |
 
 Also review `SECRET_URLS["admin"]`, currently the literal `"admin"` on both sites.
 
@@ -705,6 +759,14 @@ Once it does, four things must change together — the last is easy to miss:
   and deploy per `docs/runbooks/celery-task-rename.md`; not a code edit.
 - [ ] **Confirm `remind_unreceived_banktransfers` is in the beat config.** It is
   documented "run on the 15th" but nothing in the repo schedules it.
+- [ ] **Run the Stripe tests once against real test keys.** They are deselected by
+  default (`-m "not stripe"`) because they need Stripe test keys *and* a webhook
+  tunnel. The Stripe CLI is now installed in the devcontainer
+  (`.devcontainer/Dockerfile`), so the flow is: export the test keys, run
+  `stripe listen --forward-to localhost:8000/payments/webhook/stripe/`, then
+  `pytest -m stripe`. Nothing has ever exercised AT's Stripe path end to end —
+  do this before trusting recurring card donations.
+  ⚠️ Blocked by §9.8: the Stripe *recurring* tests build a Plan too.
 
 ### 9.4 Verify before trusting
 
@@ -769,7 +831,41 @@ while leaving capitalised names in the tree that would have 404'd on deploy. Whe
 changing only the case of a filename, verify with `git ls-tree`, not `ls`, and
 rename through `git update-index` if `git mv` refuses.
 
-### 9.8 Housekeeping
+### 9.8 BLOCKER — recurring donations 500 on `Plan.slug`
+
+Every recurring donation fails with
+`DataError: value too long for type character varying(50)`.
+
+froide-payment's `PlanProductMixin.get_or_create_plan` writes
+`slug=slugify(plan_name)` into `Plan.slug`, declared as a bare
+`models.SlugField()` — Django's default `max_length=50`, while the adjacent
+`name` field allows 256. AT's plan name is
+`"5 EUR Spende monatlich an Forum Informationsfreiheit"` (the site name comes
+from `DONATION_SITE_NAME_OVERRIDE`, the legal recipient), which slugifies to
+**52 characters**. DE's `"…an FragDenStaat"` slugifies to **38**, which is why
+upstream has never hit this. A textbook Germany-specific assumption.
+
+Caught by `fds_donation/tests/test_banktransfer.py::test_banktransfer_recurring`,
+now marked `xfail(strict=True)` so it converts back to a failure the moment the
+bug is fixed and the marker cannot quietly outlive it. `test_banktransfer_once`
+(one-off) passes — only the recurring path builds a Plan.
+
+`Plan.slug` is **never read anywhere in froide-payment** (grepped), so widening
+it is behaviourally inert. **[H]** — the choice is not mine:
+
+1. **Upstream one-liner** (recommended): `SlugField(max_length=256)` + migration,
+   PR to `okfde/froide-payment`. Correct, and fixes it for any deployment whose
+   organisation name is longer than Germany's. Tension with D5 (no permanent
+   fork) is only about timing — AT must run a fork or a pinned commit until the
+   PR merges.
+2. **Shorten `DONATION_SITE_NAME_OVERRIDE`** to ≤ 24 characters. No upstream
+   work, but the string is the legal donation recipient shown to donors and sent
+   to PayPal as the plan name/description — a product and legal decision, not a
+   merge one.
+
+Do not ship recurring donations until one of these lands.
+
+### 9.9 Housekeeping
 
 - The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
   origin; this branch exists only in the dev container.

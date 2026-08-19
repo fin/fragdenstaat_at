@@ -2,6 +2,12 @@ import os
 
 from configurations import values
 
+# The async browser tests (fds_donation/tests/test_banktransfer.py, test_stripe.py)
+# touch the ORM from an async context. DE sets this in its settings/test.py; AT
+# previously set it in tests/conftest.py, which only covers tests/ -- so the
+# fds_donation tests failed with SynchronousOnlyOperation.
+os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
+
 from .base import THEME_ROOT, FragDenStaatBase, env, es_hosts
 
 

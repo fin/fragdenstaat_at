@@ -22,8 +22,12 @@ async def fill_donation_page(page: Page, donor_email):
     await page.get_by_placeholder("Vorname").fill("Peter")
     await page.get_by_placeholder("Nachname").fill("Parker")
     await page.get_by_placeholder("z.B. name@beispiel.de").fill(donor_email)
-    await page.get_by_text("Nein, danke.").nth(1).click()
-    await page.get_by_text("Nein, danke.").nth(2).click()
+    # Opt out of the donation receipt and the user account. Addressed by field
+    # id, not by get_by_text(...).nth(): DE's form has a third "Nein, danke."
+    # (the contact/newsletter opt-in) ahead of these two, which D3 removes on AT,
+    # so DE's indices 1 and 2 silently point at the wrong controls here.
+    await page.locator("#id_receipt_0").click()
+    await page.locator("#id_account_1").click()
     await page.get_by_label("Was ist drei plus vier?").fill("7")
 
 
@@ -46,7 +50,7 @@ async def test_banktransfer_once(
     await page.get_by_role("button", name="Jetzt spenden").click()
     await page.wait_for_url(DONATION_DONE_URL)
 
-    assert await page.get_by_text("Vielen Dank für Deine Spende!").is_visible()
+    assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
     assert await page.get_by_text(donor_email).is_visible()
 
     donation = Donation.objects.filter(
@@ -61,6 +65,18 @@ async def test_banktransfer_once(
     assert "IBAN" in message.body
 
 
+# BLOCKER, see MERGE_PLAN.md 9.8. Every recurring donation 500s: froide-payment
+# builds a Plan with slug=slugify(plan_name) into a plain SlugField() (max 50),
+# and AT's plan name -- "5 EUR Spende monatlich an Forum Informationsfreiheit",
+# from DONATION_SITE_NAME_OVERRIDE -- slugifies to 52 characters. DE's site name
+# yields 38, which is why upstream never hit it. Plan.slug is never read anywhere
+# in froide-payment, so widening it upstream is safe. strict=True: this flips to
+# a failure the moment it is fixed, so the marker cannot outlive the bug.
+@pytest.mark.xfail(
+    strict=True,
+    reason="froide-payment Plan.slug is SlugField() (max 50); AT's plan name "
+    "slugifies to 52 chars. Needs an upstream max_length bump -- MERGE_PLAN 9.8.",
+)
 @pytest.mark.xdist_group(name="sequential")
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
@@ -78,7 +94,7 @@ async def test_banktransfer_recurring(
     await page.get_by_role("button", name="Jetzt spenden").click()
     await page.wait_for_url(DONATION_DONE_URL)
 
-    assert await page.get_by_text("Vielen Dank für Deine Spende!").is_visible()
+    assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
     assert await page.get_by_text(donor_email).is_visible()
 
     donation = Donation.objects.filter(

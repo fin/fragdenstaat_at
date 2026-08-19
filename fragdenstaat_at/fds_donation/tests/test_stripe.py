@@ -171,8 +171,12 @@ async def fill_donation_page(page: Page, donor_email):
     await page.get_by_placeholder("Vorname").fill("Peter")
     await page.get_by_placeholder("Nachname").fill("Parker")
     await page.get_by_placeholder("z.B. name@beispiel.de").fill(donor_email)
-    await page.get_by_text("Nein, danke.").nth(1).click()
-    await page.get_by_text("Nein, danke.").nth(2).click()
+    # Opt out of the donation receipt and the user account. Addressed by field
+    # id, not by get_by_text(...).nth(): DE's form has a third "Nein, danke."
+    # (the contact/newsletter opt-in) ahead of these two, which D3 removes on AT,
+    # so DE's indices 1 and 2 silently point at the wrong controls here.
+    await page.locator("#id_receipt_0").click()
+    await page.locator("#id_account_1").click()
     await page.get_by_label("Was ist drei plus vier?").fill("7")
 
 
@@ -201,7 +205,7 @@ async def test_sepa_recurring_donation_success(
 
         await page.wait_for_url(DONATION_DONE_URL)
 
-        assert await page.get_by_text("Vielen Dank für Deine Spende!").is_visible()
+        assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
         assert await page.get_by_text(donor_email).is_visible()
 
         print("waiting for webhooks to complete...")
@@ -337,7 +341,7 @@ async def test_sepa_shorten_recurring_interval(
 
         await page.wait_for_url(DONATION_DONE_URL)
 
-        assert await page.get_by_text("Vielen Dank für Deine Spende!").is_visible()
+        assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
         assert await page.get_by_text(donor_email).is_visible()
 
     stripe_event_id = [
@@ -475,7 +479,7 @@ async def test_sepa_once_donation_additional_fields(
 
         await page.wait_for_url(DONATION_DONE_URL)
 
-        assert await page.get_by_text("Vielen Dank für Deine Spende!").is_visible()
+        assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
         assert await page.get_by_text(donor_email).is_visible()
 
         print("waiting for webhooks to complete...")
@@ -531,7 +535,7 @@ async def test_sepa_recurring_donation_failed(
 
         await page.wait_for_url(DONATION_DONE_URL)
 
-        assert await page.get_by_text("Vielen Dank für Deine Spende!").is_visible()
+        assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
         assert await page.get_by_text(donor_email).is_visible()
 
         print("waiting for webhooks to complete...")
@@ -576,7 +580,7 @@ async def test_sepa_once_donation_disputed(page: Page, live_server, stripe_sepa_
 
         await page.wait_for_url(DONATION_DONE_URL)
 
-        assert await page.get_by_text("Vielen Dank für Deine Spende!").is_visible()
+        assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
         assert await page.get_by_text(donor_email).is_visible()
 
         print("waiting for webhooks to complete...")
@@ -626,7 +630,7 @@ async def test_creditcard_recurring_donation_success(
 
         await page.wait_for_url(DONATION_DONE_URL)
 
-        assert await page.get_by_text("Vielen Dank für Deine Spende!").is_visible()
+        assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
         assert await page.get_by_text(donor_email).is_visible()
 
         print("waiting for webhooks to complete...")
@@ -675,7 +679,7 @@ async def test_creditcard_once_donation_success(
 
         await page.wait_for_url(DONATION_DONE_URL)
 
-        assert await page.get_by_text("Vielen Dank für Deine Spende!").is_visible()
+        assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
         assert await page.get_by_text(donor_email).is_visible()
 
         print("waiting for webhooks to complete...")

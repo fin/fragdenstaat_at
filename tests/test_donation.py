@@ -14,22 +14,23 @@ def django_db_setup(django_db_setup, django_db_blocker):
 # Pinned to one xdist worker: it drives a real browser against live_server,
 # so it cannot share a worker with tests that mutate the same DB rows.
 @pytest.mark.xdist_group(name="sequential")
+@pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
-def test_donation_page(page, live_server, django_db_setup):
+async def test_donation_page(page, live_server, django_db_setup):
     mail.outbox = []
-    response = page.goto(live_server.url + "/spenden/spende/spenden/")
+    response = await page.goto(live_server.url + "/spenden/spende/spenden/")
     assert response.status == 200
-    page.click("text=20 Euro")
-    page.fill("#id_first_name", "Test")
-    page.fill("#id_last_name", "Testor")
-    page.fill("#id_email", "test@example.com")
-    page.click("text=Überweisung")
+    await page.click("text=20 Euro")
+    await page.fill("#id_first_name", "Test")
+    await page.fill("#id_last_name", "Testor")
+    await page.fill("#id_email", "test@example.com")
+    await page.click("text=Überweisung")
     # No #id_contact_* radio to click: the newsletter opt-in is hidden and
     # defaults to "no" under D3 (AT routes no subscription URLs). Restore the
     # click here if the opt-in is ever shown again.
-    page.click("#id_account_1")
-    page.fill("input[name=test]", "7")
-    page.click("#donate-now")
+    await page.click("#id_account_1")
+    await page.fill("input[name=test]", "7")
+    await page.click("#donate-now")
     assert page.url.startswith(
         live_server.url + "/spenden/spende/spenden/abgeschlossen/"
     )

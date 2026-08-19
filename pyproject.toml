@@ -136,7 +136,6 @@ dev = [
   "pycodestyle",
   "pyflakes",
   "pytest-django",
-  "pytest-factoryboy",
   "django-coverage-plugin",
   "tblib",
   "time-machine>=2.16",
@@ -146,7 +145,21 @@ dev = [
   "polib",
   "pytest-xdist>=3.8.0",
   "pytest-cov>=7.1.0",
-  "pytest-playwright>=0.4.0",
+  # Async, not the sync pytest-playwright: DE's browser tests (fds_donation's
+  # test_banktransfer/test_stripe/test_paypal) are `async def` and await the
+  # Page. The two plugins both define a `page` fixture and cannot coexist, so
+  # AT's own browser test is async too (tests/test_donation.py).
+  "pytest-playwright-asyncio>=0.7.2",
+  # Pulled in by pytest-playwright-asyncio, but named explicitly because
+  # fds_donation's tests carry @pytest.mark.asyncio. Running the Stripe ones
+  # also needs the Stripe CLI and test keys -- see MERGE_PLAN.md 9.3.
+  "pytest-asyncio>=0.24",
+  # pytest-factoryboy < 2.8 calls __pytest_wrapped__ on a fixture, which modern
+  # pytest no longer exposes, so collection of fds_donation's conftest dies with
+  # AttributeError: 'FixtureFunctionDefinition' object has no attribute
+  # '__pytest_wrapped__'. AT's lock had drifted to 2.5.1 while DE resolved 2.8.1.
+  # The floor is on factoryboy, not pytest -- do not "fix" this by pinning pytest.
+  "pytest-factoryboy>=2.8.1",
   "ruff>=0.6.0",
 ]
 

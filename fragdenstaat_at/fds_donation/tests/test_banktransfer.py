@@ -65,18 +65,6 @@ async def test_banktransfer_once(
     assert "IBAN" in message.body
 
 
-# BLOCKER, see MERGE_PLAN.md 9.8. Every recurring donation 500s: froide-payment
-# builds a Plan with slug=slugify(plan_name) into a plain SlugField() (max 50),
-# and AT's plan name -- "5 EUR Spende monatlich an Forum Informationsfreiheit",
-# from DONATION_SITE_NAME_OVERRIDE -- slugifies to 52 characters. DE's site name
-# yields 38, which is why upstream never hit it. Plan.slug is never read anywhere
-# in froide-payment, so widening it upstream is safe. strict=True: this flips to
-# a failure the moment it is fixed, so the marker cannot outlive the bug.
-@pytest.mark.xfail(
-    strict=True,
-    reason="froide-payment Plan.slug is SlugField() (max 50); AT's plan name "
-    "slugifies to 52 chars. Needs an upstream max_length bump -- MERGE_PLAN 9.8.",
-)
 @pytest.mark.xdist_group(name="sequential")
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db

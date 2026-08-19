@@ -24,6 +24,9 @@ class FdsDonationConfig(AppConfig):
     default = True
 
     def ready(self):
+        from django.db.models.signals import pre_save
+
+        from froide_payment.models import Plan
         from froide_payment.signals import (
             sepa_notification,
             subscription_cancel_feedback,
@@ -56,10 +59,12 @@ class FdsDonationConfig(AppConfig):
             subscription_was_canceled,
             subscription_was_modified,
             tag_subscriber_donor,
+            truncate_plan_slug,
             user_email_changed,
         )
 
         status_changed.connect(payment_status_changed)
+        pre_save.connect(truncate_plan_slug, sender=Plan)
         subscription_canceled.connect(subscription_was_canceled)
         subscription_modified.connect(subscription_was_modified)
         subscription_cancel_feedback.connect(save_subscription_cancel_feedback)

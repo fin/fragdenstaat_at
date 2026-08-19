@@ -283,3 +283,30 @@ def save_subscription_cancel_feedback(sender, data=None, **kwargs):
     form = SubscriptionCancelFeedbackForm(data=data)
     if form.is_valid():
         form.save(subscription=sender)
+
+
+def truncate_plan_slug(sender, instance, **kwargs):
+    """Keep froide-payment's generated Plan.slug inside the column.
+
+    Every provider builds a Plan with ``slug=slugify(plan_name)`` (see
+    ``provider/mixins.py``, ``provider/paypal.py``, ``provider/stripe.py``) into a
+    bare ``models.SlugField()`` -- Django's default ``max_length=50``, while the
+    adjacent ``name`` field allows 256. AT's plan name is
+    "5 EUR Spende monatlich an Forum Informationsfreiheit" (the site name is
+    ``DONATION_SITE_NAME_OVERRIDE``, the legal recipient), which slugifies to 52
+    characters, so every recurring donation used to die with
+    ``DataError: value too long for type character varying(50)``. DE's name
+    slugifies to 38, which is why upstream never hit this.
+
+    Truncating is safe: ``Plan.slug`` is written in four places and read in none
+    -- the only other reference is the admin's ``prepopulated_fields``, a JS
+    convenience for manually created plans -- and the field is not ``unique``, so
+    a collision between two truncated slugs carries no meaning either.
+
+    The limit is read off the field rather than hardcoded, so if froide-payment
+    ever widens the column this listener quietly becomes a no-op instead of
+    silently continuing to cut names short.
+    """
+    max_length = sender._meta.get_field("slug").max_length
+    if instance.slug and max_length and len(instance.slug) > max_length:
+        instance.slug = instance.slug[:max_length].rstrip("-")

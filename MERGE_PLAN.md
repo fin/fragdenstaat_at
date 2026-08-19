@@ -766,7 +766,7 @@ Once it does, four things must change together — the last is easy to miss:
   `stripe listen --forward-to localhost:8000/payments/webhook/stripe/`, then
   `pytest -m stripe`. Nothing has ever exercised AT's Stripe path end to end —
   do this before trusting recurring card donations.
-  ⚠️ Blocked by §9.8: the Stripe *recurring* tests build a Plan too.
+  (The Plan.slug overflow that broke the recurring flows is fixed — §9.8.)
 
 ### 9.4 Verify before trusting
 
@@ -831,39 +831,46 @@ while leaving capitalised names in the tree that would have 404'd on deploy. Whe
 changing only the case of a filename, verify with `git ls-tree`, not `ls`, and
 rename through `git update-index` if `git mv` refuses.
 
-### 9.8 BLOCKER — recurring donations 500 on `Plan.slug`
+### 9.8 Fixed: recurring donations 500'd on `Plan.slug`
 
-Every recurring donation fails with
-`DataError: value too long for type character varying(50)`.
+**Resolved locally — no upstream dependency, no product change.** Recorded
+because the failure mode is instructive and the workaround should be removed
+once upstream moves.
 
-froide-payment's `PlanProductMixin.get_or_create_plan` writes
-`slug=slugify(plan_name)` into `Plan.slug`, declared as a bare
-`models.SlugField()` — Django's default `max_length=50`, while the adjacent
-`name` field allows 256. AT's plan name is
-`"5 EUR Spende monatlich an Forum Informationsfreiheit"` (the site name comes
-from `DONATION_SITE_NAME_OVERRIDE`, the legal recipient), which slugifies to
-**52 characters**. DE's `"…an FragDenStaat"` slugifies to **38**, which is why
-upstream has never hit this. A textbook Germany-specific assumption.
+Every recurring donation failed with
+`DataError: value too long for type character varying(50)`. froide-payment
+builds a Plan with `slug=slugify(plan_name)` into a bare `models.SlugField()` —
+Django's default `max_length=50`, while the adjacent `name` allows 256. AT's
+plan name, `"5 EUR Spende monatlich an Forum Informationsfreiheit"` (the site
+name is `DONATION_SITE_NAME_OVERRIDE`, the legal recipient), slugifies to **52
+characters**. DE's `"…an FragDenStaat"` gives **38**, which is why upstream has
+never hit it — a textbook Germany-specific assumption.
 
-Caught by `fds_donation/tests/test_banktransfer.py::test_banktransfer_recurring`,
-now marked `xfail(strict=True)` so it converts back to a failure the moment the
-bug is fixed and the marker cannot quietly outlive it. `test_banktransfer_once`
-(one-off) passes — only the recurring path builds a Plan.
+Fixed by `fds_donation.listeners.truncate_plan_slug`, a `pre_save` receiver on
+`Plan` wired up in `apps.py`. This sits at the model, so it covers all four
+write sites at once (`provider/mixins.py` for bank transfer, `provider/paypal.py`
+twice, `provider/stripe.py`) rather than one provider.
 
-`Plan.slug` is **never read anywhere in froide-payment** (grepped), so widening
-it is behaviourally inert. **[H]** — the choice is not mine:
+Truncating is safe, and was checked rather than assumed:
 
-1. **Upstream one-liner** (recommended): `SlugField(max_length=256)` + migration,
-   PR to `okfde/froide-payment`. Correct, and fixes it for any deployment whose
-   organisation name is longer than Germany's. Tension with D5 (no permanent
-   fork) is only about timing — AT must run a fork or a pinned commit until the
-   PR merges.
-2. **Shorten `DONATION_SITE_NAME_OVERRIDE`** to ≤ 24 characters. No upstream
-   work, but the string is the legal donation recipient shown to donors and sent
-   to PayPal as the plan name/description — a product and legal decision, not a
-   merge one.
+- `Plan.slug` is **written in four places and read in none**. The only other
+  reference is the admin's `prepopulated_fields`, a JS convenience for manually
+  created plans.
+- The field is **not `unique`**, so a collision between two truncated slugs
+  carries no meaning.
+- `name` is untouched — it is the 256-char column donors and PayPal actually see.
 
-Do not ship recurring donations until one of these lands.
+The limit is read off the field (`sender._meta.get_field("slug").max_length`)
+rather than hardcoded, so if froide-payment ever widens the column the listener
+becomes a no-op instead of silently continuing to cut names short.
+
+Regression test: `fds_donation/tests/test_plan_slug.py`, which asserts up front
+that AT's name still overflows and tells you to delete both it and the listener
+if that stops being true.
+
+- [ ] **Optional, low priority:** upstream `SlugField(max_length=256)` + migration
+  to `okfde/froide-payment`, so the next deployment with an organisation name
+  longer than Germany's does not have to rediscover this. Not a blocker for AT.
 
 ### 9.9 Housekeeping
 

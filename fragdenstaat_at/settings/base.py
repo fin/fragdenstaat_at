@@ -319,6 +319,22 @@ class FragDenStaatBase(German, Base):
     # caching whenever the response must not be shared between users.
     CMS_PAGE_CACHE = True
 
+    # Restrict the content types a Flow can be attached to. Unset, flowcontrol
+    # offers *every* installed model in the admin (an empty Q filters nothing),
+    # which makes the dropdown unusable. These three are the objects AT actually
+    # runs journeys over -- donors, newsletter subscribers and users -- matching
+    # DE. fds_donation and fds_newsletter both register flowcontrol actions and
+    # triggers already (see their actions.py / triggers.py).
+    FLOWCONTROL_CONTENT_TYPES = [
+        "fds_donation.donor",
+        "fds_newsletter.subscriber",
+        "account.user",
+    ]
+
+    # Extra template filters available inside flow conditions, on top of
+    # flowcontrol's own. theme/filters.py provides has_tag / has_all_tags.
+    FLOWCONTROL_TEMPLATE_FILTERS = ["fragdenstaat_at.theme.filters"]
+
     # Old links with capitalised slugs redirect to the lowercase page instead of
     # 404ing.
     CMS_REDIRECT_TO_LOWERCASE_SLUG = True
@@ -874,6 +890,11 @@ class FragDenStaatBase(German, Base):
     # DE's value: "https://ogimage.frag-den-staat.de/api/{hash}?path={path}"
     # To enable, see the checklist in MERGE_PLAN.md §9.
     FDS_OGIMAGE_URL = env("FDS_OGIMAGE_URL", "")
+
+    TELNYX_APP_ID = os.environ.get("TELNYX_APP_ID", "")
+    TELNYX_API_KEY = os.environ.get("TELNYX_API_KEY", "")
+    TELNYX_PUBLIC_KEY = os.environ.get("TELNYX_PUBLIC_KEY", "")
+    TELNYX_FROM_NUMBER = os.environ.get("TELNYX_FROM_NUMBER", "")
 
     # FRONTEX_CAPTCHA_MODEL_PATH = os.environ.get("FRONTEX_CAPTCHA_MODEL_PATH", None)
 

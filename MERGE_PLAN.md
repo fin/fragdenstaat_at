@@ -883,22 +883,38 @@ off, `CMS_COLOR_SCHEME*` — no dark mode). What is left:
 - [x] **YouTube embeds now use the no-cookie domain**
   (`DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL`), matching DE. AT ships `cookie_consent`,
   so an embed setting cookies on load was a consent problem, not a preference.
-- [ ] **`flowcontrol` is installed but unconfigured.** django-flowcontrol is an
-  admin-configurable automation engine: a `Flow` is a tree of actions —
-  `Condition`, `Delay`, `WaitForTrigger`, `State`, `ForLoop`, `EmailAlert`,
-  `StartFlow` — executed per object with a `FlowRun` tracking progress. DE points
-  `FLOWCONTROL_CONTENT_TYPES` at `fds_donation.donor`,
-  `fds_newsletter.subscriber` and `account.user`, i.e. it drives donor and
-  subscriber lifecycle journeys (welcome series, lapsed-donor follow-up).
-  `FLOWCONTROL_TEMPLATE_FILTERS` points at `theme/filters.py`, which supplies
-  `has_tag`/`has_all_tags` for conditions inside flow templates.
-  AT sets neither, so flows have nothing to attach to. **Deferred with the
-  newsletter** — same trigger as `CELERY_TASK_ROUTES` below. Porting
-  `theme/filters.py` is only worth doing at the same time; alone it is dead code. **[R]**
-- [ ] **`datashow` is installed but uses the default storage.** DE defines an
-  `overwrite` backend in `STORAGES` and points `DATASHOW_STORAGE_BACKEND` at it;
-  AT has neither, so it falls back to `"default"` — functional, but re-uploading
-  a dataset leaves the old file behind under a suffixed name. **[R]**
+- [x] **`flowcontrol` enabled.** django-flowcontrol is an admin-configurable
+  automation engine: a `Flow` is a tree of actions — `Condition`, `Delay`,
+  `WaitForTrigger`, `State`, `ForLoop`, `EmailAlert`, `StartFlow` — executed per
+  object, with a `FlowRun` tracking progress. It is the machinery behind donor and
+  subscriber journeys (welcome series, lapsed-donor follow-up).
+
+  AT already had the integration — `fds_donation` and `fds_newsletter` both
+  register flowcontrol actions and triggers, and `fds_newsletter/0001` depends on
+  `flowcontrol.0007` — only the configuration was missing. Now set:
+
+  - `FLOWCONTROL_CONTENT_TYPES = ["fds_donation.donor",
+    "fds_newsletter.subscriber", "account.user"]`, matching DE. Correcting an
+    earlier note in this plan: unset does **not** mean flows have nothing to
+    attach to, it means the opposite — `get_content_type_choices()` returns an
+    empty `Q`, which filters nothing, so the admin offered all **317** installed
+    content types. Now it offers 3.
+  - `FLOWCONTROL_TEMPLATE_FILTERS = ["fragdenstaat_at.theme.filters"]`, with
+    `theme/filters.py` ported from DE (`has_tag`, `has_all_tags` for use in flow
+    conditions). Verified the resolved filter list is
+    `['flowcontrol.filters', 'fragdenstaat_at.theme.filters']`.
+
+  Migrations are already applied (7/7, nothing pending).
+
+- [ ] **Schedule the flowcontrol beat tasks before relying on flows.** Nothing
+  executes a flow on its own: `flowcontrol.tasks.enqueue_flowruns_task` picks up
+  runnable `FlowRun`s and dispatches `execute_flowrun_task`, and
+  `continue_flowruns_task` advances waiting ones. Neither DE nor AT schedules
+  them in settings, because both run
+  `django_celery_beat.schedulers:DatabaseScheduler` — the schedule lives in the
+  admin, not the repo. So a fresh AT install has flowcontrol fully configured and
+  still silently runs no flows until those two periodic tasks are added. Check
+  what DE's production beat uses for intervals. **[R]**
 - [ ] **No `CELERY_TASK_ROUTES`.** DE routes tasks across queues; AT runs
   everything on the default queue. **Accepted for now** — it only starts to
   matter when the newsletter is activated and bulk sends can block short tasks.

@@ -375,11 +375,28 @@ enables security by default; `xpack.security.enabled=false` is already set in
 Marked **[A]** automatable / cheap, **[R]** needs review, **[H]** genuine
 design or legal judgement.
 
-### P1b — finish the test harness (D7) · ~3 days
+### P1b — finish the test harness (D7) · ~2 days
 
-Adopt DE's harness proper: its `fragdenstaat_de/tests/` package layout, async
-Playwright, the sequential browser-test group, and the `database-cache` workflow.
-AT's suite is now a working baseline to migrate *from*. **[R]**
+*Config adopted.* `pytest.ini` now registers DE's markers (`stripe`, `paypal`,
+`elasticsearch`, `xdist_group`), excludes externally-keyed tests by default,
+reuses the test database (**71s → 6.9s**), filters third-party deprecation noise,
+and groups the browser test for `--dist loadgroup`.
+
+Worth knowing: DE declares all of this under `[tool.pytest]` in `pyproject.toml`,
+but pytest reads `[tool.pytest.ini_options]` and DE ships no `pytest.ini`, so
+**upstream it has no effect** — hence the `PytestUnknownMarkWarning`s in DE's
+output. AT's `pytest.ini` does work.
+
+Parallelism is configured but not enabled: measured **156s at `-n 4` versus 6.9s
+serial**, because each xdist worker builds its own database and setup dominates a
+38-test suite. Revisit once DE's donation tests land and the suite is large enough
+to amortise it.
+
+*Remaining:* DE's per-app `tests/` packages and their factories — chiefly
+`fds_donation/tests/` (13 modules incl. `test_recurrence`, `test_form`,
+`test_banktransfer`, `test_external`). These only pass against DE's donation code,
+so they land **with** P2 step 4 rather than before it, and are precisely the
+coverage that makes that step safe. Also DE's `database-cache` CI workflow. **[R]**
 
 ### P2 — rebuild the AT layer against DE@HEAD · 3–4 weeks
 

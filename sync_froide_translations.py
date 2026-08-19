@@ -1,14 +1,37 @@
 #!/usr/bin/env python
-"""
-Search froide's `de` .po file for entries whose msgid or msgstr contains any
-of the given keywords, then add missing ones to the local de_AT override file
-in fragdenstaat_at (leaving msgstr empty so they can be filled in manually).
+"""Collect German-specific strings from every installed app into AT's de_AT override.
+
+Two jobs, both aimed at letting AT drop its forks of froide / froide-payment
+(see MERGE_PLAN.md D4, D5, P6):
+
+  scan    Search each app's `de` catalog for strings carrying Germany-specific
+          wording ("Open Knowledge", "FragDenStaat.de", "gelber Brief", ...) and
+          add the matches to AT's de_AT catalog with an *empty* msgstr, ready to
+          be filled in by hand.
+
+  adopt   Import de_AT catalogs that already exist -- in an app's own source
+          tree, or on a fork branch such as `fin/main` -- carrying their msgstr
+          across verbatim. This is how translations living in a fork get moved
+          into fragdenstaat_at so the fork can be retired.
+
+Apps are discovered from Django's INSTALLED_APPS rather than a hardcoded list,
+so froide, froide-payment, filingcabinet, django-cms and anything added later
+are all covered automatically, and apps AT does *not* install are never
+scanned. Everything lands in one catalog, because AT's locale directory comes
+first in LOCALE_PATHS and therefore overrides every app-level catalog.
 
 Usage:
-    python sync_froide_translations.py [--dry-run]
+    python sync_froide_translations.py --dry-run
+    python sync_froide_translations.py
+    python sync_froide_translations.py --adopt
+    python sync_froide_translations.py --adopt --ref froide-payment=fin/main
+    python sync_froide_translations.py --app froide --app froide_payment
 """
+
 import argparse
 import os
+import subprocess
+import sys
 
 import polib
 
@@ -23,54 +46,163 @@ KEYWORDS = [
     "IBAN",
 ]
 
-# Matched as-is (case-sensitive substring).
+# Matched as-is (case-sensitive substring). "DE" as a word would match far too
+# much lowercased -- "wieder", "werden", "Absender" and so on.
 CASE_SENSITIVE_KEYWORDS = [
     "DE",
 ]
 
-FROIDE_PO = os.path.join(
-    os.path.dirname(__file__),
-    "../froide/froide/locale/de/LC_MESSAGES/django.po",
-)
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 TARGET_PO = os.path.join(
-    os.path.dirname(__file__),
-    "fragdenstaat_at/locale/de_AT/LC_MESSAGES/django.po",
+    HERE, "fragdenstaat_at", "locale", "de_AT", "LC_MESSAGES", "django.po"
 )
 
 TARGET_HEADER = """\
-# FragDenStaat.at override translations for froide (de_AT).
-# Strings here take precedence over froide's own de / de_AT translations.
-# Leave msgstr empty to fall back to froide's translation.
+# FragDenStaat.at override translations (de_AT).
 #
+# Generated and updated by sync_froide_translations.py. Strings here take
+# precedence over every app's own de / de_AT catalog, because AT's locale
+# directory comes first in LOCALE_PATHS.
+#
+# An empty msgstr falls back to the app's own translation, so entries added by
+# `scan` are inert until somebody fills them in.
+#
+# Each entry records the app it came from in a comment. Re-running the script
+# never overwrites a msgstr that already has content.
 """
 
 
-def contains_keyword(text: str) -> bool:
-    lower = text.lower()
-    for kw in KEYWORDS:
-        if kw.lower() in lower:
-            return True
-    for kw in CASE_SENSITIVE_KEYWORDS:
-        if kw in text:
-            return True
-    return False
-
-
-def entry_matches(entry: polib.POEntry) -> bool:
-    if entry.obsolete:
+def contains_keyword(text):
+    if not text:
         return False
+    lower = text.lower()
+    if any(kw.lower() in lower for kw in KEYWORDS):
+        return True
+    return any(kw in text for kw in CASE_SENSITIVE_KEYWORDS)
+
+
+def entry_texts(entry):
     texts = [entry.msgid, entry.msgstr]
     if entry.msgid_plural:
         texts.append(entry.msgid_plural)
     texts.extend(entry.msgstr_plural.values())
-    return any(contains_keyword(t) for t in texts)
+    return texts
 
 
-def load_or_create_target() -> polib.POFile:
+def entry_matches(entry):
+    if entry.obsolete:
+        return False
+    return any(contains_keyword(t) for t in entry_texts(entry))
+
+
+def key(entry):
+    """Identity of a translation: msgctxt disambiguates identical msgids."""
+    return (entry.msgctxt, entry.msgid)
+
+
+def discover_sources(only=None, all_apps=False):
+    """Yield (label, locale_dir, repo) for every catalog that can shadow AT's.
+
+    Two kinds of source, because packages disagree about where locale lives:
+
+    * entries in LOCALE_PATHS -- this is how froide ships its catalog, one
+      directory for the whole package rather than one per app, which a pure
+      INSTALLED_APPS walk would miss entirely;
+    * app directories containing a `locale/`, which is how froide-payment,
+      filingcabinet and most Django apps ship theirs.
+
+    By default only apps that live in a git checkout are considered -- those are
+    the ones AT could end up forking, and the ones whose German wording is worth
+    overriding. Third-party wheels out of site-packages (django-cms,
+    localflavor, ...) are skipped unless --all-apps is given: they match keywords
+    like "IBAN" through generic validator messages, which is noise. AT's own apps
+    are always skipped, since their German belongs in AT's own `de` catalog
+    rather than in an override of itself.
+    """
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fragdenstaat_at.settings.test")
+    os.environ.setdefault("DJANGO_CONFIGURATION", "Test")
+    sys.path.insert(0, HERE)
+
+    import configurations
+
+    configurations.setup()
+    from django.apps import apps
+    from django.conf import settings
+
+    own = os.path.join(HERE, "fragdenstaat_at")
+    target_locale = os.path.dirname(os.path.dirname(os.path.dirname(TARGET_PO)))
+    seen_dirs = set()
+
+    def emit(label, locale_dir):
+        locale_dir = os.path.realpath(locale_dir)
+        if locale_dir in seen_dirs or locale_dir == os.path.realpath(target_locale):
+            return None
+        if only and label not in only:
+            return None
+        seen_dirs.add(locale_dir)
+        return (label, locale_dir, find_repo(locale_dir))
+
+    for locale_dir in map(os.fspath, settings.LOCALE_PATHS):
+        repo = find_repo(locale_dir)
+        label = (
+            os.path.basename(repo)
+            if repo
+            else os.path.basename(os.path.dirname(locale_dir))
+        )
+        got = emit(label, locale_dir)
+        if got:
+            yield got
+
+    for config in apps.get_app_configs():
+        locale_dir = os.path.join(config.path, "locale")
+        if not os.path.isdir(locale_dir):
+            continue
+        if config.path.startswith(own):
+            continue
+        if not all_apps and find_repo(config.path) is None:
+            continue
+        got = emit(config.label, locale_dir)
+        if got:
+            yield got
+
+
+def po_from_git(repo, ref, relpath):
+    """Read a .po from a git ref without checking it out."""
+    try:
+        blob = subprocess.run(
+            ["git", "-C", repo, "show", f"{ref}:{relpath}"],
+            capture_output=True,
+            check=True,
+        ).stdout.decode("utf-8")
+    except subprocess.CalledProcessError:
+        return None
+    return polib.pofile(blob)
+
+
+def find_repo(app_path):
+    """Walk up from an app directory to its git checkout, if any.
+
+    Returns None for anything installed into site-packages. Without that guard,
+    walking up from `.venv/lib/python3.x/site-packages/cms` eventually reaches
+    fragdenstaat_at's own `.git` and every third-party wheel looks like a
+    checkout we control.
+    """
+    # LOCALE_PATHS entries may be Path objects, app paths are always str.
+    app_path = os.fspath(app_path)
+    if "site-packages" in app_path.split(os.sep):
+        return None
+    path = app_path
+    while path != os.path.dirname(path):
+        if os.path.isdir(os.path.join(path, ".git")):
+            return path
+        path = os.path.dirname(path)
+    return None
+
+
+def load_or_create_target():
     if os.path.exists(TARGET_PO):
         return polib.pofile(TARGET_PO)
-
     po = polib.POFile()
     po.metadata = {
         "Project-Id-Version": "fragdenstaat_at",
@@ -88,57 +220,154 @@ def load_or_create_target() -> polib.POFile:
     return po
 
 
+def make_entry(entry, label, msgstr):
+    new = polib.POEntry(
+        msgid=entry.msgid,
+        msgstr=msgstr,
+        msgctxt=entry.msgctxt,
+        occurrences=entry.occurrences,
+        flags=[f for f in entry.flags if f != "fuzzy"],
+        comment=f"from {label}" + (f"\n{entry.comment}" if entry.comment else ""),
+    )
+    if entry.msgid_plural:
+        new.msgid_plural = entry.msgid_plural
+        if msgstr:
+            new.msgstr_plural = dict(entry.msgstr_plural)
+        else:
+            new.msgstr_plural = dict.fromkeys(entry.msgstr_plural, "")
+        new.msgstr = ""
+    return new
+
+
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dry-run", action="store_true", help="Print matches, don't write")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--dry-run", action="store_true", help="print, don't write")
+    parser.add_argument(
+        "--adopt",
+        action="store_true",
+        help="also import existing de_AT catalogs, keeping their msgstr",
+    )
+    parser.add_argument(
+        "--ref",
+        action="append",
+        default=[],
+        metavar="REPO=REF",
+        help="adopt de_AT from a git ref instead of the working tree, e.g. "
+        "froide-payment=fin/main. Repeatable. Implies --adopt.",
+    )
+    parser.add_argument(
+        "--app",
+        action="append",
+        default=[],
+        metavar="LABEL",
+        help="restrict to these source labels. Repeatable.",
+    )
+    parser.add_argument(
+        "--all-apps",
+        action="store_true",
+        help="also scan third-party apps installed from wheels, not just git "
+        "checkouts (noisy: generic IBAN/validator strings match)",
+    )
+    parser.add_argument(
+        "--no-scan",
+        action="store_true",
+        help="skip the keyword scan; adopt only",
+    )
     args = parser.parse_args()
 
-    source = polib.pofile(FROIDE_PO)
+    refs = {}
+    for spec in args.ref:
+        if "=" not in spec:
+            parser.error(f"--ref expects REPO=REF, got {spec!r}")
+        repo, ref = spec.split("=", 1)
+        refs[repo] = ref
+    adopt = args.adopt or bool(refs)
+
     target = load_or_create_target()
+    # Never clobber work already done by hand.
+    translated = {key(e) for e in target if e.msgstr or any(e.msgstr_plural.values())}
+    seen = {key(e) for e in target}
 
-    existing_msgids = {e.msgid for e in target}
+    added, adopted, skipped_ref = [], [], []
 
-    added = []
-    for entry in source:
-        if not entry_matches(entry):
+    for label, locale_dir, repo in discover_sources(
+        set(args.app) or None, all_apps=args.all_apps
+    ):
+        repo_name = os.path.basename(repo) if repo else None
+
+        if adopt:
+            source = None
+            if repo_name in refs:
+                relpath = os.path.relpath(
+                    os.path.join(locale_dir, "de_AT", "LC_MESSAGES", "django.po"), repo
+                )
+                source = po_from_git(repo, refs[repo_name], relpath)
+                if source is None:
+                    skipped_ref.append(f"{label} ({repo_name}@{refs[repo_name]})")
+            else:
+                path = os.path.join(locale_dir, "de_AT", "LC_MESSAGES", "django.po")
+                if os.path.exists(path):
+                    source = polib.pofile(path)
+
+            for entry in source or []:
+                if entry.obsolete or not entry.msgid:
+                    continue
+                has_text = entry.msgstr or any(entry.msgstr_plural.values())
+                if not has_text or key(entry) in seen:
+                    continue
+                adopted.append((label, make_entry(entry, label, entry.msgstr)))
+                seen.add(key(entry))
+
+        if args.no_scan:
             continue
-        if entry.msgid in existing_msgids:
+
+        de_po = os.path.join(locale_dir, "de", "LC_MESSAGES", "django.po")
+        if not os.path.exists(de_po):
             continue
+        for entry in polib.pofile(de_po):
+            if not entry_matches(entry) or key(entry) in seen:
+                continue
+            # An entry already carrying a hand-written override needs no stub.
+            if key(entry) in translated:
+                continue
+            added.append((label, make_entry(entry, label, "")))
+            seen.add(key(entry))
 
-        new_entry = polib.POEntry(
-            occurrences=entry.occurrences,
-            comment=entry.comment,
-            flags=entry.flags,
-            msgid=entry.msgid,
-            msgstr="",
-        )
-        if entry.msgid_plural:
-            new_entry.msgid_plural = entry.msgid_plural
-            new_entry.msgstr_plural = {k: "" for k in entry.msgstr_plural}
+    def breakdown(pairs):
+        counts = {}
+        for label, _e in pairs:
+            counts[label] = counts.get(label, 0) + 1
+        return "".join(f"\n  {label}: {n}" for label, n in sorted(counts.items()))
 
-        added.append(new_entry)
+    if adopted:
+        print(f"Adopting {len(adopted)} existing de_AT translation(s):", end="")
+        print(breakdown(adopted))
+        for label, e in adopted:
+            print(f"  [{label}] {e.msgid[:70]!r} -> {e.msgstr[:50]!r}")
+    if skipped_ref:
+        print("No de_AT catalog at the requested ref for: " + ", ".join(skipped_ref))
+    if added:
+        print(f"\nFound {len(added)} untranslated candidate(s):", end="")
+        print(breakdown(added))
+        for label, e in added:
+            print(f"  [{label}] {e.msgid[:80]!r}".replace("\\n", " "))
 
-    if not added:
+    if not adopted and not added:
         print("Nothing new to add.")
         return
 
-    print(f"Found {len(added)} new entr{'y' if len(added) == 1 else 'ies'} to add:")
-    for e in added:
-        preview = e.msgid[:80].replace("\n", "\\n")
-        print(f"  {preview!r}")
-
     if args.dry_run:
-        print("Dry run — not writing.")
+        print("\nDry run -- not writing.")
         return
 
     os.makedirs(os.path.dirname(TARGET_PO), exist_ok=True)
-
-    for e in added:
+    for _label, e in adopted + added:
         target.append(e)
-
     target.header = TARGET_HEADER.strip()
     target.save(TARGET_PO)
-    print(f"\nSaved to {TARGET_PO}")
+    print(f"\nSaved {len(target)} entries to {TARGET_PO}")
     print("Run `django-admin compilemessages --locale de_AT` to compile.")
 
 

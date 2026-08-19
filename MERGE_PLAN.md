@@ -683,12 +683,40 @@ with `python scripts/de_drift.py` rather than trusting numbers in prose.
 Deliberately last: relocating `de_AT` before P2 means re-syncing the catalogue every
 time a label changes. froide keeps carrying it until then.
 
-Fix `sync_froide_translations.py`'s hardcoded path; run it against the *final*
-post-sync string set; fill in the msgstrs; land `locale/de_AT/`. Keep
-`LANGUAGE_CODE="de-at"` with `locale/de/` as fallback and `locale/de_AT/` as
-override; reconcile against DE's `USER_LANGUAGES`/`de-ls` split. Then drop `de_AT`
-from the froide fork and repin to `okfde/froide@main` — the D5 exit criterion.
-**[H]**
+✅ **The tooling is ready** — `sync_froide_translations.py` no longer hardcodes
+froide. It discovers sources from `LOCALE_PATHS` *and* `INSTALLED_APPS`, which
+matters because packages disagree about where catalogs live: froide ships one
+directory for the whole package (a pure app walk misses it entirely), while
+froide-payment and filingcabinet ship one per app. Sources are limited to apps
+living in a git checkout — the ones AT could fork — so third-party wheels do not
+pollute the results with generic `IBAN` validator strings; `--all-apps` opts back
+in. AT's own apps are always skipped: their German belongs in AT's own `de`
+catalog, not in an override of itself.
+
+Two modes:
+
+- **scan** (default) — keyword-match each `de` catalog, add matches with an empty
+  msgstr. An empty msgstr falls back to the app's own translation, so the entries
+  are inert until filled in.
+- **adopt** (`--adopt`) — import `de_AT` catalogs that already exist, msgstr and
+  all. `--ref froide-payment=fin/main` reads them straight out of a fork branch
+  **without checking it out**, which is how a fork's translations get moved into
+  AT so the fork can be retired.
+
+Measured today (`--dry-run --ref froide-payment=fin/main`): **585 existing
+translations to adopt** (583 froide + 2 froide-payment) and **57 untranslated
+candidates** (4 froide + 53 froide-payment). Re-running is idempotent and never
+overwrites a msgstr that has content — verified by filling one in and re-running.
+
+This works because AT's locale directory comes **first** in `LOCALE_PATHS`, ahead
+of froide's, so one merged AT catalog overrides every app-level catalog.
+
+Remaining, and still **[H]**: run it against the *final* post-sync string set,
+fill in the msgstrs, land `locale/de_AT/`. Keep `LANGUAGE_CODE="de-at"` with
+`locale/de/` as fallback; reconcile against DE's `USER_LANGUAGES`/`de-ls` split.
+Then drop `de_AT` from the froide fork and repin to `okfde/froide@main` — the D5
+exit criterion. Note the fork currently checked out is `okfde-main`, not fin's;
+run `scripts/froide-source.sh fin` before starting.
 
 ---
 
@@ -872,7 +900,51 @@ if that stops being true.
   to `okfde/froide-payment`, so the next deployment with an organisation name
   longer than Germany's does not have to rediscover this. Not a blocker for AT.
 
-### 9.9 Housekeeping
+### 9.9 The froide-payment fork is not in the dependency set
+
+`fin/froide-payment@main` and `fin/2026-08-fdsat-deployed` are **identical**, so
+production runs the fork — while `pyproject.toml` and `uv.lock` both declare
+`okfde/froide-payment@main`. The switch therefore drops eight commits. Audited:
+
+| commit | effect | still missing from okfde? | handled |
+|---|---|---|---|
+| `3b869ff`+`ef68ff9` | `Plan.slug` → `max_length=256` + migration `0018_alter_plan_slug` | **yes** | ✅ §9.8 listener |
+| `9c24aed` | `get_stripe_locales` gains `"de-at"` | **yes** | ❌ see below |
+| `134cc6f` | PayPal `application_context.locale` → `LANGUAGE_CODE.split("-")[0]` | **yes** | ❌ see below |
+| `b303254` | pins `stripe.api_version = "2020-08-27"` | **yes** | ❌ see below |
+| `e8d5c30` | `locale/de_AT/` catalog (2 strings) | **yes** | ✅ adoptable, see P6 |
+| `eea1787`, `4d01a02` | README only | yes | n/a — no runtime effect |
+
+**Migration-graph consequence, for the live-DB rehearsal (P3).** Production has
+applied `froide_payment.0018_alter_plan_slug`, which does not exist in okfde —
+and okfde has its *own* `0018_order_remote_reference_is_unique_and_more`, plus
+`0019` and `0020` on top. After the switch, `django_migrations` carries a row for
+a file that is gone while three unapplied migrations arrive. Django tolerates the
+orphan row, but the `slug` **column stays `varchar(256)`** while the model says
+50. That is harmless (the column is wider than the model, and the §9.8 listener
+truncates to the model's limit), but it must be expected rather than discovered.
+Add to `docs/runbooks/live-db-verification.md`.
+
+**Still open — three behavioural patches, all Austria-specific. [H]**
+
+- [ ] **Stripe locale.** Without `9c24aed`, `get_stripe_locales()` returns `[]`
+  for `de-at`, so Stripe checkout stops being forced to German. Not patchable by
+  configuration — it reads `settings.LANGUAGE_CODE` against a hardcoded dict.
+  Needs a provider subclass or, better, a one-line upstream PR.
+- [ ] **PayPal locale.** Without `134cc6f`, PayPal receives `locale: "de-at"`
+  rather than `"de"`. Same shape of fix.
+- [ ] **`stripe.api_version`.** `b303254` pins the API version to `2020-08-27` at
+  import. This one should probably **not** be carried over verbatim — it is a
+  2023-era pin against a since-upgraded Stripe library, and silently freezing the
+  API version is exactly the kind of thing that misleads later. Decide
+  deliberately: re-pin to a current version, or drop it and test. Trivially
+  settable from AT's `apps.py` either way.
+
+These are the strongest argument for the D5 exit being a small upstream PR to
+`okfde/froide-payment` rather than an indefinite fork: all three are one-liners
+that any non-German deployment needs.
+
+### 9.10 Housekeeping
 
 - The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
   origin; this branch exists only in the dev container.

@@ -262,7 +262,7 @@ Not all 32 need to stay different — only ~11 do. Measured by inspecting each d
 | **D** | AT's visual identity | `styles/header.scss`, `homepage.scss`, `blog.scss`, `donations.scss`, `collapsible.scss`, `cms_utils.scss`, `vega.scss`, `type.scss` | **Keep AT.** This is the genuine 8-file divergence |
 | **E** | AT's deliberate module/import lists | `styles/base.scss` (`banner`/`legal_actions` commented out — apps AT lacks; DE added `easylang`), `javascript/misc.ts`, `javascript/main.ts` | **Keep AT's**, but merge DE's *new* entries selectively — AT is missing `datawrapper`, `autosubmit`, `inline-detailbox` |
 | **F** | Stale DE config AT must not keep | `javascript/misc/matomo.ts` | **Fix or delete.** AT's copy hardcodes `setDomains(['*.fragdenstaat.de'])` and `setSiteId('25')` — DE's Matomo property. Inert only because `misc.ts` has the import commented out; enabling analytics as-is would report AT traffic to DE |
-| **G** | Belongs with its Python app | `javascript/donation-form.ts` (the largest diff: DE refactored to a `DonationForm` class with amount validation, shipping setup, typed payment-confirm events) | **Defer to P2 step 4.** It is the client half of DE's 374 donation commits and expects DE's form fields |
+| **G** | Belongs with its Python app | `javascript/donation-form.ts` | ✅ **Taken**, once step 4 landed. One AT override re-applied: the fee hint keyed on `lang === 'de'`, but AT serves `de-at`, so Austrian visitors silently got the English string — widened to `startsWith('de')` |
 | **H** | Font tooling | `fonts/make_subsets.sh`, `fonts/requirements.txt` | **Take DE** — it generates the subsets AT now ships |
 
 **Done.** A, B, C, H taken from DE; E merged selectively (only
@@ -464,38 +464,33 @@ coverage that makes that step safe. Also DE's `database-cache` CI workflow. **[R
    `cms_apps.py` apphook to restore CMS pages in site search. Delete the dead German
    machinery identified in §3. **[R]**
 
-4. **`fds_donation`.** ⚠️ **Blocked on verifiability, not effort — see below.**
-   Take DE@HEAD, re-apply the AT layer: Austrian banking,
-   `DONATION_SITE_NAME_OVERRIDE` 🔁, `MIN_AMOUNT=2` 🔁, `country="AT"`,
-   `DONATION_PROJECTS=["FOI"]`, the Erste/George importer 🔁, and
-   `RegularDonorsProgressBarCMSPlugin`. Re-enable `update_direct_debit` against
-   Austrian reference formats. **[H]**
+4. **`fds_donation`.** ✅ **Done.** DE@HEAD adopted (583 → 1359 model lines),
+   schema forward-ported as a single AT migration `0046` per D8(b), keeping AT's
+   45-migration lineage rather than DE's 79. Applied cleanly to an extract load,
+   no drift after. Brings `Recurrence` (recurring donations move off
+   froide-payment `Subscription`s), `DonorEvent`, donor self-service auth,
+   `form_settings`, flowcontrol actions, gift-order shipping.
 
-   ⚠️ Nothing in the suite exercises `RegularDonorsProgressBarPlugin` or the bank
-   importer, so both were changed on this branch without test cover — the plugin
-   query was checked by hand against an extract whose donation tables are empty,
-   which proves the SQL valid but not the arithmetic. Add tests here.
+   AT's layer was **entirely overwritten by the adoption** and re-applied:
+   Austrian bank details and creditor ID (6 templates), `MIN_AMOUNT=2`,
+   `DONATION_SITE_NAME_OVERRIDE` on payment descriptors, Austria-first country
+   choices, the Erste/George importer (now a named `BANK_COLUMNS` map with DE's
+   recorded beside it), and `RegularDonorsProgressBarCMSPlugin`.
 
-   **Why this is blocked.** Measured 2026-08-18:
+   ⚠️ **It also silently undid D3** — both the hidden `contact` field and the
+   removed `?newsletter` bypass. Re-applied, and the first now uses DE's
+   `hide_contact` setting (defaulting True for AT) instead of the hidden-field
+   hack. **Expect the same on every future sync of this app**; the browser test
+   catches the form half, nothing catches the bypass.
 
-   - **The app is atomic.** DE's `Donation` has an FK to `Recurrence`, `forms.py`
-     references recurrence 26 times, and `auth.py` imports it directly. The useful
-     smaller pieces — `form_settings.py`'s proper `hide_contact`, donor
-     self-service auth — cannot be taken without the central architectural change:
-     recurring donations moving off froide-payment `Subscription`s onto a
-     first-class `Recurrence` model. 34 migrations, 583 → 1359 model lines.
-   - **Nothing local can verify it.** The extract holds **0 donors, 0 donations,
-     0 payments, 0 subscriptions**, and AT's only donation test is a single
-     browser test. That migrations apply and modules import can be checked; that
-     donation *behaviour* is preserved cannot.
-   - **It carries product surface AT has not asked for** — recurrence upgrade
-     flows, gift-order shipping, flowcontrol donor journeys — the same question D3
-     answered for newsletters with "install the models, expose no surface".
+   Settings this required: `DEFAULT_CURRENCY_LABEL`/`_SYMBOL`,
+   `PAYMENT_SUBSCRIPTION_ACCESS_FUNC`, and test-only `PAYMENT_VARIANTS` including
+   `sepa` — without it the donor-link tests fail with "Payment variant does not
+   exist". `theme/admin.py` also needed `make_tag_autocomplete_admin`.
 
-   This is the one place where a green suite would be false confidence, on the app
-   that handles money. It needs either a production-shaped dump with real donation
-   rows, or a deliberate decision to accept DE's own tests plus review as the
-   assurance. **Doing P1b first is the cheapest way to unblock it.**
+   **Suite: 37 → 118 passing.** DE's 15 donation test modules now run against AT's
+   code. Still unverified: behaviour against real donation rows, since the extract
+   has none — that is the live-data rehearsal.
 
 5. **Frontend.** Adopt DE's `frontend/`, re-applying AT's `base.scss`,
    `globalvars.scss`, StixTwo and dropdown tokens. **[R]**

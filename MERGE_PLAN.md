@@ -915,15 +915,29 @@ production runs the fork — while `pyproject.toml` and `uv.lock` both declare
 | `e8d5c30` | `locale/de_AT/` catalog (2 strings) | **yes** | ✅ adoptable, see P6 |
 | `eea1787`, `4d01a02` | README only | yes | n/a — no runtime effect |
 
-**Migration-graph consequence, for the live-DB rehearsal (P3).** Production has
-applied `froide_payment.0018_alter_plan_slug`, which does not exist in okfde —
-and okfde has its *own* `0018_order_remote_reference_is_unique_and_more`, plus
-`0019` and `0020` on top. After the switch, `django_migrations` carries a row for
-a file that is gone while three unapplied migrations arrive. Django tolerates the
-orphan row, but the `slug` **column stays `varchar(256)`** while the model says
-50. That is harmless (the column is wider than the model, and the §9.8 listener
-truncates to the model's limit), but it must be expected rather than discovered.
-Add to `docs/runbooks/live-db-verification.md`.
+**Migration-graph consequence: none. Measured, not assumed.** froide-payment is
+a *shared upstream* app, unlike the site-specific `fds_*` apps — the fin fork
+tracked okfde rather than diverging from it, so the production dump already has
+**all twenty** okfde migrations applied, including `0018_order_remote_reference…`,
+`0019` and `0020`. `showmigrations froide_payment` against the dump with the
+okfde checkout reports every migration `[X]`; switching sources requires no
+migration at all.
+
+The only residue is one orphan row, `0018_alter_plan_slug`, recorded for a file
+that exists solely on the fork. Django ignores applied rows with no corresponding
+node — `check_consistent_history` only fires when a migration is applied *before*
+its dependencies — so this is inert. Do not "clean it up" with `migrate --prune`
+without thinking: the row is the only remaining trace of why the column is wide.
+
+One asymmetry to be aware of: the dump's `froide_payment_plan.slug` column is
+`varchar(256)` (fin's migration widened it) while okfde's model declares 50.
+Harmless — the column is wider than the model, `makemigrations` compares model
+state against *migration* state and so stays quiet, and the §9.8 listener
+truncates to the model's limit. It does mean production slugs get cut to 50 in a
+column that could hold 256, which matters not at all for a field nothing reads.
+
+⚠️ This paragraph previously claimed three migrations would arrive unapplied.
+That was wrong — checked against `fds_final` and corrected.
 
 **Still open — three behavioural patches, all Austria-specific. [H]**
 

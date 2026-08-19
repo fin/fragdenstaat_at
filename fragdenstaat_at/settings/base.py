@@ -22,7 +22,6 @@ def env(key, default=None):
 THEME_ROOT = Path(__file__).resolve().parent.parent
 
 
-
 def es_hosts(value):
     """Normalise Elasticsearch host settings to scheme-qualified URLs.
 
@@ -248,7 +247,6 @@ class FragDenStaatBase(German, Base):
         # ],
     }
 
-
     CMS_SIDEFRAME_ENABLED = False
     CMS_TOOLBAR_ANONYMOUS_ON = False
     CMS_TEMPLATES = [
@@ -314,9 +312,28 @@ class FragDenStaatBase(German, Base):
 
     DJANGOCMS_PICTURE_NESTING = True
 
-    # Set to False until this is fixed
-    # https://github.com/divio/django-cms/issues/5725
-    CMS_PAGE_CACHE = False
+    # Enabled, matching DE. The django-cms issue this was disabled for
+    # (https://github.com/divio/django-cms/issues/5725) is worked around by
+    # monkey_patch_cms_cache() in fds_cms/models.py, which AT carries verbatim
+    # from DE and calls at import: it adds never-cache headers instead of
+    # caching whenever the response must not be shared between users.
+    CMS_PAGE_CACHE = True
+
+    # Old links with capitalised slugs redirect to the lowercase page instead of
+    # 404ing.
+    CMS_REDIRECT_TO_LOWERCASE_SLUG = True
+
+    # Route YouTube embeds through the no-cookie domain, as DE does. AT ships
+    # cookie_consent, so an embed that sets cookies on load is a consent problem,
+    # not just a preference.
+    DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL = "https://www.youtube-nocookie.com/embed/{}"
+
+    # django-filer rejects files whose content type does not match the extension.
+    # Browsers and some office suites send application/octet-stream for perfectly
+    # ordinary uploads, so DE exempts it; without this those uploads fail.
+    FILER_REMOVE_FILE_VALIDATORS = [
+        "application/octet-stream",
+    ]
 
     # TEXT_ADDITIONAL_TAGS is deprecated in djangocms-text: a tag is allowed by
     # having a key here. Ported from DE, minus its form/input/button/textarea
@@ -347,6 +364,12 @@ class FragDenStaatBase(German, Base):
         "*": {"style", "class", "id", "hidden", "disabled"},
     }
     TEXT_ADDITIONAL_PROTOCOLS = ("bank",)
+
+    # djangocms-text defaults to TipTap (see djangocms_text/editors.py). DE pins
+    # CKEditor 4, and the CKEDITOR_SETTINGS block below is CKEditor toolbar
+    # configuration -- without this it was being applied to an editor AT was not
+    # actually running. theme/editor.py additionally turns inline editing off.
+    TEXT_EDITOR = "fragdenstaat_at.theme.editor.ckeditor4"
 
     CKEDITOR_SETTINGS = {
         "language": "{{ language }}",
@@ -511,7 +534,6 @@ class FragDenStaatBase(German, Base):
         "svg",
     )
 
-
     THUMBNAIL_DEFAULT_ALIAS = "default"
     THUMBNAIL_ALIASES = {
         "filer.Image": {
@@ -542,7 +564,6 @@ class FragDenStaatBase(German, Base):
         },
     }
     FDS_THUMBNAIL_ENABLE_AVIF = False
-
 
     META_SITE_PROTOCOL = "http"
     META_USE_SITES = True
@@ -684,49 +705,49 @@ class FragDenStaatBase(German, Base):
     def FROIDE_CONFIG(self):
         config = super(FragDenStaatBase, self).FROIDE_CONFIG
         config.update(
-            dict(
-                create_new_publicbody=False,
-                publicbody_empty=False,
-                user_can_hide_web=True,
-                public_body_officials_public=False,
-                public_body_officials_email_public=False,
-                default_law=1,
-                doc_conversion_binary="/usr/bin/libreoffice",
-                dryrun=env("FROIDE_DRY_RUN", False),
-                read_receipt=True,
-                delivery_receipt=True,
-                dsn=True,
-                message_handlers={
+            {
+                "create_new_publicbody": False,
+                "publicbody_empty": False,
+                "user_can_hide_web": True,
+                "public_body_officials_public": False,
+                "public_body_officials_email_public": False,
+                "default_law": 1,
+                "doc_conversion_binary": "/usr/bin/libreoffice",
+                "dryrun": env("FROIDE_DRY_RUN", False),
+                "read_receipt": True,
+                "delivery_receipt": True,
+                "dsn": True,
+                "message_handlers": {
                     "email": "froide.foirequest.message_handlers.EmailMessageHandler",
                     # 'fax': 'froide_fax.fax.FaxMessageHandler'
                 },
-                delivery_reporter="froide.foirequest.delivery.PostfixDeliveryReporter",
-                text_analyzer="fragdenstaat_at.theme.search.get_text_analyzer",
-                search_analyzer="fragdenstaat_at.theme.search.get_search_analyzer",
-                search_quote_analyzer="fragdenstaat_at.theme.search.get_search_quote_analyzer",
-                query_preprocessor="fragdenstaat_at.theme.search.QueryPreprocessor",
-                dryrun_domain="test.fragdenstaat.at",
-                allow_pseudonym=True,
-                api_activated=True,
-                search_engine_query=(
+                "delivery_reporter": "froide.foirequest.delivery.PostfixDeliveryReporter",
+                "text_analyzer": "fragdenstaat_at.theme.search.get_text_analyzer",
+                "search_analyzer": "fragdenstaat_at.theme.search.get_search_analyzer",
+                "search_quote_analyzer": "fragdenstaat_at.theme.search.get_search_quote_analyzer",
+                "query_preprocessor": "fragdenstaat_at.theme.search.QueryPreprocessor",
+                "dryrun_domain": "test.fragdenstaat.at",
+                "allow_pseudonym": True,
+                "api_activated": True,
+                "search_engine_query": (
                     "http://www.google.at/search?as_q=%(query)s&as_epq=&as_oq=&as_eq=&"
                     "hl=en&lr=&cr=&as_ft=i&as_filetype=&as_qdr=all&as_occt=any&"
                     "as_dt=i&as_sitesearch=%(domain)s&as_rights=&safe=images"
                 ),
-                suspicious_asn_provider_list=env("SUSPICIOUS_ASN", "").split("|"),
-                show_public_body_employee_name=False,
-                request_throttle=[
+                "suspicious_asn_provider_list": env("SUSPICIOUS_ASN", "").split("|"),
+                "show_public_body_employee_name": False,
+                "request_throttle": [
                     (5, 5 * 60),  # X requests in X seconds
                     (6, 6 * 60 * 60),
                     (10, 24 * 60 * 60),
                     (20, 7 * 24 * 60 * 60),
                 ],
-                message_throttle=[
+                "message_throttle": [
                     (2, 5 * 60),  # X messages in X seconds
                     (6, 6 * 60 * 60),
                     (8, 24 * 60 * 60),
                 ],
-                greetings=[
+                "greetings": [
                     rec(r"Sehr geehrte Damen und Herren,?"),
                     rec(r"^\s*Name des Absenders\s+(.*)"),
                     rec(r"Hallo\s+(.*)"),
@@ -744,14 +765,14 @@ class FragDenStaatBase(German, Base):
                     rec(r"^\s*(?:Von|An|Cc|To|From): (.*)"),
                     rec(r"^\s*Guten\s+Tag\s+(.+)"),
                 ],
-                custom_replacements=[
+                "custom_replacements": [
                     rec(r"[Bb][Gg]-[Nn][Rr]\.?\s*\:?\s*([a-zA-Z0-9\s/]+)"),
                     rec(r"Ihr Kennwort lautet: (.*)"),
                     rec(r"Token: ([A-Z0-9]+)"),
                     rec(r"(https://wetransfer.com/downloads/.*)"),
                     rec(r"(https://send.firefox.com/download/.*)"),
                 ],
-                moderation_triggers=[
+                "moderation_triggers": [
                     {
                         "name": "nonfoi",
                         "label": _("Non-FOI"),
@@ -784,7 +805,7 @@ class FragDenStaatBase(German, Base):
                         ],
                     },
                 ],
-                closings=[
+                "closings": [
                     rec(
                         r"\b([Mm]it *)?(den *)?(freun\w+|vielen|besten)? "
                         r"*Gr(ü|u|\?)(ß|ss|\?)(?!\s+Gott)(en?)?,?"
@@ -795,14 +816,16 @@ class FragDenStaatBase(German, Base):
                     rec(r"\bMfG"),
                     rec(r"\b(?:Best *regards|Kind *regards|Sincerely),?"),
                 ],
-                hide_content_funcs=[
-                    lambda email: email.from_[1]
-                    in (
-                        "noreply@dhl.com",  # Hide DHL delivery emails
-                        "noreply-bscw@itzbund.de",  # Hide BSCW.bund.de auto messages
+                "hide_content_funcs": [
+                    lambda email: (
+                        email.from_[1]
+                        in (
+                            "noreply@dhl.com",  # Hide DHL delivery emails
+                            "noreply-bscw@itzbund.de",  # Hide BSCW.bund.de auto messages
+                        )
                     )
                 ],
-                recipient_blocklist_regex=rec(
+                "recipient_blocklist_regex": rec(
                     # NOTE: this list is inherited wholesale from DE and is entirely
                     # German (de-mail, BND, bahn.de, jobcenter-ge.de). The generic
                     # entries (noreply/postmaster) earn their keep; the rest should be
@@ -813,24 +836,24 @@ class FragDenStaatBase(German, Base):
                     r"^askema\.noreply@ema\.europa\.eu$|^.*@nomail\.ec\.europa\.eu$|"
                     r"^eingangsbestaetigung@jobcenter-ge\.de$"
                 ),
-                content_urls={
+                "content_urls": {
                     "terms": "/info/nutzungsbedingungen/",
                     "privacy": "/info/datenschutz/",
                     # "pseudonym": "/hilfe/datenschutz-und-privatsphare/pseudonyme-nutzung/",
                     "about": "/info/ueber/",
                     "help": "/hilfe/",
                 },
-                bounce_enabled=True,
-                bounce_max_age=60 * 60 * 24 * 14,  # 14 days
-                bounce_format="bounce+{token}@fragdenstaat.at",
-                unsubscribe_enabled=True,
-                unsubscribe_format="unsub+{token}@fragdenstaat.at",
-                auto_reply_subject_regex=rec(
+                "bounce_enabled": True,
+                "bounce_max_age": 60 * 60 * 24 * 14,  # 14 days
+                "bounce_format": "bounce+{token}@fragdenstaat.at",
+                "unsubscribe_enabled": True,
+                "unsubscribe_format": "unsub+{token}@fragdenstaat.at",
+                "auto_reply_subject_regex": rec(
                     r"^(Auto-?Reply|Out of office|Out of the office|Abwesenheitsnotiz|"
                     r"Automatische Antwort|automatische Empfangsbestätigung)"
                 ),
-                auto_reply_email_regex=rec("^auto(reply|responder|antwort)@"),
-                non_meaningful_subject_regex=[
+                "auto_reply_email_regex": rec("^auto(reply|responder|antwort)@"),
+                "non_meaningful_subject_regex": [
                     r"^(ifg[- ])?anfrage$",
                     r"^dokumente?$",
                     r"^infos?$",
@@ -838,8 +861,8 @@ class FragDenStaatBase(German, Base):
                     r"^e-?mails?$",
                     r"^kommunikation$",
                 ],
-                address_regex=r"\d{4,5}",
-            )
+                "address_regex": r"\d{4,5}",
+            }
         )
         return config
 
@@ -858,7 +881,5 @@ class FragDenStaatBase(German, Base):
         ("fontawesome4", "fa", "Font Awesome 4", "4.7.0"),
     ]
 
-
     COOKIE_CONSENT_LOG_ENABLED = False
     COOKIE_CONSENT_SECURE = False
-

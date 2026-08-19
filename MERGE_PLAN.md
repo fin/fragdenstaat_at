@@ -874,33 +874,63 @@ runs and are not comparable). **AT 92 settings, DE 127, 40 DE-only.** Most of th
 evidencecollection, Telnyx/fax, Paperless) or are already-settled choices (Matomo
 off, `CMS_COLOR_SCHEME*` — no dark mode). What is left:
 
-- [ ] **Rich-text editor differs.** `TEXT_EDITOR` defaults to **`"tiptap"`**
-  (`djangocms_text/editors.py`); DE sets it to `theme.editor.ckeditor4`. AT never
-  ported `theme/editor.py`, so **AT's editors get TipTap while DE's get
-  CKEditor4** — a visible difference in the admin, on CMS plugins ported from DE.
-  AT does carry a `CKEDITOR_SETTINGS` block (toolbar layout), which djangocms-text
-  still reads, but it configures CKEditor and is largely inert under TipTap.
-  Either port `theme/editor.py` and set `TEXT_EDITOR`, or drop `CKEDITOR_SETTINGS`
-  and accept TipTap deliberately. Right now AT has neither end tied off. **[H]**
-- [ ] **YouTube embeds are not cookie-less.** DE sets
-  `DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL` to `youtube-nocookie.com`; AT does not, so
-  embeds hit `youtube.com` and set cookies on load. AT installs `cookie_consent`,
-  which makes this a consent question, not a preference. **[H]**
-- [ ] **`flowcontrol` is installed but unconfigured.** DE sets
-  `FLOWCONTROL_CONTENT_TYPES` (`fds_donation.donor`, `fds_newsletter.subscriber`,
-  `account.user`) and `FLOWCONTROL_TEMPLATE_FILTERS`; AT sets neither, so flows
-  have nothing to attach to. Relevant now that D3 restored newsletter/mailing. **[R]**
+- [x] **Rich-text editor.** `TEXT_EDITOR` defaults to `"tiptap"`
+  (`djangocms_text/editors.py`), so AT's editors were getting TipTap while DE's
+  get CKEditor 4 — and AT's `CKEDITOR_SETTINGS` toolbar block was configuring an
+  editor that was not running. `theme/editor.py` is now ported (it also disables
+  inline editing) and `TEXT_EDITOR` points at it. Verified: the editor resolves
+  to `ckeditor4`.
+- [x] **YouTube embeds now use the no-cookie domain**
+  (`DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL`), matching DE. AT ships `cookie_consent`,
+  so an embed setting cookies on load was a consent problem, not a preference.
+- [ ] **`flowcontrol` is installed but unconfigured.** django-flowcontrol is an
+  admin-configurable automation engine: a `Flow` is a tree of actions —
+  `Condition`, `Delay`, `WaitForTrigger`, `State`, `ForLoop`, `EmailAlert`,
+  `StartFlow` — executed per object with a `FlowRun` tracking progress. DE points
+  `FLOWCONTROL_CONTENT_TYPES` at `fds_donation.donor`,
+  `fds_newsletter.subscriber` and `account.user`, i.e. it drives donor and
+  subscriber lifecycle journeys (welcome series, lapsed-donor follow-up).
+  `FLOWCONTROL_TEMPLATE_FILTERS` points at `theme/filters.py`, which supplies
+  `has_tag`/`has_all_tags` for conditions inside flow templates.
+  AT sets neither, so flows have nothing to attach to. **Deferred with the
+  newsletter** — same trigger as `CELERY_TASK_ROUTES` below. Porting
+  `theme/filters.py` is only worth doing at the same time; alone it is dead code. **[R]**
 - [ ] **`datashow` is installed but uses the default storage.** DE defines an
   `overwrite` backend in `STORAGES` and points `DATASHOW_STORAGE_BACKEND` at it;
   AT has neither, so it falls back to `"default"` — functional, but re-uploading
   a dataset leaves the old file behind under a suffixed name. **[R]**
 - [ ] **No `CELERY_TASK_ROUTES`.** DE routes tasks across queues; AT runs
-  everything on the default queue. Fine until a slow task blocks a fast one.
-  Relevant alongside the task rename in §9.3. **[R]**
-- [ ] Minor: `FILER_REMOVE_FILE_VALIDATORS`, `CMS_REDIRECT_TO_LOWERCASE_SLUG`,
-  `CMS_PAGE_CACHE` (AT `False`, DE `True` — worth revisiting for performance),
-  `CMS_RAW_ID_USERS` (AT `50`, DE `True`), and `SECRET_URLS` (AT exposes
-  `/admin`, DE randomises the path). **[R]**
+  everything on the default queue. **Accepted for now** — it only starts to
+  matter when the newsletter is activated and bulk sends can block short tasks.
+  Revisit together with the flowcontrol config above. **[R]**
+- [x] **`CMS_PAGE_CACHE = True`** (was `False`). The django-cms issue it was
+  disabled for is worked around by `monkey_patch_cms_cache()` in
+  `fds_cms/models.py` — which AT carries **byte-identical to DE** and calls at
+  import; it adds never-cache headers instead of caching whenever a response must
+  not be shared between users. Verified with `scripts/verify_render.py` against a
+  fully migrated database: 10/10 pages 200, no logged errors.
+- [x] **`CMS_REDIRECT_TO_LOWERCASE_SLUG = True`** — capitalised legacy links
+  redirect instead of 404ing.
+- [x] **`FILER_REMOVE_FILE_VALIDATORS = ["application/octet-stream"]`**, as DE.
+  Browsers and office suites send that content type for ordinary uploads, which
+  django-filer's extension/content-type check would otherwise reject.
+
+**Answered, no change needed:**
+
+- **`SECRET_URLS`** sets the admin URL prefix: froide builds the admin route as
+  `SECRET_URLS.get("admin", "admin")`, so a value moves `/admin/` somewhere
+  unguessable and cuts automated login attempts. My earlier note that "AT exposes
+  `/admin`" was wrong — `settings/production.py:276` already sets it from
+  `DJANGO_SECRET_URL_ADMIN`. Only base/dev uses the literal `admin`, which is
+  correct. DE's base `{}` and AT's `{"admin": "admin"}` are functionally the same
+  value.
+- **`CMS_RAW_ID_USERS`** is a threshold, not a flag: django-cms uses a raw-ID
+  input instead of a user dropdown in the *page permission* admin once
+  `User.objects.count()` exceeds it (`cms/admin/permissionadmin.py`). AT's `50`
+  keeps the friendlier dropdown until there are 50 users; DE's `True` compares
+  against `1`, so DE is effectively always raw-ID. Purely an admin-widget nicety
+  that avoids rendering a `<select>` of every user, and only applies when
+  `CMS_PERMISSION` is on. AT's value is the better default for a smaller install.
 
 ✅ **Checked and *not* a problem:** `VERSIONING_ALIAS_MODELS_ENABLED`. DE sets it
 explicitly to `True`, AT omits it — but djangocms-alias defaults it to

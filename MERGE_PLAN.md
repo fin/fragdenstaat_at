@@ -1066,7 +1066,45 @@ These are the strongest argument for the D5 exit being a small upstream PR to
 `okfde/froide-payment` rather than an indefinite fork: all three are one-liners
 that any non-German deployment needs.
 
-### 9.10 Housekeeping
+### 9.10 Dependency sync before deploy
+
+Production installs from `uv.lock`, not from what happens to be in a developer's
+`.venv`. The lock moved a lot during this merge — pytest tooling, playwright,
+the whole Elasticsearch client stack, and `django-payments` — so the deploy must
+carry the lock, not just the source.
+
+- [ ] **Deploy `uv.lock` and `pyproject.toml` together with the code, and install
+  with `uv sync --locked` (or `--frozen`).** A plain `uv sync` may re-resolve and
+  quietly hand production a different set than was tested. `--locked` fails
+  instead, which is what you want on a deploy.
+- [ ] **Rebuild the Elasticsearch image.** `deps/elasticsearch/Dockerfile` now
+  pins 8.19.3 and pins the german-decompounder data to a commit. If production
+  ES stays below 8.16, `no_sub_matches` is silently ignored and search quality
+  degrades with no error — see §9.5 and the search section in §7.
+- [ ] **Decide the outstanding version bumps** before deploying rather than
+  after: `django` 5.2.6 → 5.2.15 (nine patch releases, where security fixes
+  ship), `urllib3` 1.26.13 → 2.7.0 (a major behind, with advisories), and a
+  review of `pandas` 3.0.3 against the bank-statement import. All three are
+  detailed under "Library drift beyond the test tooling" in §7. **[R]**
+- [ ] **Check `django-payments` resolves to 3.x.** `[tool.uv]
+  constraint-dependencies` pins `>=3.1,<4` deliberately (§9.9 context): free
+  resolution picks 4.1.0, which nothing has run against froide-payment. If a
+  future lock refresh drops the constraint, this silently regresses.
+
+**Developer trap, not a deploy step:** `uv sync` replaces the editable sibling
+checkouts (`froide`, `froide-payment`, `django-filingcabinet`) with the git pins
+from `pyproject.toml`, because that is what the manifest declares. After any
+`uv sync` in the devcontainer, re-run the three editable installs from
+`devsetup.sh` or you will be testing against upstream `main` instead of your
+local checkouts — with no visible sign that anything changed:
+
+```
+uv pip install -e ../django-filingcabinet --no-deps
+uv pip install -e ../froide --config-setting editable_mode=compat --no-deps
+uv pip install -e ../froide-payment --config-setting editable_mode=compat --no-deps
+```
+
+### 9.11 Housekeeping
 
 - The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
   origin; this branch exists only in the dev container.

@@ -239,6 +239,32 @@ def make_entry(entry, label, msgstr):
     return new
 
 
+DE_MARKER = "de: "
+
+
+def annotate(target, de_text):
+    """Record each entry's German alongside it, as an extracted comment.
+
+    Purely informative: it lets a reviewer see what an override actually
+    changes, and for an empty stub it shows the text that is being fallen back
+    to. Refreshed on every run, including for entries that already existed, so
+    it tracks upstream rewording. Never touches msgstr.
+    """
+    for entry in target:
+        german = de_text.get(key(entry))
+        if not german:
+            continue
+        # Everything from the first marker line onward is ours to rewrite;
+        # anything above it is provenance or a hand-written note, so keep it.
+        lines = (entry.comment or "").splitlines()
+        for i, line in enumerate(lines):
+            if line.startswith(DE_MARKER):
+                lines = lines[:i]
+                break
+        lines.append(DE_MARKER + " ".join(german.split()))
+        entry.comment = "\n".join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -285,6 +311,10 @@ def main():
         refs[repo] = ref
     adopt = args.adopt or bool(refs)
 
+    # msgid -> the app's own German, recorded as a comment on each entry so a
+    # reviewer can see what the override differs from without opening two files.
+    de_text = {}
+
     target = load_or_create_target()
     # Never clobber work already done by hand.
     translated = {key(e) for e in target if e.msgstr or any(e.msgstr_plural.values())}
@@ -326,6 +356,9 @@ def main():
             if os.path.exists(de_path):
                 de_entries = {key(e): e for e in polib.pofile(de_path)}
                 live_msgids = set(de_entries)
+                for k, v in de_entries.items():
+                    if v.msgstr:
+                        de_text.setdefault(k, v.msgstr)
 
             for entry in source or []:
                 if entry.obsolete or not entry.msgid:
@@ -360,6 +393,8 @@ def main():
         if not os.path.exists(de_po):
             continue
         for entry in polib.pofile(de_po):
+            if entry.msgstr:
+                de_text.setdefault(key(entry), entry.msgstr)
             if not entry_matches(entry) or key(entry) in seen:
                 continue
             # An entry already carrying a hand-written override needs no stub.
@@ -405,8 +440,9 @@ def main():
             print(f"  [{label}] {e.msgid[:80]!r}".replace("\\n", " "))
 
     if not adopted and not added:
-        print("Nothing new to add.")
-        return
+        # Not a reason to stop: the German-source comments are refreshed on
+        # every run, so there is still work to write out.
+        print("No new entries; refreshing the recorded German source text.")
 
     if args.dry_run:
         print("\nDry run -- not writing.")
@@ -415,6 +451,8 @@ def main():
     os.makedirs(os.path.dirname(TARGET_PO), exist_ok=True)
     for _label, e in adopted + added:
         target.append(e)
+
+    annotate(target, de_text)
     target.header = TARGET_HEADER.strip()
     target.save(TARGET_PO)
     print(f"\nSaved {len(target)} entries to {TARGET_PO}")

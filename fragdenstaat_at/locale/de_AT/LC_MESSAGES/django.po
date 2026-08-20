@@ -24,12 +24,15 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. from froide
+#. de: Konto
 #: froide/account/apps.py
 #: froide/account/templates/account/includes/breadcrumbs.html
 msgid "Account"
 msgstr "Account"
 
 #. from froide
+#. de: Sie müssen die Nutzungs- und Datenschutzbedingungen von FragDenStaat.de
+#. akzeptieren.
 #: froide/account/forms.py
 msgid "You need to accept our Terms and Conditions and Priavcy Statement."
 msgstr ""
@@ -37,6 +40,9 @@ msgstr ""
 "akzeptieren."
 
 #. from froide
+#. de: Sie stimmen den <a href="{url_terms}"
+#. target="_blank">Nutzungsbedingungen</a> und <a href="{url_privacy}"
+#. target="_blank">Datenschutzbedingungen</a> von FragDenStaat.de zu.
 #: froide/account/forms.py
 #, python-brace-format
 msgid ""
@@ -49,36 +55,43 @@ msgstr ""
 "target=\"_blank\">Datenschutzbedingungen</a> von FragDenStaat.at zu."
 
 #. from froide
+#. de: Bitte bestätigen Sie Ihre E-Mail-Adresse bevor Sie sich anmelden.
 #: froide/account/forms.py
 msgid "Please activate your mail address before logging in."
 msgstr "Bitte bestätigen Sie Ihre E-Mail-Adresse bevor Sie sich einloggen."
 
 #. from froide
+#. de: Der:die eingeloggte Nutzer:in passt nicht zu dem geklickten Link!
 #: froide/account/forms.py
 msgid "Logged in user does not match this link!"
 msgstr "Der eingeloggte Nutzer passt nicht zu dem geklickten Link!"
 
 #. from froide
+#. de: Informationsfreiheitsgesetz
 #: froide/account/forms.py
 msgid "Freedom of Information Act"
 msgstr "Informationsgesetz"
 
 #. from froide
+#. de: Bestätigungs-Satz
 #: froide/account/forms.py
 msgid "Confirmation Phrase"
 msgstr "Bestätitungs-Satz"
 
 #. from froide
+#. de: << Anfragesteller:in >>
 #: froide/account/models.py
 msgid "<< Name Not Public >>"
 msgstr "Anfragesteller/in"
 
 #. from froide
+#. de: << Antragsteller:in >>
 #: froide/account/services.py
 msgid "<< Name removed >>"
 msgstr "Antragsteller/in"
 
 #. from froide
+#. de: Sende E-Mail an Nutzer:innen
 #: froide/account/templates/account/admin_send_mail.html
 msgid "Send mail to users"
 msgstr "Sende E-Mail an Nutzer"
@@ -92,22 +105,27 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. from froide
+#. de: Weiter
 #: froide/account/templates/account/go.html
 #: froide/letter/templates/letter/default.html
 msgid "Continue"
 msgstr "zum nächsten Schritt"
 
 #. from froide
+#. de: Noch kein Konto? Klicken Sie hier, um ein Konto zu erstellen!
 #: froide/account/templates/account/login.html
 msgid "Don't have an account? Click here to sign up!"
 msgstr "Noch keinen Account? Klicken Sie hier, um sich anzumelden!"
 
 #. from froide
+#. de: Anmelden
 #: froide/account/templates/account/login.html
 msgid "Log In"
 msgstr "Einloggen"
 
 #. from froide
+#. de: Ihre IFG-Anfragen werden nicht gelöscht. Nur die persönlichen
+#. Informationen Ihres Account werden entfernt.
 #: froide/account/templates/account/settings.html
 msgid ""
 "Your FOI requests will not be removed. Only your personal information "
@@ -117,58 +135,70 @@ msgstr ""
 "Ihres Account werden entfernt."
 
 #. from froide
+#. de: Ihre Konto-Einstellungen
 #: froide/account/templates/account/show.html
 msgid "Your account settings"
 msgstr "Ihre Nutzerkonto-Einstellungen"
 
 #. from froide
+#. de: Konto erstellen
 #: froide/account/templates/account/signup.html
 msgid "Sign Up"
 msgstr "Anmelden"
 
 #. from froide
+#. de: Anfragen des:der Nutzer:in
 #: froide/account/templates/admin/account/user/change_form.html
 msgid "This users requests"
 msgstr "Anfragen des Nutzers"
 
 #. from froide
+#. de: Markiere ausgewählte Informationsfreiheitsanfragen als gesehen
 #: froide/foirequest/admin.py
 msgid "Mark selected requests as checked"
 msgstr "Markiere ausgewählte Anfragen als gesehen"
 
 #. from froide
+#. de: Markiere ausgewählte Anfragen als nicht-IFG
 #: froide/foirequest/admin.py
 msgid "Mark selected requests as not FoI"
 msgstr "Markiere ausgewählte Anfragen als nicht-IF"
 
 #. from froide
+#. de: %d Anfrage(n) erfolgreich als nicht-IFG markiert.
 #: froide/foirequest/admin.py
 #, python-format
 msgid "%d request(s) successfully marked as not FoI."
 msgstr "%d "
 
 #. from froide
+#. de: Siehe IFG-Nachricht
 #: froide/foirequest/admin.py
 msgid "See FoiMessage"
 msgstr "Siehe Nachricht"
 
 #. from froide
+#. de: Informationsfreiheitsanfrage
 msgid "FOI Request"
 msgstr "Anfrage"
 
 #. from froide
+#. de: Informationsfreiheitsanfragen %(by)s auf %(sitename)s
 #: froide/foirequest/feeds.py
 #, python-format
 msgid "Freedom of Information Requests %(by)s on %(sitename)s"
 msgstr "Anfragen %(by)s auf %(sitename)s"
 
 #. from froide
+#. de: Informationsfreiheitsanfragen auf %(sitename)s
 #: froide/foirequest/feeds.py
 #, python-format
 msgid "Freedom of Information Requests on %(sitename)s"
 msgstr "Anfragen auf %(sitename)s"
 
 #. from froide
+#. de: Dieser Feed enthält die neuesten Informationsfreiheitsanfragen %(by)s,
+#. die mit Hilfe von %(sitename)s gestellt wurden.
 #: froide/foirequest/feeds.py
 #, python-format
 msgid ""
@@ -179,6 +209,8 @@ msgstr ""
 "%(sitename)s gestellt wurden."
 
 #. from froide
+#. de: Dieser Feed enthält die neuesten Informationsfreiheitsanfragen, die mit
+#. Hilfe von %(sitename)s gestellt wurden.
 #: froide/foirequest/feeds.py
 #, python-format
 msgid ""
@@ -189,6 +221,7 @@ msgstr ""
 "gestellt wurden."
 
 #. from froide
+#. de: Zustand
 #: froide/foirequest/filters.py
 #: froide/foirequest/templates/foirequest/foiproject_detail.html
 #: froide/foirequest/views/account_requests.py
@@ -196,36 +229,43 @@ msgid "status"
 msgstr "status"
 
 #. from froide
+#. de: Unbekannte:r IFG-Mail-Empfänger:in
 #: froide/foirequest/foi_mail.py froide/foirequest/tests/test_mail.py
 msgid "Unknown FoI-Mail Recipient"
 msgstr "Unbekannter Antwortmail-Empfänger"
 
 #. from froide
+#. de: Absender:in
 #: froide/foirequest/forms/message.py
 msgid "Sender Name"
 msgstr "Absender"
 
 #. from froide
+#. de: Sie dürfen einige der erhaltenen Dokumente nicht veröffentlichen..
 #: froide/foirequest/forms/message.py
 msgid "You are not allowed to publish some received documents"
 msgstr "Sie dürfen einige der erhaltenen Dokumente nicht veröffentlichen."
 
 #. from froide
+#. de: Beschreiben Sie Ihre Anfrage möglichst kurz und präzise hier ...
 #: froide/foirequest/forms/request.py
 msgid "Specify your request here..."
 msgstr "Beschreiben Sie Ihre Anfrage hier ..."
 
 #. from froide
+#. de: Bitte geben Sie ein Ergebnis dieser Anfrage an
 #: froide/foirequest/forms/request.py
 msgid "Please give a resolution to this request"
 msgstr "Bitte schreiben Sie eine Zusammenfassung des Ergebnisses"
 
 #. from froide
+#. de: Nutzer:in kann genehmigen
 #: froide/foirequest/models/attachment.py
 msgid "User can approve"
 msgstr "Nutzer kann genehmigen"
 
 #. from froide
+#. de: Informationsfreiheitsanfrage
 #: froide/foirequest/models/event.py froide/foirequest/models/message.py
 #: froide/foirequest/models/request.py froide/foirequest/models/suggestion.py
 #: froide/foirequestfollower/models.py
@@ -233,41 +273,50 @@ msgid "Freedom of Information Request"
 msgstr "Anfrage"
 
 #. from froide
+#. de: Von Nutzer:in
 #: froide/foirequest/models/message.py
 msgid "From User"
 msgstr "Von Nutzer"
 
 #. from froide
+#. de: Empfänger:in
 #: froide/foirequest/models/message.py
 msgid "Recipient"
 msgstr "Empfänger"
 
 #. from froide
+#. de: Wurde geschwärzt?
 #: froide/foirequest/models/message.py
 msgid "Was Redacted?"
 msgstr "wurde geschwärzt?"
 
 #. from froide
+#. de: Informationsfreiheitsnachricht
 #: froide/foirequest/models/message.py
 msgid "Freedom of Information Message"
 msgstr "Nachricht"
 
 #. from froide
+#. de: Informationsfreiheitsnachrichten
 #: froide/foirequest/models/message.py
 msgid "Freedom of Information Messages"
 msgstr "Nachrichten"
 
 #. from froide
+#. de: Schlagwort einer Informationsfreiheitsanfrage
 #: froide/foirequest/models/request.py
 msgid "FoI Request Tag"
 msgstr "Schlagwort einer Anfrage"
 
 #. from froide
+#. de: Schlagworte einer Informationsfreiheitsanfrage
 #: froide/foirequest/models/request.py
 msgid "FoI Request Tags"
 msgstr "Schlagworte einer Anfrage"
 
 #. from froide
+#. de: Die Behörde dieser Anfrage wurde durch den:die Nutzer:in erstellt und
+#. muss noch bestätigt werden.
 #: froide/foirequest/models/request.py
 msgid ""
 "The Public Body of this request has been created by the user and still needs"
@@ -277,6 +326,8 @@ msgstr ""
 " werden."
 
 #. from froide
+#. de: Eine Antwort wurde erhalten und der:die Nutzer:in muss einen neuen
+#. Status angeben.
 #: froide/foirequest/models/request.py
 msgid "A message was received and the user needs to set a new status."
 msgstr ""
@@ -284,52 +335,62 @@ msgstr ""
 "angeben."
 
 #. from froide
+#. de: Nutzer:in hat die Anfrage aus anderen Gründen zurückgezogen.
 #: froide/foirequest/models/request.py
 msgid "User withdrew the request for other reasons."
 msgstr "Nutzer hat die Anfrage aus anderen Gründen zurückgezogen."
 
 #. from froide
+#. de: Informationsfreiheitsgesetz
 #: froide/foirequest/models/request.py froide/publicbody/models.py
 msgid "Freedom of Information Law"
 msgstr "Informationsgesetz"
 
 #. from froide
+#. de: Informationsfreiheitsanfragen
 #: froide/foirequest/models/request.py froide/templates/scaffold.html
 msgid "Freedom of Information Requests"
 msgstr "Anfragen"
 
 #. from froide
+#. de: Anfragesteller:in
 #: froide/foirequest/signals.py
 #: froide/problem/templates/problem/message_toolbar_item.html
 msgid "requester"
 msgstr "anfragesteller"
 
 #. from froide
+#. de: ✔️ Informationsfreiheitsanfrage gesendet
 #: froide/foirequest/signals.py
 msgid "Your Freedom of Information Request was sent"
 msgstr "✔️ Anfrage gesendet"
 
 #. from froide
+#. de: Zeige alle Informationsfreiheitsanfragen
 #: froide/foirequest/templates/foirequest/_request_search.html
 msgid "Show all FoI requests"
 msgstr "Zeige alle Anfragen"
 
 #. from froide
+#. de: …an diese IFG-Anfrage:
 #: froide/foirequest/templates/foirequest/admin_redeliver.html
 msgid "...to this FOI request:"
 msgstr "…an diese IFG-Anfrage"
 
 #. from froide
+#. de: Absender:in angeben
 #: froide/foirequest/templates/foirequest/body/message/meta_container.html
 msgid "Set Sending Public Body"
 msgstr "Absender angeben"
 
 #. from froide
+#. de: verspätet
 #: froide/foirequest/templates/foirequest/body/timeline.html
 msgid "overdue"
 msgstr "verspaetet"
 
 #. from froide
+#. de: Mit freundlichen Grüßen
 #: froide/foirequest/templates/foirequest/emails/dummy_mail_end.txt
 msgid ""
 "\n"
@@ -339,6 +400,8 @@ msgstr ""
 "Mit freundlichen Grüßen,"
 
 #. from froide
+#. de: Guten Tag, ich würde gerne eine Anfrage nach einem (noch
+#. festzulegenden) Informationsfreiheitsgesetz stellen.
 #: froide/foirequest/templates/foirequest/emails/dummy_mail_start.txt
 msgid ""
 "Dear Sir or Madam,\n"
@@ -350,12 +413,18 @@ msgstr ""
 "ich würde gerne eine Anfrage nach einem (noch festzulegenden) Informationsgesetz/Auskunftsgesetz stellen."
 
 #. from froide
+#. de: Betreff: %(subject)s
 #: froide/foirequest/templates/foirequest/emails/formatted_message.txt
 #, python-format
 msgid "Subject: %(subject)s"
 msgstr "Betreff: %(subject)s "
 
 #. from froide
+#. de: Hallo %(name)s, %(pbname)s hat auf Ihre Anfrage „%(title)s“
+#. geantwortet. Bitte lesen Sie die Nachricht auf FragDenStaat.de und tragen
+#. ein, ob die Anfrage abgeschlossen ist. Sie können dort auch eine weitere
+#. Nachricht senden. Um die Antwort zu lesen und der Behörde zu antworten,
+#. klicken Sie auf diesen Link: %(action_url)s Beste Grüße, %(site_name)s
 #: froide/foirequest/templates/foirequest/emails/message_received_notification.txt
 #, python-format
 msgid ""
@@ -382,6 +451,11 @@ msgstr ""
 "%(site_name)s"
 
 #. from froide
+#. de: Guten Tag, meine Informationsfreiheitsanfrage „%(title)s“ vom %(date)s
+#. (#%(num)s) wurde von Ihnen nicht in der gesetzlich vorgeschriebenen Zeit
+#. beantwortet. Sie haben die Frist mittlerweile um %(due)s überschritten.
+#. Bitte informieren Sie mich umgehend über den Stand meiner Anfrage. Mit
+#. freundlichen Grüßen %(name)s
 #: froide/foirequest/templates/foirequest/emails/overdue_reply.txt
 #, python-format
 msgid ""
@@ -402,6 +476,11 @@ msgstr ""
 "%(name)s"
 
 #. from froide
+#. de: Rechtshinweis: Diese E-Mail wurde über den Webservice
+#. https://fragdenstaat.de versendet. Antworten werden ggf. im Auftrag der
+#. Antragstellenden automatisch auf dem Internet-Portal veröffentlicht. Falls
+#. Sie noch Fragen haben, besuchen Sie https://fragdenstaat.de/hilfe/fuer-
+#. behoerden/
 #: froide/foirequest/templates/foirequest/emails/request_footer.txt
 msgid ""
 "Legal Note: This mail was sent through a Freedom Of Information Portal. "
@@ -414,44 +493,53 @@ msgstr ""
 "behoerden/\n"
 
 #. from froide
+#. de: Neues zu Ihrer Anfrage „%(title)s“
 #: froide/foirequest/templates/foirequest/emails/request_update.txt
 #, python-format
 msgid "Updates to your request \"%(title)s\""
 msgstr "Neues zu Ihrer Anfrage \"%(title)s\""
 
 #. from froide
+#. de: Anfrage
 #: froide/foirequest/templates/foirequest/header/breadcrumb.html
 msgid "request"
 msgstr "anfrage"
 
 #. from froide
+#. de: Sie können die:den gesetzliche:n Vermittler:in einschalten
 #: froide/foirequest/templates/foirequest/header/header.html
 msgid "Consider sending a letter to a mediator"
 msgstr "Sie können den gesetzlichen Vermittler einschalten"
 
 #. from froide
+#. de: Herunterladen
 #: froide/foirequest/templates/foirequest/header/info-box.html
 #: froide/foirequest/views/request.py
 msgid "Download"
 msgstr "Download"
 
 #. from froide
+#. de: Informationsfreiheitsanfragen
 #: froide/foirequest/templates/foirequest/list.html
 msgid "FoI Requests"
 msgstr "Anfragen"
 
 #. from froide
+#. de: „%(name)s“ schwärzen
 #: froide/foirequest/templates/foirequest/redact.html
 #, python-format
 msgid "Redact \"%(name)s\""
 msgstr "\"%(name)s\" schwärzen"
 
 #. from froide
+#. de: Anfrage stellen
 #: froide/foirequest/templates/foirequest/request.html
 msgid "Make a request"
 msgstr "Make a request"
 
 #. from froide
+#. de: Stellen Sie eine identische Anfrage in Ihrem Namen, um Zugang zu den
+#. Informationen zu erhalten.
 #: froide/foirequest/templates/foirequest/snippets/make_same_request.html
 msgid ""
 "Make an identical request in your name to get access to the information."
@@ -468,21 +556,26 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. from froide
+#. de: Nachricht
 #: froide/foirequest/templatetags/foirequest_tags.py froide/problem/views.py
 msgid "Message"
 msgstr "Message"
 
 #. from froide
+#. de: Vorherige Seite
 #: froide/foirequest/views/attachment.py
 msgid "Previous Page"
 msgstr "vorherige Seite"
 
 #. from froide
+#. de: Ihre Anfrage kann noch nicht vermittelt werden.
 #: froide/foirequest/views/message.py
 msgid "Your request cannot be escalated."
 msgstr "Ihre Anfrage kann noch nicht vermittelt werden. "
 
 #. from froide
+#. de: Ein Fehler ist aufgetreten bei der Authentifizierung Ihrer Dateien.
+#. Bitte kontaktieren Sie die Administrator:innen direkt.
 #: froide/foirequest/views/request_actions.py
 msgid ""
 "A session error occurred while authenticating your uploads. Please contact "
@@ -492,31 +585,39 @@ msgstr ""
 "kontaktieren Sie FragDenStaat.at direkt."
 
 #. from froide
+#. de: Anfrage folgen
 #: froide/foirequestfollower/configuration.py
 msgid "Follow request"
 msgstr "Sie interessiert das!"
 
 #. from froide
+#. de: Anfrage folgen?
 #: froide/foirequestfollower/configuration.py
 msgid "Follow request?"
 msgstr "Interessiert Sie das?"
 
 #. from froide
+#. de: Nicht mehr folgen
 #: froide/foirequestfollower/configuration.py
 msgid "Unfollow request"
 msgstr "Kein Interesse mehr"
 
 #. from froide
+#. de: IFG-Seite
 #: froide/foisite/models.py
 msgid "FOI Site"
 msgstr "Informationsfreiheits-Portal"
 
 #. from froide
+#. de: IFG-Seiten
 #: froide/foisite/models.py
 msgid "FOI Sites"
 msgstr "Informationsfreheits-Portal"
 
 #. from froide
+#. de: Es sieht so aus, als kämen Sie aus %(country_name)s. Wussten Sie, dass
+#. es eine <a href="%(url)s">IFG-Seite für %(country_name)s namens
+#. %(name)s</a> gibt?
 #: froide/foisite/templates/foisite/banner.html
 #, python-format
 msgid ""
@@ -529,11 +630,14 @@ msgstr ""
 "namens %(name)s</a> gibt?"
 
 #. from froide
+#. de: Anfrage der Woche
 #: froide/frontpage/models.py
 msgid "Featured Requests"
 msgstr "Anfragen der Woche"
 
 #. from froide
+#. de: Sie haben vor kurzem Antworten auf einige Ihrer Anfragen bei
+#. FragDenStaat.de erhalten.
 #: froide/guide/templates/guide/emails/new_guidance.txt
 msgid "You recently received replies to some of your requests."
 msgstr ""
@@ -541,31 +645,38 @@ msgstr ""
 " erhalten."
 
 #. from froide
+#. de: Nichts
 #: froide/helper/admin_utils.py
 msgid "None"
 msgstr "None"
 
 #. from froide
+#. de: Behörden-Typ
 #: froide/publicbody/forms.py
 msgid "Classification"
 msgstr "Klassifikation"
 
 #. from froide
+#. de: Monat(e)
 #: froide/publicbody/models.py
 msgid "Month(s) (DE)"
 msgstr "Monat(e) (DE)"
 
 #. from froide
+#. de: Informationsfreiheitsgesetze
 #: froide/publicbody/models.py
 msgid "Freedom of Information Laws"
 msgstr "Informationsgesetze"
 
 #. from froide
+#. de: Alle Einrichtungen, die Verwaltungs­aufgaben des Landes wahrnehmen.
 #: froide/publicbody/templates/publicbody/jurisdiction.html
 msgid "All bodies that work on administrative tasks of this jurisdiction."
 msgstr "Alle Einrichtungen, die Verwaltungs­aufgaben wahrnehmen."
 
 #. from froide
+#. de: Das Informations­freiheits­gesetz von %(name)s erlaubt Ihnen den Zugang
+#. zu Informationen der Verwaltung.
 #: froide/publicbody/templates/publicbody/jurisdiction.html
 #, python-format
 msgid ""
@@ -576,17 +687,22 @@ msgstr ""
 "Informationen der Verwaltung."
 
 #. from froide
+#. de: Bundesministerium für Arbeit
 #: froide/publicbody/templates/publicbody/widget/_add_js_vars.html
 #: froide/publicbody/widgets.py
 msgid "Ministry of Labour"
 msgstr "Bundesministerium für Inneres"
 
 #. from froide
+#. de: Kann Sie als Nutzer:in auf FragDenStaat.de identifizieren
 #: froide/settings.py
 msgid "Access to user status"
 msgstr "Kann Sie als Nutzer:in auf FragDenStaat.at identifizieren"
 
 #. from froide
+#. de: Wir kämpfen für Transparenz! <a
+#. href="https://fragdenstaat.de/hilfe/spenden/">Kämpfen Sie mit und
+#. unterstützen Sie uns.</a>
 #: froide/templates/emails/footer.html
 msgid ""
 "Support Froide by <a href=\"https://okfn.de/spenden/\">donating to Open "
@@ -596,6 +712,8 @@ msgstr ""
 "Sie mit und unterstützen Sie uns.</a>"
 
 #. from froide
+#. de: Wir kämpfen für Transparenz! Kämpfen Sie mit und unterstützen Sie uns:
+#. https://fragdenstaat.de/hilfe/spenden/
 #: froide/templates/emails/footer.txt
 msgid ""
 "Support Froide by donating to Open Knowledge Foundation Germany:\n"
@@ -605,6 +723,8 @@ msgstr ""
 "https://fragdenstaat.at/\n"
 
 #. from froide
+#. de: Jede:r Bürger:in hat nach den Informations&shy;gesetzen das Recht,
+#. Zugang zu Informationen der öffentlichen Hand zu erhalten.
 #: froide/templates/index.html
 msgid ""
 "Every citizen has the right under the Freedom of Information Laws to ask for"
@@ -615,6 +735,9 @@ msgstr ""
 "Informationen der öffentlichen Hand zu erhalten."
 
 #. from froide
+#. de: Diese Seite veröffentlicht Informations&shy;freiheits&shy;anfragen und
+#. ihre Antworten, so dass der Vorgang durch die Öffentlichkeit geprüft werden
+#. kann.
 #: froide/templates/index.html
 msgid ""
 "This site publishes Freedom of Information requests and replies so that "
@@ -626,6 +749,8 @@ msgstr ""
 
 #. from froide
 #. Translators: meta description
+#. de: %(site)s hilft Ihnen, Informationsfreiheitsanfragen an Behörden zu
+#. stellen
 #: froide/templates/scaffold.html
 #, python-format
 msgid ""
@@ -633,17 +758,21 @@ msgid ""
 msgstr "%(site)s hilft Ihnen, Informationsanfragen an Behörden zu stellen"
 
 #. from froide
+#. de: Arbeit
 #: froide/templates/snippets/homepage_hero.html
 msgid "Employment"
 msgstr "Eurofighter"
 
 #. from froide
+#. de: Anfrage besuchen
 #: froide/templates/snippets/homepage_hero.html
 msgid "Visit this request"
 msgstr "Lesen Sie die Anfrage"
 
 #. from froide
 #. Translators: meta keywords
+#. de: Informationsfreiheitsanfragen, Informationsfreiheitsgesetze,
+#. Behördeninformationen
 #: froide/templates/snippets/meta.html
 msgid ""
 "Freedom of Information Requests, Freedom of Information Law, Public Body "
@@ -653,6 +782,16 @@ msgstr ""
 "Behördeninformationen, Auskunftspflicht"
 
 #. from froide
+#. de: Mit dem Anhaken willige ich ein, dass die von mir ausgewählte und
+#. geschwärzte Bilddatei von der Open Knowledge Foundation Deutschland e.V.
+#. (Projekt {site_name}) in meinem {site_name}-Konto hinterlegt wird, damit
+#. ich sie bei zukünftigen Anfragen im Bedarfsfall als Identitätsnachweis an
+#. Behörden übermitteln kann. Zudem versichere ich, der im Nachweis angegebene
+#. Inhaber dieses Dokuments zu sein. Ich weiß, dass meine Einwilligung
+#. freiwillig ist und ich Sie jederzeit mit Wirkung für die Zukunft widerrufen
+#. kann. Den Hinweis zur empfohlenen Vornahme von Schwärzungen, sowie <a
+#. href="{url_privacy}" target="_blank">die Datenschutzerklärung</a> habe ich
+#. zur Kenntnis genommen.
 msgid ""
 "By checking this box, I agree that the image file I have selected and "
 "redacted may be stored by {site_name} in my user account, so that I can use "
@@ -674,11 +813,16 @@ msgstr ""
 "ich zur Kenntnis genommen."
 
 #. from froide_payment
+#. de: z.B. DE12...
 #: froide_payment/forms.py
 msgid "e.g. DE12..."
 msgstr "z.B. AT12..."
 
 #. from froide
+#. de: Froide ist ein freies und Open Source Projekt der <a
+#. href="https://okfn.de">Open Knowledge Foundation </a><br/>Wenn Sie Froide
+#. unterstützen möchten, besuchen Sie bitte unser <a
+#. href="https://github.com/okfde/froide">GitHub-Repo</a>
 #: froide/templates/footer.html
 msgid ""
 "Froide is a free and Open Source Project by <a href=\"https://okfn.de\">the "
@@ -687,6 +831,9 @@ msgid ""
 msgstr ""
 
 #. from froide
+#. de: Ein gelber Brief ist eine förmliche Zustellung mit Zustellungsurkunde.
+#. Normalerweise befindet sich solch ein Brief in einem gelben Umschlag, aber
+#. es gibt auch Ausnahmen.
 #: froide/foirequest/views/message.py
 msgid ""
 "Registered mail is a postal service which allows the sender proof of mailing"
@@ -694,47 +841,58 @@ msgid ""
 msgstr ""
 
 #. from froide
+#. de: Gelber Brief: Welches Zustelldatum wurde auf dem Briefumschlag
+#. eingetragen?
 #: froide/foirequest/views/message.py
 msgid "Registered mail: what is the date stamped on the envelope?"
 msgstr ""
 
 #. from froide
+#. de: Es handelt sich um einen gelben Brief
 #: froide/foirequest/views/message.py
 msgid "The letter is registered mail"
 msgstr ""
 
 #. from froide_payment
+#. de: {success}/{total} Dauerspenden gekündigt.
 #: admin.py
 #, python-brace-format
 msgid "{success}/{total} subscriptions canceled."
 msgstr ""
 
 #. from froide_payment
+#. de: Dauerspende kündigen
 #: admin.py templates/froide_payment/subscription/default.html
 msgid "Cancel subscription"
 msgstr ""
 
 #. from froide_payment
+#. de: Dauerspende
 #: admin.py
 msgid "subscription"
 msgstr ""
 
 #. from froide_payment
+#. de: Dauerspende-Bestellung
 #: admin.py
 msgid "subscription order"
 msgstr ""
 
 #. from froide_payment
+#. de: Konnte nicht alle Spenden finden, Vorgang abgebrochen!
 #: admin.py
 msgid "Could not find all payments, aborting!"
 msgstr ""
 
 #. from froide_payment
+#. de: Ihre IBAN
 #: forms.py
 msgid "Your IBAN"
 msgstr ""
 
 #. from froide_payment
+#. de: Die IBAN fängt mit zwei Buchstaben und zwei Ziffern an. Nur SEPA-
+#. Länder.
 #: forms.py
 msgid ""
 "The IBAN starts with two letters and then two numbers. SEPA countries only."
@@ -746,6 +904,18 @@ msgstr ""
 #. made on its fork. Recovered rather than retranslated: this is a legal
 #. formula, and the only Austria-specific part is who is being authorised.
 #. If upstream rewords the English, re-derive it the same way.
+#. de: Durch Angabe Ihrer Zahlungsinformationen und der Bestätigung der
+#. vorliegenden Zahlung ermächtigen Sie (A) Open Knowledge Foundation
+#. Deutschland e.V. und Stripe, unseren Zahlungsdienstleister, Ihrem
+#. Kreditinstitut Anweisungen zur Belastung Ihres Kontos zu erteilen, und (B)
+#. Ihr Kreditinstitut, Ihr Konto gemäß diesen Anweisungen zu belasten. Im
+#. Rahmen Ihrer Rechte haben Sie, entsprechend den Vertragsbedingungen mit
+#. Ihrem Kreditinstitut, Anspruch auf eine Rückerstattung von Ihrem
+#. Kreditinstitut. Eine Rückerstattung muss innerhalb von 8 Wochen ab dem Tag,
+#. an dem Ihr Konto belastet wurde, geltend gemacht werden. Eine Erläuterung
+#. Ihrer Rechte können Sie von Ihrem Kreditinstitut anfordern. Sie erklären
+#. sich einverstanden, Benachrichtigungen über künftige Belastungen bis
+#. spätestens 2 Tage vor dem Buchungsdatum zu erhalten.
 #: forms.py
 msgid ""
 "By providing your payment information and confirming this payment, you "
@@ -773,76 +943,93 @@ msgstr ""
 "Buchungsdatum zu erhalten."
 
 #. from froide_payment
+#. de: Die angegeben IBAN scheint ungültig.
 #: forms.py
 msgid "The provided IBAN seems invalid."
 msgstr ""
 
 #. from froide_payment
+#. de: Spendenbetrag:
 #: forms.py
 msgid "Donation amount:"
 msgstr ""
 
 #. from froide_payment
+#. de: Spendenrhythmus
 #: forms.py
 msgid "Frequency"
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende per Lastschrift hier kündigen.
 #: provider/lastschrift.py
 msgid "You can cancel your direct debit subscription here."
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende per Lastschrift hier ändern.
 #: provider/lastschrift.py
 msgid "You can modify your direct debit subscription here."
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende direkt bei Paypal kündigen.
 #: provider/paypal.py
 msgid "You can cancel your subscription within your Paypal dashboard."
 msgstr ""
 
 #. from froide_payment
+#. de: Deine Paypal-Dauerspende wurde schon gekündigt.
 #: provider/paypal.py
 msgid "Your Paypal subscription has already been canceled."
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende per Paypal hier kündigen.
 #: provider/paypal.py
 msgid "You can cancel your Paypal subscription."
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende nur bei Paypal anpassen.
 #: provider/paypal.py
 msgid "You cannot modify your Paypal subscription here."
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende ändern, sobald die erste Zahlung
+#. eingegangen ist.
 #: provider/paypal.py provider/stripe.py
 msgid "You can modify your subscription when it receives the first payment."
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende per Paypal anpassen.
 #: provider/paypal.py
 msgid "You can modify your Paypal subscription."
 msgstr ""
 
 #. from froide_payment
+#. de: Diese Dauerspende wurde schon gekündigt.
 #: provider/stripe.py
 msgid "This subscription is already canceled."
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende per Kreditkarte hier kündigen.
 #: provider/stripe.py
 msgid "You can cancel your credit card subscription."
 msgstr ""
 
 #. from froide_payment
+#. de: Diese Dauerspende wurde gekündigt.
 #: provider/stripe.py
 msgid "This subscription has been canceled."
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende ändern oder bei Bedarf durch Änderung des
+#. nächsten Abbuchungstermins pausieren.
 #: provider/stripe.py
 msgid ""
 "You can modify your subscription or pause it by adjusting the next payment "
@@ -850,68 +1037,82 @@ msgid ""
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende per SEPA-Lastschrift hier kündigen.
 #: provider/stripe.py
 msgid "You can cancel your SEPA direct debit subscription here."
 msgstr ""
 
 #. from froide_payment
+#. de: SEPA-Lastschrift mit der IBAN {label}
 #: provider/stripe.py
 #, python-brace-format
 msgid "SEPA direct debit with IBAN {label}"
 msgstr ""
 
 #. from froide_payment
+#. de: Die IBAN für Deine SEPA-Lastschriftauftrag wurde aktualisiert.
 #: provider/stripe.py
 msgid "Your SEPA direct debit IBAN was updated successfully."
 msgstr ""
 
 #. from froide_payment
+#. de: Spende
 #: templates/froide_payment/order/default.html
 msgid "Donation"
 msgstr ""
 
 #. from froide_payment
+#. de: Dies ist eine Spende
 #: templates/froide_payment/order/default.html
 msgid "This is a donation"
 msgstr ""
 
 #. from froide_payment
+#. de: Dauerspende
 #: templates/froide_payment/order/default.html
 msgid "Subscription"
 msgstr ""
 
 #. from froide_payment
+#. de: Dauerspenden-Seite
 #: templates/froide_payment/order/default.html
 msgid "Subscription page"
 msgstr ""
 
 #. from froide_payment
+#. de: Deine IBAN erfordert Deine Adresse als zusätzliche Überprüfung.
 #: templates/froide_payment/payment/_sepa_form.html
 #: templates/froide_payment/payment/sepa.html
 msgid "Your IBAN requires your address details for verification."
 msgstr ""
 
 #. from froide_payment
+#. de: IBAN ändern
 #: templates/froide_payment/payment/_sepa_form.html
 msgid "Change IBAN"
 msgstr ""
 
 #. from froide_payment
+#. de: Jetzt spenden
 #: templates/froide_payment/payment/base.html
 msgid "Donate now"
 msgstr ""
 
 #. from froide_payment
+#. de: Schließe Deine Dauerspende ab:
 #: templates/froide_payment/payment/base.html
 msgid "Finish your recurring donation:"
 msgstr ""
 
 #. from froide_payment
+#. de: Schließe Deine Spende ab:
 #: templates/froide_payment/payment/base.html
 msgid "Finish your donation:"
 msgstr ""
 
 #. from froide_payment
+#. de: Du spendest <strong>%(amount)s&nbsp;€</strong>
+#. <mark>%(interval)s</mark>: %(description)s.
 #: templates/froide_payment/payment/base.html
 #, python-format
 msgid ""
@@ -921,6 +1122,8 @@ msgid ""
 msgstr ""
 
 #. from froide_payment
+#. de: Du spendest <strong>%(amount)s&nbsp;€</strong>:
+#. <mark>%(description)s</mark>.
 #: templates/froide_payment/payment/base.html
 #, python-format
 msgid ""
@@ -929,41 +1132,50 @@ msgid ""
 msgstr ""
 
 #. from froide_payment
+#. de: Du kannst Deine Dauerspende jederzeit online oder durch Kontaktaufnahme
+#. kündigen.
 #: templates/froide_payment/payment/base.html
 msgid "You can cancel your donation anytime online or by contacting us."
 msgstr ""
 
 #. from froide_payment
+#. de: Spende abschließen
 #: templates/froide_payment/payment/creditcard.html
 msgid "Finalize donation"
 msgstr ""
 
 #. from froide_payment
+#. de: Bist Du sicher, dass Du Deine Dauerspende kündigen willst?
 #: templates/froide_payment/subscription/_cancel_form.html
 msgid "Are you sure you want to cancel your subscription?"
 msgstr ""
 
 #. from froide_payment
+#. de: Deine Dauerspende
 #: templates/froide_payment/subscription/default.html
 msgid "Your subscription"
 msgstr ""
 
 #. from froide_payment
+#. de: Dauerspende ändern
 #: templates/froide_payment/subscription/default.html
 msgid "Modify subscription"
 msgstr ""
 
 #. from froide_payment
+#. de: Zahlungen dieser Dauerspende
 #: templates/froide_payment/subscription/default.html
 msgid "Payments on this subscription"
 msgstr ""
 
 #. from froide_payment
+#. de: Dauerspende jetzt kündigen
 #: templates/froide_payment/subscription/default.html
 msgid "Cancel subscription now"
 msgstr ""
 
 #. from froide_payment
+#. de: Diese Dauerspende wurde am %(date)s gekündigt.
 #: templates/froide_payment/subscription/default.html
 #, python-format
 msgid ""
@@ -973,22 +1185,28 @@ msgid ""
 msgstr ""
 
 #. from froide_payment
+#. de: Diese Dauerspende kann geändert werden, sobald die erste Zahlung
+#. eingegangen ist.
 #: templates/froide_payment/subscription/default.html
 msgid "This subscription can be modified after the first payment arrives."
 msgstr ""
 
 #. from froide_payment
+#. de: Spende an {}
 #: templatetags/froide_payment.py
 #, python-brace-format
 msgid "Donation to {}"
 msgstr ""
 
 #. from froide_payment
+#. de: Deine Dauerspende wurde gekündigt.
 #: views.py
 msgid "Your subscription has been canceled."
 msgstr ""
 
 #. from froide_payment
+#. de: Es ist ein Fehler bei unserem Zahlungsanbieter aufgetreten. Wir kümmern
+#. uns darum, dass Deine Dauerspende ordentlich gekündigt wurde.
 #: views.py
 msgid ""
 "An error occurred with our payment provider. We will investigate and make "
@@ -996,22 +1214,27 @@ msgid ""
 msgstr ""
 
 #. from froide_payment
+#. de: Deine Dauerspende wurde geändert.
 #: views.py
 msgid "Your subscription has been modified."
 msgstr ""
 
 #. from froide_payment
+#. de: Leider ist beim Ändern Deiner Dauerspende bei unserem Zahlungsanbieter
+#. ein Fehler aufgetreten.
 #: views.py
 msgid ""
 "There was an error modifying your subscription with our payment provider."
 msgstr ""
 
 #. from froide_payment
+#. de: Deine Dauerspende wurde geändert.
 #: views.py
 msgid "The subscription was modified."
 msgstr ""
 
 #. from froide_payment
+#. de: Deine Dauerspende wurde nicht geändert.
 #: views.py
 msgid "The subscription was not modified."
 msgstr ""

@@ -241,13 +241,37 @@ SELECT count(*) FROM djangocms_text_text
 
 ## 5. No model drift
 
+Check AT's own apps. **This must exit 0:**
+
 ```bash
-python manage.py makemigrations --check --dry-run
+python manage.py makemigrations --check --dry-run \
+  fds_cms fds_donation fds_mailing fds_newsletter theme
+# -> No changes detected in apps 'fds_mailing', 'fds_donation', 'theme', 'fds_cms', 'fds_newsletter'
 ```
 
-`fds_cms`, `fds_donation` and `theme` must produce nothing. Upstream packages
-(`account`, `publicbody`, `djangocms_frontend`, `contractor`, `sortabletable`)
-have pre-existing drift and are expected to appear — that is not new.
+Run it **unscoped** and it will always fail, on any database — five upstream apps
+report drift:
+
+| app | cause |
+|---|---|
+| `account` | django-oauth-toolkit 3.1.0; froide's migrations were generated against a newer one |
+| `publicbody` | django-parler 2.3 changed translation constraints |
+| `contractor`, `sortabletable` | built against django-cms 5.0; AT runs 5.1.1 (`cmsplugin_ptr` changed) |
+| `djangocms_frontend` | 2.5.1 ships a proxy `Image` model with no migration |
+
+Note `makemigrations --check` compares **models in code against migration files on
+disk** — it never touches the database, so this result is identical whichever dump
+is loaded. It is not a symptom of a bad import.
+
+Do not "fix" it by running `makemigrations`: every file it wants to write lands in
+`site-packages/` or the froide checkout, not in this repo, so it would be lost on
+the next install.
+
+Chasing the versions does not help either — measured, not assumed. Upgrading
+django-parler 2.3 → 2.4 clears `publicbody` and immediately introduces the same
+drift in `djangocms_alias`; upgrading django-oauth-toolkit past DE's 3.3.0 makes
+`account` worse, adding two new fields froide has no migration for. The drift
+moves, it does not go away. Leave it and scope the check.
 
 ---
 

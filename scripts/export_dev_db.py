@@ -197,8 +197,10 @@ def export_table(
         overrides: {col_name: sql_expression} replacing that column in the SELECT,
                    e.g. {'_created_by_id': 'NULL', 'created_by': "'dev'"}
         geom_cols: column names containing PostGIS geometry (auto ST_AsEWKT'd)
-        optional:  the table genuinely may not exist (an app this deployment does
-                   not install). Anything else missing is a bug and raises.
+        optional:  the table genuinely may not exist, either because this
+                   deployment does not install the app, or because the source
+                   database has not applied the migration that creates it yet.
+                   Anything else missing is a bug and raises.
     Returns:
         number of rows exported
     """
@@ -212,7 +214,10 @@ def export_table(
                 f"export_table: table {table!r} does not exist. If that is "
                 f"expected for this deployment, pass optional=True."
             )
-        print(f"  SKIP {table} (not in DB, optional)", file=ERR)
+        print(f"  SKIP {table} (not in source DB, optional)", file=ERR)
+        # Also record it in the SQL. A silently absent table is invisible to
+        # whoever loads the dump later; a comment makes it self-documenting.
+        OUT.write(f"-- SKIPPED {table}: not present in the source database\n")
         return 0
 
     all_cols, tbl_geom_cols, tbl_json_cols = get_table_columns(cursor, table)
@@ -589,6 +594,11 @@ def main() -> None:
             where="confirmed = TRUE",
             order_by="id",
             overrides={"user_id": "NULL"},
+            # Created by froide's publicbody migration 0052. Production is still
+            # on 0050, so the table is absent there and this exports nothing --
+            # which is correct, not an error. It starts producing rows once
+            # production catches up.
+            optional=True,
         )
 
         # ── 6. CMS pages and content ──────────────────────────────────────────
@@ -802,6 +812,9 @@ def main() -> None:
                 where=f"version_id IN ({version_ids_lit})",
                 order_by="id",
                 overrides={"user_id": "1"},
+                # Added by a later djangocms-versioning migration than production
+                # has applied. Absent there, present once it catches up.
+                optional=True,
             )
 
         # ── Footer ────────────────────────────────────────────────────────────

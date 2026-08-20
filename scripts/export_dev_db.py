@@ -47,17 +47,16 @@ import uuid
 # For standalone use, configure DJANGO_SETTINGS_MODULE and call django.setup().
 try:
     from django.db import connection
-    from django.apps import apps as django_apps
     connection.ensure_connection()
 except Exception:
-    import django
     import os
+
+    import django
     os.environ.setdefault(
         "DJANGO_SETTINGS_MODULE", "fragdenstaat_at.settings.production"
     )
     django.setup()
     from django.db import connection
-    from django.apps import apps as django_apps
 
 ERR = sys.stderr
 
@@ -261,7 +260,7 @@ def export_table(
     for row in rows:
         vals = ", ".join(
             pg_escape(v, col=col, geom_cols=geom_set, json_cols=tbl_json_cols)
-            for col, v in zip(all_cols, row)
+            for col, v in zip(all_cols, row, strict=True)
         )
         OUT.write(f'INSERT INTO "{table}" ({col_list}) VALUES ({vals}) ON CONFLICT DO NOTHING;\n')
         count += 1
@@ -272,8 +271,10 @@ def export_table(
 
 # ─── FK detection for columns that must be NULLed in plugin tables ────────────
 
-from django.contrib.auth import get_user_model as _get_user_model
-from django.db.models import ForeignKey as _DjFKField
+# Imported here rather than at the top of the file: Django has to be configured
+# first (see the setup block above), so these cannot move up.
+from django.contrib.auth import get_user_model as _get_user_model  # noqa: E402
+from django.db.models import ForeignKey as _DjFKField  # noqa: E402
 
 _FILER_DB_TABLES = {"filer_file", "filer_image", "filer_folder"}
 
@@ -344,8 +345,8 @@ def get_plugin_ids_in_placeholders(cursor, placeholder_ids: list) -> list:
 
 def get_plugin_type_map() -> dict:
     """Return {plugin_type_name: model_class} for all registered CMS plugins."""
-    from cms.plugin_pool import plugin_pool
     from cms.models import CMSPlugin
+    from cms.plugin_pool import plugin_pool
 
     result: dict = {}
     for plugin_cls in plugin_pool.get_all_plugins():
@@ -740,7 +741,7 @@ def main() -> None:
             for tbl in all_plugin_child_tables:
                 model = table_to_model.get(tbl)
                 null_cols = get_filer_fk_attnames(model) if model else set()
-                overrides = {col: "NULL" for col in null_cols}
+                overrides = dict.fromkeys(null_cols, "NULL")
 
                 n = export_table(
                     cursor,

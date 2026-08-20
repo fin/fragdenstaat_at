@@ -1,12 +1,14 @@
 from decimal import Decimal
 
-from django.db.models import Sum
+from django.conf import settings
+from django.db.models import DecimalField, ExpressionWrapper, F, Sum
 from django.urls import reverse
 from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
+from froide_payment.models import Subscription
 
 from froide.helper.auth import is_crew
 
@@ -16,7 +18,6 @@ from fragdenstaat_at.fds_mailing.cms_plugins import EmailRenderMixin, EmailTempl
 from .auth import get_donor_from_request
 from .forms import RecurrenceUpgradeForm
 from .models import (
-    RegularDonorsProgressBarCMSPlugin,
     DefaultDonation,
     DonationFormCMSPlugin,
     DonationFormViewCount,
@@ -25,6 +26,7 @@ from .models import (
     Donor,
     DonorEvent,
     EmailDonationButtonCMSPlugin,
+    RegularDonorsProgressBarCMSPlugin,
     RemoteDonationFormCMSPlugin,
     UpgradeRecurrenceFormCMSPlugin,
 )

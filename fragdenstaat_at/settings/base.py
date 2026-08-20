@@ -607,6 +607,13 @@ class FragDenStaatBase(German, Base):
         "froide.helper.middleware.XForwardedForMiddleware",
         "django.middleware.locale.LocaleMiddleware",  # needs to be before CommonMiddleware
         "django.contrib.sessions.middleware.SessionMiddleware",
+        # The one genuine middleware difference from DE, which has this enabled
+        # here. Left off because it is inert for AT: its only job is to attach
+        # request.site from SITE_ID, and nothing in froide or fragdenstaat_at
+        # reads request.site (checked). Enabling it costs a Site lookup per
+        # request and buys nothing today -- uncomment if something starts
+        # relying on request.site, or for exact parity with DE.
+        # "django.contrib.sites.middleware.CurrentSiteMiddleware",
         "django.middleware.common.CommonMiddleware",
         FROIDE_CSRF_MIDDLEWARE,
         "django.contrib.auth.middleware.AuthenticationMiddleware",

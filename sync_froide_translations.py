@@ -292,6 +292,7 @@ def main():
 
     added, adopted, skipped_ref = [], [], []
     skipped_obsolete = []
+    redundant = []
 
     for label, locale_dir, repo in discover_sources(
         set(args.app) or None, all_apps=args.all_apps
@@ -320,9 +321,11 @@ def main():
             # carrying the translation, one an empty stub that silently won at
             # runtime.
             live_msgids = None
+            de_entries = {}
             de_path = os.path.join(locale_dir, "de", "LC_MESSAGES", "django.po")
             if os.path.exists(de_path):
-                live_msgids = {key(e) for e in polib.pofile(de_path)}
+                de_entries = {key(e): e for e in polib.pofile(de_path)}
+                live_msgids = set(de_entries)
 
             for entry in source or []:
                 if entry.obsolete or not entry.msgid:
@@ -332,6 +335,20 @@ def main():
                     continue
                 if live_msgids is not None and key(entry) not in live_msgids:
                     skipped_obsolete.append((label, entry.msgid))
+                    continue
+
+                # Keep this an *override* catalog. de-at falls back to de, so an
+                # entry whose text matches the de translation renders identically
+                # whether it is here or not -- it is pure duplication that has to
+                # be re-synced by hand every time upstream rewords something.
+                # Only carry entries that actually say something different.
+                de_entry = de_entries.get(key(entry))
+                if (
+                    de_entry is not None
+                    and de_entry.msgstr == entry.msgstr
+                    and de_entry.msgstr_plural == entry.msgstr_plural
+                ):
+                    redundant.append((label, entry.msgid))
                     continue
                 adopted.append((label, make_entry(entry, label, entry.msgstr)))
                 seen.add(key(entry))
@@ -362,6 +379,16 @@ def main():
         print(breakdown(adopted))
         for label, e in adopted:
             print(f"  [{label}] {e.msgid[:70]!r} -> {e.msgstr[:50]!r}")
+    if redundant:
+        by = {}
+        for label, _m in redundant:
+            by[label] = by.get(label, 0) + 1
+        detail = ", ".join(f"{k}: {v}" for k, v in sorted(by.items()))
+        print(
+            f"\nSkipped {len(redundant)} entr(y/ies) identical to the de "
+            f"translation ({detail}) -- de-at falls back to de, so they would "
+            "render the same either way."
+        )
     if skipped_obsolete:
         print(
             f"\nSkipped {len(skipped_obsolete)} adopted entr(y/ies) whose msgid no "

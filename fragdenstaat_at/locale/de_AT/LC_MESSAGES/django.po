@@ -2292,12 +2292,6 @@ msgstr ""
 
 #. from froide
 #: froide/foirequest/templates/foirequest/request.html
-msgid "Do <strong>not include</strong> personal information in your request."
-msgstr ""
-"Schließen Sie <strong>keine</strong> persönlichen Daten in Ihre Anfrage ein."
-
-#. from froide
-#: froide/foirequest/templates/foirequest/request.html
 msgid "Do <strong>not ask</strong> for personal information."
 msgstr "Fragen Sie <strong>nicht</strong> nach persönlichen Informationen."
 
@@ -2423,11 +2417,6 @@ msgstr "nächste"
 #: froide/templates/pagination/pagination.html
 msgid "previous"
 msgstr "vorherige"
-
-#. from froide
-#: froide/foirequest/views/make_request.py
-msgid "Please use proper spelling."
-msgstr "Bitte achten Sie auf Ihre Rechtschreibung."
 
 #. from froide
 #: froide/foirequest/views/make_request.py
@@ -2896,16 +2885,6 @@ msgstr "Rang"
 
 #. from froide
 #: froide/publicbody/models.py
-msgid "Public Body Tag"
-msgstr "Behörden-Schlagwort"
-
-#. from froide
-#: froide/publicbody/models.py
-msgid "Public Body Tags"
-msgstr "Behörden-Schlagwörter"
-
-#. from froide
-#: froide/publicbody/models.py
 msgid "Tagged Public Body"
 msgstr "Verschlagwortete Behörde"
 
@@ -2962,12 +2941,6 @@ msgstr "oder"
 #, python-format
 msgid "%(name)s is a %(classification)s in %(juris)s on %(site_name)s"
 msgstr "%(name)s ist ein(e) %(classification)s in %(juris)s auf %(site_name)s"
-
-#. from froide
-#: froide/publicbody/templates/publicbody/jurisdiction.html
-#, python-format
-msgid "Freedom of Information<br/>in %(name)s"
-msgstr "Informationsfreiheit<br/> in %(name)s"
 
 #. from froide
 #: froide/publicbody/templates/publicbody/jurisdiction.html
@@ -3091,14 +3064,6 @@ msgstr "Besonderer Hinweis"
 #: froide/publicbody/templates/publicbody/show.html
 msgid "Summary of Results"
 msgstr "Zusammenfassung der Ergebnisse"
-
-#. from froide
-#: froide/publicbody/templates/publicbody/show.html
-#, python-format
-msgid "One requests to this public body"
-msgid_plural "%(count)s requests to this public body"
-msgstr[0] ""
-msgstr[1] ""
 
 #. from froide
 #: froide/publicbody/templates/publicbody/show.html
@@ -3465,34 +3430,6 @@ msgstr ""
 msgid "e.g. DE12..."
 msgstr "z.B. AT12..."
 
-#. from froide_payment
-#: froide_payment/forms.py
-msgid ""
-"By providing your payment information and confirming this payment, you "
-"authorise (A) Open Knowledge Foundation Deutschland e.V. and Stripe, our "
-"payment service provider and/or PPRO, its local service provider, to send "
-"instructions to your bank to debit your account and (B) your bank to debit "
-"your account in accordance with those instructions. As part of your rights, "
-"you are entitled to a refund from your bank under the terms and conditions "
-"of your agreement with your bank. A refund must be claimed within 8 weeks "
-"starting from the date on which your account was debited. Your rights are "
-"explained in a statement that you can obtain from your bank. You agree to "
-"receive notifications for future debits up to 2 days before they occur."
-msgstr ""
-"Durch Angabe Ihrer Zahlungsinformationen und der Bestätigung der "
-"vorliegenden Zahlung ermächtigen Sie (A) Forum Informationsfreiheit und "
-"Stripe, unseren Zahlungsdienstleister, bzw. PPRO, den lokalen "
-"Bankdienstleister von Stripe, Ihrem Kreditinstitut Anweisungen zur Belastung"
-" Ihres Kontos zu erteilen, und (B) Ihr Kreditinstitut, Ihr Konto gemäß "
-"diesen Anweisungen zu belasten. Im Rahmen Ihrer Rechte haben Sie, "
-"entsprechend den Vertragsbedingungen mit Ihrem Kreditinstitut, Anspruch auf "
-"eine Rückerstattung von Ihrem Kreditinstitut. Eine Rückerstattung muss "
-"innerhalb von 8 Wochen ab dem Tag, an dem Ihr Konto belastet wurde, geltend "
-"gemacht werden. Eine Erläuterung Ihrer Rechte können Sie von Ihrem "
-"Kreditinstitut anfordern. Sie erklären sich einverstanden, "
-"Benachrichtigungen über künftige Belastungen bis spätestens 2 Tage vor dem "
-"Buchungsdatum zu erhalten."
-
 #. from froide
 #: froide/templates/footer.html
 msgid ""
@@ -3556,6 +3493,11 @@ msgid ""
 msgstr ""
 
 #. from froide_payment
+#. SEPA direct debit mandate. Upstream's current German with the creditor
+#. changed to AT's legal entity -- the same substitution fin/froide-payment
+#. made on its fork. Recovered rather than retranslated: this is a legal
+#. formula, and the only Austria-specific part is who is being authorised.
+#. If upstream rewords the English, re-derive it the same way.
 #: forms.py
 msgid ""
 "By providing your payment information and confirming this payment, you "
@@ -3569,6 +3511,18 @@ msgid ""
 "obtain from your bank. You agree to receive notifications for future debits "
 "up to 2 days before they occur."
 msgstr ""
+"Durch Angabe Ihrer Zahlungsinformationen und der Bestätigung der "
+"vorliegenden Zahlung ermächtigen Sie (A) Forum Informationsfreiheit und "
+"Stripe, unseren Zahlungsdienstleister, Ihrem Kreditinstitut Anweisungen zur "
+"Belastung Ihres Kontos zu erteilen, und (B) Ihr Kreditinstitut, Ihr Konto "
+"gemäß diesen Anweisungen zu belasten. Im Rahmen Ihrer Rechte haben Sie, "
+"entsprechend den Vertragsbedingungen mit Ihrem Kreditinstitut, Anspruch auf "
+"eine Rückerstattung von Ihrem Kreditinstitut. Eine Rückerstattung muss "
+"innerhalb von 8 Wochen ab dem Tag, an dem Ihr Konto belastet wurde, geltend "
+"gemacht werden. Eine Erläuterung Ihrer Rechte können Sie von Ihrem "
+"Kreditinstitut anfordern. Sie erklären sich einverstanden, "
+"Benachrichtigungen über künftige Belastungen bis spätestens 2 Tage vor dem "
+"Buchungsdatum zu erhalten."
 
 #. from froide_payment
 #: forms.py

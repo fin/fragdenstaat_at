@@ -291,6 +291,7 @@ def main():
     seen = {key(e) for e in target}
 
     added, adopted, skipped_ref = [], [], []
+    skipped_obsolete = []
 
     for label, locale_dir, repo in discover_sources(
         set(args.app) or None, all_apps=args.all_apps
@@ -311,11 +312,26 @@ def main():
                 if os.path.exists(path):
                     source = polib.pofile(path)
 
+            # msgids the app still actually uses. Adopting from an old fork
+            # otherwise resurrects strings whose English source has since
+            # changed: froide-payment's SEPA mandate lost an "and/or PPRO"
+            # clause after the 2023 fork, so the fork's entry and the current
+            # one are different msgids and both landed in the catalog -- one
+            # carrying the translation, one an empty stub that silently won at
+            # runtime.
+            live_msgids = None
+            de_path = os.path.join(locale_dir, "de", "LC_MESSAGES", "django.po")
+            if os.path.exists(de_path):
+                live_msgids = {key(e) for e in polib.pofile(de_path)}
+
             for entry in source or []:
                 if entry.obsolete or not entry.msgid:
                     continue
                 has_text = entry.msgstr or any(entry.msgstr_plural.values())
                 if not has_text or key(entry) in seen:
+                    continue
+                if live_msgids is not None and key(entry) not in live_msgids:
+                    skipped_obsolete.append((label, entry.msgid))
                     continue
                 adopted.append((label, make_entry(entry, label, entry.msgstr)))
                 seen.add(key(entry))
@@ -346,6 +362,13 @@ def main():
         print(breakdown(adopted))
         for label, e in adopted:
             print(f"  [{label}] {e.msgid[:70]!r} -> {e.msgstr[:50]!r}")
+    if skipped_obsolete:
+        print(
+            f"\nSkipped {len(skipped_obsolete)} adopted entr(y/ies) whose msgid no "
+            "longer exists in the app's current catalog:"
+        )
+        for label, mid in skipped_obsolete:
+            print(f"  [{label}] {mid[:70]!r}")
     if skipped_ref:
         print("No de_AT catalog at the requested ref for: " + ", ".join(skipped_ref))
     if added:

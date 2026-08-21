@@ -6,6 +6,7 @@ from io import BytesIO
 from typing import Optional
 
 from django import forms
+from django.conf import settings
 from django.http import HttpResponse, StreamingHttpResponse
 from django.utils import formats, timezone
 from django.utils.text import slugify
@@ -26,6 +27,37 @@ from .tasks import (
 from .utils import format_decimal_amount, format_decimal_amount_with_currency
 
 MAX_DONATIONS_PER_PAGE = 26
+
+
+class ZWBExportDisabled(RuntimeError):
+    """Raised when a ZWB export is attempted while the kill switch is off."""
+
+
+def check_zwb_export_enabled():
+    """Refuse to run any ZWB export unless explicitly enabled.
+
+    The admin's "Export JZWB..." action is a one-click, high-consequence
+    operation with no preview step: it emails every selected donor their annual
+    donation receipt as a PDF, stamps ``receipt_date`` on their donations, and
+    writes a postcode-encrypted copy to external legal-retention storage. There
+    is no undo, and on a database restored from production the donor addresses
+    are real.
+
+    So it is off by default and has to be turned on deliberately, for the run,
+    by setting ``DONATION_ZWB_EXPORT_ENABLED = True``. Guarding here rather than
+    in the admin covers the Celery tasks too -- ``send_jzwb_mailing_task`` and
+    ``backup_jzwb_pdf_task`` reach the mailing and backup helpers without going
+    through the form.
+    """
+    if not getattr(settings, "DONATION_ZWB_EXPORT_ENABLED", False):
+        raise ZWBExportDisabled(
+            "ZWB export is disabled. It emails donation receipts to real "
+            "donors, sets receipt dates and writes to legal-retention storage, "
+            "so it must be enabled deliberately: set "
+            "DONATION_ZWB_EXPORT_ENABLED = True for the duration of the run. "
+            "Never enable it against a database restored from production "
+            "unless you intend to send those emails."
+        )
 
 
 class JZWBExportForm(forms.Form):
@@ -83,6 +115,7 @@ class JZWBExportForm(forms.Form):
         return response
 
     def run_export(self, queryset=None):
+        check_zwb_export_enabled()
         year = self.cleaned_data["year"]
         export_format = self.cleaned_data["export_format"]
         store_backup = self.cleaned_data["store_backup"]
@@ -376,6 +409,7 @@ def send_jzwb_mailing(
     store_backup: bool = True,
     set_receipt_date: bool = True,
 ):
+    check_zwb_export_enabled()
     if not donor.can_receive_receipt:
         return
 
@@ -424,6 +458,7 @@ def backup_jzwb(
     pdf_bytes: Optional[bytes] = None,
     ignore_receipt_date: Optional[datetime] = None,
 ):
+    check_zwb_export_enabled()
     pdf_generator = PostcodeEncryptedZWBPDFGenerator(
         donor, year=year, ignore_receipt_date=ignore_receipt_date
     )

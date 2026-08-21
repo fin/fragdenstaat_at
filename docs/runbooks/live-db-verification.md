@@ -431,6 +431,21 @@ env -u DJANGO_SETTINGS_MODULE -u DJANGO_CONFIGURATION \
   python -m pytest -m paypal -q
 ```
 
+**Also needs `lt` (localtunnel) on `PATH`**, which is not installed by the
+devcontainer:
+
+```bash
+npm install -g localtunnel
+```
+
+PayPal has to reach `live_server` to deliver `CHECKOUT.ORDER.APPROVED` and
+`PAYMENT.CAPTURE.COMPLETED`, and it cannot route to `localhost`. The test opens a
+public `*.loca.lt` tunnel and registers that as the webhook URL. This is the
+structural difference from Stripe, whose CLI polls outward and needs no inbound
+path. Note it does expose the test server publicly for the duration, and
+`loca.lt` is third-party infrastructure that rate-limits — a tunnel that comes up
+but delivers no webhook is the next thing to suspect, ahead of the test code.
+
 Four variables, not two: the first pair authenticates AT against PayPal, the
 second is a sandbox buyer account the browser logs in *as*. `settings/test.py`
 hardcodes `https://api.sandbox.paypal.com` and the tests assert `"sandbox"` is

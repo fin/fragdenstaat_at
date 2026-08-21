@@ -1,6 +1,8 @@
 import asyncio
 import os
+import pathlib
 import re
+import tempfile
 import time
 from decimal import Decimal
 
@@ -154,23 +156,81 @@ async def fill_donation_page(page: Page, donor_email):
     await page.get_by_label("Was ist drei plus vier?").fill("7")
 
 
-async def try_selectors(page: Page, selectors: list[str], value: str | None = None):
+async def try_selectors(
+    page: Page,
+    selectors: list[str],
+    value: str | None = None,
+    force: bool = False,
+):
+    """Fill or click the first matching selector. Returns whether it worked.
+
+    ``force`` skips Playwright's actionability checks. PayPal's login page
+    renders a #signupContainer whose .loginSignUpSeparator overlays the submit
+    button, so an ordinary click spends 30s retrying "element intercepts pointer
+    events" and then gives up -- the button is perfectly clickable, it just is
+    not the topmost node at its centre point.
+    """
     for sel in selectors:
         try:
             print("trying", sel)
             el = await page.query_selector(sel)
-            if el and el.is_visible():
+            if el and await el.is_visible():
                 print("found element", sel, value)
                 if value:
                     await el.fill(value)
                 else:
-                    await el.click()
+                    await el.click(force=force)
                 return True
         except Exception as e:
             print(e)
             continue
     print("failed")
     return False
+
+
+LOGIN_TIMEOUT = 60
+
+
+async def retry_selectors(page: Page, selectors, value, what: str, force=False):
+    """Poll for one of *selectors*, giving up after LOGIN_TIMEOUT seconds.
+
+    These used to be `while not entered: ...` with no bound, which meant the
+    test could only ever hang -- never fail. If the flow does not reach PayPal
+    (a locator change on our own donation form is enough), the loop polls a
+    localhost page for a PayPal login field forever, at 1s intervals and near
+    zero CPU, so it looks like a slow test rather than a broken one. Ctrl-C then
+    lands in asyncio internals and names nothing useful.
+
+    Failing here instead reports where the browser actually is, which is the
+    fact you need.
+    """
+    deadline = time.monotonic() + LOGIN_TIMEOUT
+    while time.monotonic() < deadline:
+        if await try_selectors(page, selectors, value, force=force):
+            return True
+        await asyncio.sleep(1)
+
+    # Playwright is driven over --remote-debugging-pipe, so the browser cannot
+    # be inspected from outside the test process. Capture the evidence here or
+    # it is lost when the run ends.
+    shot = pathlib.Path(tempfile.gettempdir()) / f"paypal-login-{what.split()[0]}.png"
+    html = shot.with_suffix(".html")
+    try:
+        await page.screenshot(path=str(shot), full_page=True)
+        html.write_text(await page.content(), encoding="utf-8")
+        saved = f"  screenshot: {shot}\n  html      : {html}\n"
+    except Exception as exc:  # pragma: no cover - diagnostics only
+        saved = f"  (could not capture page: {exc})\n"
+
+    raise AssertionError(
+        f"PayPal {what} did not appear within {LOGIN_TIMEOUT}s.\n"
+        f"  tried     : {selectors}\n"
+        f"  page url  : {page.url}\n"
+        f"  page title: {await page.title()!r}\n"
+        f"{saved}"
+        "If the URL is not on paypal.com the donation form never redirected -- "
+        "look there, not at the login helper."
+    )
 
 
 async def login_paypal(page: Page):
@@ -198,19 +258,19 @@ async def login_paypal(page: Page):
         "button:has-text('Log In')",
         "button:has-text('Log in')",
     ]
-    entered_username = False
-    while not entered_username:
-        entered_username = await try_selectors(page, email_selectors, test_account)
-        await asyncio.sleep(1)
+    await retry_selectors(page, email_selectors, test_account, what="email field")
 
     print("clicking button")
     await try_selectors(page, next_selectors)
     await asyncio.sleep(1)
-    entered_password = False
-    while not entered_password:
-        entered_password = await try_selectors(page, password_selectors, test_password)
-        await asyncio.sleep(1)
-    await try_selectors(page, login_selectors)
+    await retry_selectors(
+        page, password_selectors, test_password, what="password field"
+    )
+    # Submit. Forced, and bounded like the fields above: previously a failure
+    # here returned False and the test carried on *not logged in*, then waited
+    # for a redirect that could never arrive -- which read as a hang rather than
+    # as "the login button was never clicked".
+    await retry_selectors(page, login_selectors, None, what="login button", force=True)
 
 
 DONATION_DONE_URL = re.compile(r".*spenden/spende/spenden/abgeschlossen/.*")

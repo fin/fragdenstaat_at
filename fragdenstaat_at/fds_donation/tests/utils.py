@@ -2,16 +2,25 @@ import select
 import signal
 import subprocess
 import threading
-from queue import Queue
+from queue import Empty, Queue
 
 
 def subprocess_reader(process_args, stop_event, queue):
-    proc = subprocess.Popen(
-        process_args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        universal_newlines=True,
-    )
+    try:
+        proc = subprocess.Popen(
+            process_args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+        )
+    except BaseException as exc:
+        # Hand the failure to the reader instead of dying quietly in a thread.
+        # Without this a missing binary makes the queue stay empty forever and
+        # readline() blocks on it: the test hangs until pytest-timeout kills it,
+        # and the real cause (FileNotFoundError: 'lt') only shows up as an
+        # unrelated-looking PytestUnhandledThreadExceptionWarning.
+        queue.put(exc)
+        return
 
     poll_obj = select.poll()
     poll_obj.register(proc.stdout, select.POLLIN)
@@ -51,10 +60,29 @@ class ProcessReader:
         self.thread.start()
         return self
 
-    def readline(self):
+    READ_TIMEOUT = 60
+
+    def readline(self, timeout=None):
+        """Return the next line, re-raising anything the reader thread hit.
+
+        Bounded: the subprocess may simply stop producing output, and a bare
+        ``queue.get()`` would then wait forever.
+        """
         if not self.thread:
             raise Exception("Process not started")
-        return self.queue.get()
+        try:
+            item = self.queue.get(
+                timeout=self.READ_TIMEOUT if timeout is None else timeout
+            )
+        except Empty:
+            raise TimeoutError(
+                f"No output from {self.process_args!r} within "
+                f"{self.READ_TIMEOUT if timeout is None else timeout}s. "
+                "The process may have exited, or may never have started."
+            ) from None
+        if isinstance(item, BaseException):
+            raise item
+        return item
 
     def stop(self):
         if not self.thread:

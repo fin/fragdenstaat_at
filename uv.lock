@@ -1927,6 +1927,7 @@ dev = [
     { name = "pytest-django" },
     { name = "pytest-factoryboy" },
     { name = "pytest-playwright-asyncio" },
+    { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "ruff" },
     { name = "tblib" },
@@ -1986,7 +1987,7 @@ requires-dist = [
     { name = "elasticsearch-dsl", specifier = ">=8.0.0,<9.0.0" },
     { name = "fcdocs-annotate", git = "https://github.com/okfde/fcdocs-annotate.git?rev=main" },
     { name = "froide", git = "https://github.com/okfde/froide.git?rev=main" },
-    { name = "froide-payment", git = "https://github.com/okfde/froide-payment.git?rev=main" },
+    { name = "froide-payment", git = "https://github.com/fin/froide-payment.git?rev=2026-08-de-sync" },
     { name = "geoip2", specifier = ">=4.8.0" },
     { name = "gunicorn", marker = "extra == 'production'" },
     { name = "html-text", specifier = ">=0.7.0" },
@@ -2050,6 +2051,7 @@ dev = [
     { name = "pytest-django" },
     { name = "pytest-factoryboy", specifier = ">=2.8.1" },
     { name = "pytest-playwright-asyncio", specifier = ">=0.7.2" },
+    { name = "pytest-timeout", specifier = ">=2.4" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "ruff", specifier = ">=0.6.0" },
     { name = "tblib" },
@@ -2113,7 +2115,7 @@ dependencies = [
 [[package]]
 name = "froide-payment"
 version = "0.0.3"
-source = { git = "https://github.com/okfde/froide-payment.git?rev=main#8b816534903c4ad5d04efb27c3a11cfde0e9c094" }
+source = { git = "https://github.com/fin/froide-payment.git?rev=2026-08-de-sync#f7d3120ea07b8d29da0bc2ac89aa00f451ca62c6" }
 dependencies = [
     { name = "django-countries" },
     { name = "django-localflavor" },
@@ -3599,6 +3601,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/25/f5/cb415c3d40295292de14d3a7f678793570ac2171f51c9fb813d3f82ae71a/pytest_playwright_asyncio-0.9.0.tar.gz", hash = "sha256:d1a314387b29a50c18ffb427edf31a9d0b95a875969dcb244b3cc605e736fb0c", size = 17894, upload-time = "2026-08-10T10:20:17.383Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a2/85/fe200f5c6d5ac36c46bf497d576f22dcf34ee3d0ac651787df997b8ed63c/pytest_playwright_asyncio-0.9.0-py3-none-any.whl", hash = "sha256:dd0b90b9839d6d32150437ea3d84084e3e9d42547cf813402c94bd6aebfa272d", size = 18046, upload-time = "2026-08-10T10:20:19.159Z" },
+]
+
+[[package]]
+name = "pytest-timeout"
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ac/82/4c9ecabab13363e72d880f2fb504c5f750433b2b6f16e99f4ec21ada284c/pytest_timeout-2.4.0.tar.gz", hash = "sha256:7e68e90b01f9eff71332b25001f85c75495fc4e3a836701876183c4bcfd0540a", size = 17973, upload-time = "2025-05-05T19:44:34.99Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fa/b6/3127540ecdf1464a00e5a01ee60a1b09175f6913f0644ac748494d9c4b21/pytest_timeout-2.4.0-py3-none-any.whl", hash = "sha256:c42667e5cdadb151aeb5b26d114aff6bdf5a907f176a007a30b940d3d865b5c2", size = 14382, upload-time = "2025-05-05T19:44:33.502Z" },
 ]
 
 [[package]]

@@ -105,7 +105,20 @@ dependencies = [
   "websockets>=13.0.1",
   "xlrd>=2.0.1",
   "froide @ git+https://github.com/okfde/froide.git@main",
-  "froide-payment @ git+https://github.com/okfde/froide-payment.git@main",
+  # TEMPORARY fork pin. okfde/main sends application_context.locale =
+  # settings.LANGUAGE_CODE verbatim, so AT sends "de-at", which is not valid
+  # BCP-47 (the region subtag must be uppercase) and PayPal rejects the whole
+  # /v1/billing/subscriptions request with "violates schema" -- every recurring
+  # PayPal donation 400s. DE sends a bare "de" and never hits it.
+  #
+  # 2026-08-de-sync is okfde/main plus the three Austria-specific one-liners
+  # from the old fin fork, rebased: this locale fix in both subscription paths,
+  # and "de-at" added to Stripe's get_stripe_locales. Public over https, so no
+  # deploy key needed.
+  #
+  # Exit criterion: upstream them to okfde/froide-payment and repin to @main.
+  # Tracked in MERGE_PLAN.md 9.9.
+  "froide-payment @ git+https://github.com/fin/froide-payment.git@2026-08-de-sync",
   "sortabletable @ git+https://github.com/stefanw/djangocms-sortabletable.git@main",
   "fcdocs-annotate @ git+https://github.com/okfde/fcdocs-annotate.git@main",
   "qrcode>=7.3.1",
@@ -154,6 +167,11 @@ dev = [
   # fds_donation's tests carry @pytest.mark.asyncio. Running the Stripe ones
   # also needs the Stripe CLI and test keys -- see MERGE_PLAN.md 9.3.
   "pytest-asyncio>=0.24",
+  # The browser tests drive third-party sandboxes and have hung indefinitely
+  # more than once: an unbounded retry loop, and a Queue.get() waiting on a
+  # subprocess that never started. --timeout turns those into a stack trace
+  # instead of a run that looks merely slow.
+  "pytest-timeout>=2.4",
   # pytest-factoryboy < 2.8 calls __pytest_wrapped__ on a fixture, which modern
   # pytest no longer exposes, so collection of fds_donation's conftest dies with
   # AttributeError: 'FixtureFunctionDefinition' object has no attribute

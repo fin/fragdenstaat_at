@@ -34,6 +34,12 @@ SELECT
   (SELECT count(*) FROM cms_cmsplugin)                 AS plugins;
 ```
 
+```
+ donors | donations | payments | subscriptions | foirequests | users | plugins 
+--------+-----------+----------+---------------+-------------+-------+---------
+    381 |       730 |      663 |           138 |        4857 |  2745 |     757
+```
+
 `foirequests` and `users` also tell you the **migration window** — the CMS content
 is trivial by comparison, so those are what determine downtime.
 
@@ -351,7 +357,7 @@ env -u DJANGO_SETTINGS_MODULE -u DJANGO_CONFIGURATION \
   python -m pytest -q --create-db
 ```
 
-Expect **118 passed, 3 skipped, 11 deselected**.
+Expect **256 passed, 1 skipped, 11 deselected**.
 
 Two traps:
 
@@ -369,3 +375,84 @@ Two traps:
 
 Note how long step 3 takes on live data. It sets the production maintenance
 window, and `foirequest`/`account` are the tables that dominate it — not the CMS.
+
+---
+
+## 11. Donation system — Stripe and PayPal
+
+Section 8 checks the donation *data* that survived the import. It cannot check
+that money actually moves: the extract carries **zero donations**, and the
+banktransfer tests in the default suite never touch a payment provider. These
+are the only tests that exercise a real provider end to end, and they are
+deselected by default (`-m "not stripe and not paypal"` in `pytest.ini`) because
+they need credentials.
+
+Like section 9, these run against `test_fragdenstaat_at`, not the imported
+extract — but run them *after* an import, because a provider misconfiguration
+and a bad import look identical from the donation admin.
+
+### Stripe (8 tests)
+
+```bash
+export STRIPE_TEST_PUBLIC_KEY=pk_test_...
+export STRIPE_TEST_SECRET_KEY=sk_test_...
+
+env -u DJANGO_SETTINGS_MODULE -u DJANGO_CONFIGURATION \
+  DATABASE_URL="postgis://fragdenstaat_at:fragdenstaat_at@db:5432/fragdenstaat_at" \
+  python -m pytest -m stripe -q
+```
+
+`settings/test.py` already wires both keys into the `creditcard` and `sepa`
+variants — nothing to configure by hand. The secret key **must** start with
+`sk_test_`; the fixture asserts it, so a live key fails loudly rather than
+charging anyone.
+
+**You do not need to run `stripe listen` yourself.** `stripe_sepa_setup` starts
+the CLI forwarder itself, pointed at the `live_server` URL (a random port), and
+reads the signing secret back out of it. The Stripe CLI must be on `PATH` — it
+is baked into `.devcontainer/Dockerfile`, so this only bites outside the
+devcontainer.
+
+Covers: card once/recurring, quick donation, SEPA once, SEPA recurring, and the
+failure paths (declined, disputed, additional fields, shortened interval). The
+recurring ones are the reason §9.8 matters — they build a `Plan`, which is where
+the `slug` overflow used to 500.
+
+### PayPal (3 tests)
+
+```bash
+export PAYPAL_TEST_CLIENT_ID=...      # sandbox REST app
+export PAYPAL_TEST_SECRET=...
+export PAYPAL_TEST_ACCOUNT=...        # sandbox *buyer* login, not the app
+export PAYPAL_TEST_PASSWORD=...
+
+env -u DJANGO_SETTINGS_MODULE -u DJANGO_CONFIGURATION \
+  DATABASE_URL="postgis://fragdenstaat_at:fragdenstaat_at@db:5432/fragdenstaat_at" \
+  python -m pytest -m paypal -q
+```
+
+Four variables, not two: the first pair authenticates AT against PayPal, the
+second is a sandbox buyer account the browser logs in *as*. `settings/test.py`
+hardcodes `https://api.sandbox.paypal.com` and the tests assert `"sandbox"` is
+in the endpoint, so these cannot hit production.
+
+Covers `test_paypal_once`, `test_paypal_recurring`, `test_paypal_cancel`.
+
+### Both at once
+
+```bash
+python -m pytest -m "stripe or paypal" -q     # 11 tests
+```
+
+### Gotchas
+
+- **Missing credentials raise, they do not skip.** The autouse fixtures are named
+  `skip_stripe_if_no_key` / `skip_stripe_if_no_cli` but call `raise
+  RuntimeError`. An unset key is a loud failure, not a quiet pass — read the
+  message before assuming the payment code is broken.
+- **These are real browser tests** (`async` + Playwright chromium), pinned to one
+  xdist worker via `@pytest.mark.xdist_group("sequential")`. They are slow and
+  they talk to third-party sandboxes, so treat a single flake as a flake and a
+  reproducible failure as real.
+- **PayPal's sandbox is the flakier of the two.** It drives a real login form on
+  PayPal's side, which changes without notice.

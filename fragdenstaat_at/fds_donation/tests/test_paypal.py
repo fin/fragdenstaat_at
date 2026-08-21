@@ -18,6 +18,12 @@ from .utils import ProcessReader
 
 
 class PaypalWebhookForwarder:
+    # Waiting for the tunnel to come up and waiting for PayPal to deliver are
+    # not the same kind of wait, and sharing one timeout made a slow sandbox
+    # look like a dead process.
+    TUNNEL_STARTUP_TIMEOUT = 30
+    WEBHOOK_WAIT_TIMEOUT = 240
+
     # WEBHOOK_URL_RE = re.compile(r"https://\w+.serveo.net")
     # HTTP_RE = re.compile(r"HTTP request from")
     WEBHOOK_URL_RE = re.compile(r"https://[-\w]+.loca.lt")
@@ -51,7 +57,9 @@ class PaypalWebhookForwarder:
         process_args = ["lt", "--port", self.forward_port, "--print-requests"]
         self.proc = ProcessReader(process_args)
         self.proc.start()
-        line = self.proc.readline()
+        # Tunnel startup: fast, or it is broken. loca.lt prints its URL within
+        # seconds, so a long wait here would only delay a clear failure.
+        line = self.proc.readline(timeout=self.TUNNEL_STARTUP_TIMEOUT)
         match = self.WEBHOOK_URL_RE.search(line)
         if match:
             self.webhook_url = match.group(0)
@@ -108,8 +116,21 @@ class PaypalWebhookForwarder:
         http_request_count = 0
         try:
             if exc_val is None:
+                deadline = time.monotonic() + self.WEBHOOK_WAIT_TIMEOUT
                 while True:
-                    line = self.proc.readline()
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise TimeoutError(
+                            "PayPal delivered no further webhook within "
+                            f"{self.WEBHOOK_WAIT_TIMEOUT}s via {self.webhook_url}. "
+                            f"Seen so far: {sorted(self.seen_event_set)}; still "
+                            f"waiting for "
+                            f"{sorted(self.target_event_set - self.seen_event_set)}. "
+                            "Sandbox delivery is slow and loca.lt is flaky -- "
+                            "check the tunnel is still up before suspecting the "
+                            "payment code."
+                        )
+                    line = self.proc.readline(timeout=remaining)
                     print("Forwarder Log", repr(line.encode("utf-8")))
                     if self.HTTP_RE.search(line):
                         http_request_count += 1

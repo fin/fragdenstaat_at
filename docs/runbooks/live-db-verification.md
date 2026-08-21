@@ -465,6 +465,11 @@ in the endpoint, so these cannot hit production.
 
 Covers `test_paypal_once`, `test_paypal_recurring`, `test_paypal_cancel`.
 
+Give it a generous `--timeout`. The recurring test waits up to 240s for PayPal
+to deliver `BILLING.SUBSCRIPTION.ACTIVATED` and `PAYMENT.SALE.COMPLETED` through
+the tunnel, on top of the browser steps, so `--timeout=600` rather than the 180
+that suffices elsewhere.
+
 ### Both at once
 
 ```bash

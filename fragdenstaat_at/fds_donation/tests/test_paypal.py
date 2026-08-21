@@ -202,6 +202,29 @@ async def left_login_page(page: Page, previous_url: str, timeout: int = 20) -> b
     return page.url != previous_url and not LOGIN_URL_RE.search(page.url)
 
 
+async def paypal_error_text(page: Page) -> str | None:
+    """Return PayPal's own error banner, if the page is showing one.
+
+    Worth checking before blaming the automation: a rejected credential and a
+    click that never landed both leave you sitting on /signin, and only this
+    tells them apart.
+    """
+    for sel in (
+        "p.notification-critical",
+        ".errorMessage:not(.hide)",
+        "[role=alert]",
+    ):
+        try:
+            el = await page.query_selector(sel)
+            if el and await el.is_visible():
+                text = (await el.inner_text()).strip()
+                if text:
+                    return text
+        except Exception:
+            continue
+    return None
+
+
 async def fail_with_page_state(page: Page, what: str, hint: str):
     """Raise with the page URL, title, a screenshot and the raw HTML."""
     slug = what.replace(" ", "-")
@@ -213,6 +236,10 @@ async def fail_with_page_state(page: Page, what: str, hint: str):
         saved = f"  screenshot: {shot}\n  html      : {html}\n"
     except Exception as exc:  # pragma: no cover - diagnostics only
         saved = f"  (could not capture page: {exc})\n"
+    reported = await paypal_error_text(page)
+    if reported:
+        # PayPal told us what is wrong; its message beats our guess.
+        hint = f"PayPal says: {reported!r}\n{hint}"
     raise AssertionError(
         f"PayPal: {what}.\n"
         f"  page url  : {page.url}\n"
@@ -277,12 +304,19 @@ async def login_paypal(page: Page):
         "input[type=password]",
         "input[name='login_password']",
     ]
+    # Ids first: PayPal renders this page in the buyer's language, so the
+    # text-based selectors below only ever match by luck.
     next_selectors = [
+        "#btnNext",
+        "button[name='btnNext']",
+        "button:has-text('Weiter')",
         "button:has-text('Next')",
         "button:has-text('Continue')",
     ]
     login_selectors = [
         "button#btnLogin",
+        "button[name='btnLogin']",
+        "button:has-text('Einloggen')",
         "button[name='action']",
         "button[value='submitPassword']",
         "button:has-text('Log In')",
@@ -314,8 +348,11 @@ async def login_paypal(page: Page):
                 page,
                 "login did not submit",
                 "Filled both fields but the page never left the login step. "
-                "#btnLogin is overlaid by .loginSignUpSeparator, so a click can "
-                "be swallowed by the overlay.",
+                "If PayPal reported an error above, the credentials are wrong -- "
+                "check PAYPAL_TEST_PASSWORD survived the shell (quote it: a $ "
+                "or backtick in an unquoted export is silently truncated). "
+                "Otherwise the submit never landed: #btnLogin sits under "
+                ".loginSignUpSeparator, so a click can be swallowed.",
             )
 
 

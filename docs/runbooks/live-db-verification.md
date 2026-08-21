@@ -435,8 +435,13 @@ env -u DJANGO_SETTINGS_MODULE -u DJANGO_CONFIGURATION \
 devcontainer:
 
 ```bash
-npm install -g localtunnel
+pnpm add -g localtunnel
 ```
+
+Use pnpm, not `npm -g`. `PNPM_HOME` (`~/.local/share/pnpm`) is a mounted volume
+(`pnpm_cache` in `devcontainer.json`), so a pnpm global install survives a
+rebuild; an npm global goes into the nvm directory inside the image and does
+not.
 
 PayPal has to reach `live_server` to deliver `CHECKOUT.ORDER.APPROVED` and
 `PAYMENT.CAPTURE.COMPLETED`, and it cannot route to `localhost`. The test opens a

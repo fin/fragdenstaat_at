@@ -31,8 +31,12 @@ from django.test import Client  # noqa: E402
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--min-bytes", type=int, default=2000,
-                    help="flag 200s smaller than this as suspiciously short")
+    ap.add_argument(
+        "--min-bytes",
+        type=int,
+        default=2000,
+        help="flag 200s smaller than this as suspiciously short",
+    )
     args = ap.parse_args()
 
     settings.FRONTEND_DEBUG = False
@@ -67,7 +71,8 @@ def main() -> int:
             failures.append(f"{url} (only {size} bytes)")
 
     errors = [
-        line for line in log.getvalue().splitlines()
+        line
+        for line in log.getvalue().splitlines()
         if "Error" in line or "Invalid" in line or "Traceback" in line
     ]
 

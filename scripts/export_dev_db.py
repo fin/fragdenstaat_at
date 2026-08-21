@@ -47,11 +47,13 @@ import uuid
 # For standalone use, configure DJANGO_SETTINGS_MODULE and call django.setup().
 try:
     from django.db import connection
+
     connection.ensure_connection()
 except Exception:
     import os
 
     import django
+
     os.environ.setdefault(
         "DJANGO_SETTINGS_MODULE", "fragdenstaat_at.settings.production"
     )
@@ -86,12 +88,18 @@ sys.stdout = sys.stderr
 
 # ─── Value escaping ───────────────────────────────────────────────────────────
 
+
 def pg_str(s: str) -> str:
     """Single-quote a string, escaping embedded quotes and backslashes."""
     return "'" + str(s).replace("'", "''") + "'"
 
 
-def pg_escape(val, col: str = "", geom_cols: frozenset = frozenset(), json_cols: frozenset = frozenset()) -> str:
+def pg_escape(
+    val,
+    col: str = "",
+    geom_cols: frozenset = frozenset(),
+    json_cols: frozenset = frozenset(),
+) -> str:
     """Convert a Python value to a safe PostgreSQL literal."""
     if val is None:
         return "NULL"
@@ -178,6 +186,7 @@ def get_content_type_id(cursor, app_label: str, model: str) -> int | None:
 
 # ─── Core export function ──────────────────────────────────────────────────────
 
+
 def export_table(
     cursor,
     table: str,
@@ -234,13 +243,13 @@ def export_table(
     select_parts = []
     for col in all_cols:
         if col in overrides:
-            select_parts.append(f"{overrides[col]} AS \"{col}\"")
+            select_parts.append(f'{overrides[col]} AS "{col}"')
         elif col in geom_set:
-            select_parts.append(f"ST_AsEWKT(\"{col}\") AS \"{col}\"")
+            select_parts.append(f'ST_AsEWKT("{col}") AS "{col}"')
         elif col in tbl_json_cols:
             select_parts.append(f'CAST("{col}" AS text) AS "{col}"')
         else:
-            select_parts.append(f"\"{col}\"")
+            select_parts.append(f'"{col}"')
 
     sql = f'SELECT {", ".join(select_parts)} FROM "{table}"'
     if where:
@@ -262,7 +271,9 @@ def export_table(
             pg_escape(v, col=col, geom_cols=geom_set, json_cols=tbl_json_cols)
             for col, v in zip(all_cols, row, strict=True)
         )
-        OUT.write(f'INSERT INTO "{table}" ({col_list}) VALUES ({vals}) ON CONFLICT DO NOTHING;\n')
+        OUT.write(
+            f'INSERT INTO "{table}" ({col_list}) VALUES ({vals}) ON CONFLICT DO NOTHING;\n'
+        )
         count += 1
 
     print(f"  {table}: {count} rows", file=ERR)
@@ -306,6 +317,7 @@ def get_filer_fk_attnames(model) -> set:
 
 # ─── CMS helpers ──────────────────────────────────────────────────────────────
 
+
 def get_published_object_ids(cursor, app_label: str, model: str) -> list:
     """Return object_ids of all published versions for a content type."""
     ct_id = get_content_type_id(cursor, app_label, model)
@@ -325,8 +337,8 @@ def get_placeholder_ids_for_content(cursor, ct_id: int, object_ids: list) -> lis
         return []
     ids_lit = ", ".join(str(i) for i in object_ids)
     cursor.execute(
-        f'SELECT id FROM cms_placeholder '
-        f'WHERE content_type_id = %s AND object_id IN ({ids_lit})',
+        f"SELECT id FROM cms_placeholder "
+        f"WHERE content_type_id = %s AND object_id IN ({ids_lit})",
         [ct_id],
     )
     return [row[0] for row in cursor.fetchall()]
@@ -343,6 +355,7 @@ def get_plugin_ids_in_placeholders(cursor, placeholder_ids: list) -> list:
 
 # ─── Plugin model discovery ───────────────────────────────────────────────────
 
+
 def get_plugin_type_map() -> dict:
     """Return {plugin_type_name: model_class} for all registered CMS plugins."""
     from cms.models import CMSPlugin
@@ -358,9 +371,9 @@ def get_plugin_type_map() -> dict:
 
 # ─── Main export ──────────────────────────────────────────────────────────────
 
+
 def main() -> None:
     with connection.cursor() as cursor:
-
         # ── Pre-collect IDs for CMS filtering ────────────────────────────────
         print("Collecting published content IDs...", file=ERR)
 
@@ -418,14 +431,21 @@ def main() -> None:
         print(f"  {len(pub_ac_ids)} published alias contents", file=ERR)
         print(f"  {len(static_ph_rows)} static placeholders", file=ERR)
         print(f"  {len(all_ph_ids)} placeholders total", file=ERR)
-        print(f"  {len(all_plugin_ids)} plugins across {len(published_plugin_types)} types", file=ERR)
+        print(
+            f"  {len(all_plugin_ids)} plugins across {len(published_plugin_types)} types",
+            file=ERR,
+        )
 
         # ID literal helpers (used in WHERE clauses)
         pc_ids_lit = ", ".join(str(i) for i in pub_pc_ids) if pub_pc_ids else "NULL"
         ac_ids_lit = ", ".join(str(i) for i in pub_ac_ids) if pub_ac_ids else "NULL"
         ph_ids_lit = ", ".join(str(i) for i in all_ph_ids) if all_ph_ids else "NULL"
-        plugin_ids_lit = ", ".join(str(i) for i in all_plugin_ids) if all_plugin_ids else "NULL"
-        version_ids_lit = ", ".join(str(i) for i in version_ids) if version_ids else "NULL"
+        plugin_ids_lit = (
+            ", ".join(str(i) for i in all_plugin_ids) if all_plugin_ids else "NULL"
+        )
+        version_ids_lit = (
+            ", ".join(str(i) for i in version_ids) if version_ids else "NULL"
+        )
 
         # Export ALL pages to keep the full tree structure intact.
         # cms_page rows contain no PII (only tree metadata and template choices).
@@ -455,7 +475,9 @@ def main() -> None:
         # ── Drop all existing tables in the target database ───────────────────
         # Runs at load time against dev, before the schema is recreated, so it
         # works regardless of what migration state dev was previously at.
-        OUT.write("-- Drop all existing tables (if any) so the schema below loads cleanly\n")
+        OUT.write(
+            "-- Drop all existing tables (if any) so the schema below loads cleanly\n"
+        )
         OUT.write(
             "DO $$ DECLARE t text; BEGIN\n"
             "  FOR t IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' LOOP\n"
@@ -467,6 +489,7 @@ def main() -> None:
         # ── Schema dump (CREATE TABLE, indexes, sequences, etc.) ─────────────
         print("Dumping production schema via pg_dump...", file=ERR)
         from django.conf import settings as _settings
+
         _db = _settings.DATABASES["default"]
         _pg_env = {**os.environ}
         if _db.get("PASSWORD"):
@@ -490,7 +513,9 @@ def main() -> None:
         # ── 1. Synthetic dev user ─────────────────────────────────────────────
         print("\nExporting prerequisites...", file=ERR)
         _user_table = _get_user_model()._meta.db_table
-        OUT.write(f"-- ── Auth: synthetic dev user (id=1, table: {_user_table}) ───────────────\n")
+        OUT.write(
+            f"-- ── Auth: synthetic dev user (id=1, table: {_user_table}) ───────────────\n"
+        )
         OUT.write(
             f'INSERT INTO "{_user_table}" '
             "(id, password, last_login, is_superuser, username, first_name, last_name, "
@@ -507,33 +532,49 @@ def main() -> None:
         )
 
         # ── 2. Content types (needed for versioning GenericFKs) ───────────────
-        OUT.write("-- ── Content types ──────────────────────────────────────────────────────\n")
+        OUT.write(
+            "-- ── Content types ──────────────────────────────────────────────────────\n"
+        )
         export_table(cursor, "django_content_type", order_by="id")
 
         # ── 3. Sites ──────────────────────────────────────────────────────────
-        OUT.write("\n-- ── Sites ──────────────────────────────────────────────────────────────\n")
+        OUT.write(
+            "\n-- ── Sites ──────────────────────────────────────────────────────────────\n"
+        )
         export_table(cursor, "django_site", order_by="id")
 
         # ── 4. Migrations (tracks applied migrations / model versions) ─────────
-        OUT.write("\n-- ── Applied migrations (for tracking database/model versions) ───────────\n")
+        OUT.write(
+            "\n-- ── Applied migrations (for tracking database/model versions) ───────────\n"
+        )
         export_table(cursor, "django_migrations", order_by="id")
 
         # ── 5. PublicBody reference data ──────────────────────────────────────
         print("\nExporting publicbody data...", file=ERR)
 
-        OUT.write("\n-- ── taggit Tag (used by various M2M filters in CMS plugins) ────────────\n")
+        OUT.write(
+            "\n-- ── taggit Tag (used by various M2M filters in CMS plugins) ────────────\n"
+        )
         export_table(cursor, "taggit_tag", order_by="id")
 
-        OUT.write("\n-- ── Campaigns (public campaigns, needed for donation form purpose list) ──\n")
+        OUT.write(
+            "\n-- ── Campaigns (public campaigns, needed for donation form purpose list) ──\n"
+        )
         export_table(cursor, "froide_campaign_campaign", order_by="id", optional=True)
 
-        OUT.write("\n-- ── Classification (MP_Node tree) ─────────────────────────────────────\n")
+        OUT.write(
+            "\n-- ── Classification (MP_Node tree) ─────────────────────────────────────\n"
+        )
         export_table(cursor, "publicbody_classification", order_by="path")
 
-        OUT.write("\n-- ── Category (MP_Node tree, TagBase) ──────────────────────────────────\n")
+        OUT.write(
+            "\n-- ── Category (MP_Node tree, TagBase) ──────────────────────────────────\n"
+        )
         export_table(cursor, "publicbody_category", order_by="path")
 
-        OUT.write("\n-- ── Jurisdiction (region_id → NULL, GeoRegion not exported) ───────────\n")
+        OUT.write(
+            "\n-- ── Jurisdiction (region_id → NULL, GeoRegion not exported) ───────────\n"
+        )
         export_table(
             cursor,
             "publicbody_jurisdiction",
@@ -541,7 +582,9 @@ def main() -> None:
             overrides={"region_id": "NULL"},
         )
 
-        OUT.write("\n-- ── FoiLaw (mediator_id → NULL initially, restored after publicbodies) ─\n")
+        OUT.write(
+            "\n-- ── FoiLaw (mediator_id → NULL initially, restored after publicbodies) ─\n"
+        )
         export_table(
             cursor,
             "publicbody_foilaw",
@@ -549,7 +592,9 @@ def main() -> None:
             overrides={"mediator_id": "NULL"},
         )
 
-        OUT.write("\n-- ── FoiLaw translations (parler) ───────────────────────────────────────\n")
+        OUT.write(
+            "\n-- ── FoiLaw translations (parler) ───────────────────────────────────────\n"
+        )
         # NB: "publicbody_foilaw_translation", not "publicbody_foilawtranslation".
         # froide overrides db_table on the parler translation model. The wrong name
         # silently exported nothing, so every FoiLaw arrived with no name,
@@ -557,7 +602,9 @@ def main() -> None:
         # parler.models.DoesNotExist.
         export_table(cursor, "publicbody_foilaw_translation", order_by="id")
 
-        OUT.write("\n-- ── FoiLaw combined (meta-law M2M self-ref) ───────────────────────────\n")
+        OUT.write(
+            "\n-- ── FoiLaw combined (meta-law M2M self-ref) ───────────────────────────\n"
+        )
         export_table(cursor, "publicbody_foilaw_combined", order_by="id")
 
         OUT.write(
@@ -575,20 +622,28 @@ def main() -> None:
             geom_cols=("geo",),
         )
 
-        OUT.write("\n-- ── Restore foilaw.mediator_id after publicbodies are loaded ───────────\n")
+        OUT.write(
+            "\n-- ── Restore foilaw.mediator_id after publicbodies are loaded ───────────\n"
+        )
         for law_id, mediator_id in mediator_mappings:
             OUT.write(
                 f'UPDATE "publicbody_foilaw" SET mediator_id = {mediator_id} '
                 f"WHERE id = {law_id};\n"
             )
 
-        OUT.write("\n-- ── PublicBody ↔ FoiLaw (M2M) ─────────────────────────────────────────\n")
+        OUT.write(
+            "\n-- ── PublicBody ↔ FoiLaw (M2M) ─────────────────────────────────────────\n"
+        )
         export_table(cursor, "publicbody_publicbody_laws", order_by="id")
 
-        OUT.write("\n-- ── PublicBody categories (M2M through CategorizedPublicBody) ──────────\n")
+        OUT.write(
+            "\n-- ── PublicBody categories (M2M through CategorizedPublicBody) ──────────\n"
+        )
         export_table(cursor, "publicbody_categorizedpublicbody", order_by="id")
 
-        OUT.write("\n-- ── PublicBody contacts (confirmed=True only, user_id → NULL) ──────────\n")
+        OUT.write(
+            "\n-- ── PublicBody contacts (confirmed=True only, user_id → NULL) ──────────\n"
+        )
         export_table(
             cursor,
             "publicbody_publicbodycontact",
@@ -608,7 +663,9 @@ def main() -> None:
         if not pub_pc_ids:
             print("  No published page content found — skipping CMS export", file=ERR)
         else:
-            OUT.write("\n-- ── CMS Pages (full tree for hierarchy, username fields scrubbed) ─────\n")
+            OUT.write(
+                "\n-- ── CMS Pages (full tree for hierarchy, username fields scrubbed) ─────\n"
+            )
             # cms_page is an MP_Node; export all pages reachable as ancestors
             # created_by / changed_by are CharField not FK → replace with 'dev'
             export_table(
@@ -622,7 +679,9 @@ def main() -> None:
                 },
             )
 
-            OUT.write("\n-- ── CMS Page Extension (fds_cms, image_id → NULL) ──────────────────────\n")
+            OUT.write(
+                "\n-- ── CMS Page Extension (fds_cms, image_id → NULL) ──────────────────────\n"
+            )
             export_table(
                 cursor,
                 "fds_cms_fdspageextension",
@@ -631,7 +690,9 @@ def main() -> None:
                 overrides={"image_id": "NULL"},
             )
 
-            OUT.write("\n-- ── CMS PageUrl ────────────────────────────────────────────────────────\n")
+            OUT.write(
+                "\n-- ── CMS PageUrl ────────────────────────────────────────────────────────\n"
+            )
             export_table(
                 cursor,
                 "cms_pageurl",
@@ -639,7 +700,9 @@ def main() -> None:
                 order_by="id",
             )
 
-            OUT.write("\n-- ── CMS PageContent (published versions only, usernames scrubbed) ──────\n")
+            OUT.write(
+                "\n-- ── CMS PageContent (published versions only, usernames scrubbed) ──────\n"
+            )
             export_table(
                 cursor,
                 "cms_pagecontent",
@@ -653,7 +716,9 @@ def main() -> None:
 
         # ── 7. Static placeholders (footer, header, global blocks) ───────────
         if static_ph_rows:
-            OUT.write("\n-- ── CMS Static placeholders (footer, header, etc.) ─────────────────────\n")
+            OUT.write(
+                "\n-- ── CMS Static placeholders (footer, header, etc.) ─────────────────────\n"
+            )
             # draft_id must be NOT NULL; point it to the same placeholder as public_id
             # so we only need one copy of the content in dev.
             for sp_id, public_id in static_ph_rows:
@@ -668,22 +733,28 @@ def main() -> None:
                     site_val = str(site_id) if site_id is not None else "NULL"
                     OUT.write(
                         f'INSERT INTO "cms_staticplaceholder" '
-                        f'(id, name, code, draft_id, public_id, dirty, creation_method, site_id) '
-                        f'VALUES ({sp_id}, {pg_str(name)}, {pg_str(code)}, '
-                        f'{public_id}, {public_id}, '
-                        f'{"TRUE" if dirty else "FALSE"}, {pg_str(creation_method)}, {site_val}) '
-                        f'ON CONFLICT DO NOTHING;\n'
+                        f"(id, name, code, draft_id, public_id, dirty, creation_method, site_id) "
+                        f"VALUES ({sp_id}, {pg_str(name)}, {pg_str(code)}, "
+                        f"{public_id}, {public_id}, "
+                        f"{'TRUE' if dirty else 'FALSE'}, {pg_str(creation_method)}, {site_val}) "
+                        f"ON CONFLICT DO NOTHING;\n"
                     )
             print(f"  cms_staticplaceholder: {len(static_ph_rows)} rows", file=ERR)
 
         # ── 8. Alias categories and aliases ───────────────────────────────────
-        OUT.write("\n-- ── djangocms-alias: categories ────────────────────────────────────────\n")
+        OUT.write(
+            "\n-- ── djangocms-alias: categories ────────────────────────────────────────\n"
+        )
         export_table(cursor, "djangocms_alias_category", order_by="id")
 
-        OUT.write("\n-- ── djangocms-alias: aliases (groupers) ────────────────────────────────\n")
+        OUT.write(
+            "\n-- ── djangocms-alias: aliases (groupers) ────────────────────────────────\n"
+        )
         export_table(cursor, "djangocms_alias_alias", order_by="id")
 
-        OUT.write("\n-- ── djangocms-alias: alias content (published only) ────────────────────\n")
+        OUT.write(
+            "\n-- ── djangocms-alias: alias content (published only) ────────────────────\n"
+        )
         if pub_ac_ids:
             export_table(
                 cursor,
@@ -699,11 +770,15 @@ def main() -> None:
         # ── 8. Placeholders and plugins ───────────────────────────────────────
         # DonationGift is referenced by DonationFormCMSPlugin via M2M; export
         # it before plugins so the M2M through rows have a valid target.
-        OUT.write("\n-- ── DonationGift (referenced by DonationFormCMSPlugin M2M) ─────────────\n")
+        OUT.write(
+            "\n-- ── DonationGift (referenced by DonationFormCMSPlugin M2M) ─────────────\n"
+        )
         export_table(cursor, "fds_donation_donationgift", order_by="id")
 
         if all_ph_ids:
-            OUT.write("\n-- ── CMS Placeholders (for published page & alias content) ──────────────\n")
+            OUT.write(
+                "\n-- ── CMS Placeholders (for published page & alias content) ──────────────\n"
+            )
             export_table(
                 cursor,
                 "cms_placeholder",
@@ -711,7 +786,9 @@ def main() -> None:
                 order_by="id",
             )
 
-            OUT.write("\n-- ── CMS Plugin base records ────────────────────────────────────────────\n")
+            OUT.write(
+                "\n-- ── CMS Plugin base records ────────────────────────────────────────────\n"
+            )
             export_table(
                 cursor,
                 "cms_cmsplugin",
@@ -724,7 +801,9 @@ def main() -> None:
             # uses multi-table inheritance has a cmsplugin_ptr_id column.
             # This is more robust than iterating plugin_type_map because it catches
             # any plugin whose registered class name doesn't match plugin_type_map.
-            OUT.write("\n-- ── CMS Plugin data (one table per plugin type) ────────────────────────\n")
+            OUT.write(
+                "\n-- ── CMS Plugin data (one table per plugin type) ────────────────────────\n"
+            )
             cursor.execute(
                 """
                 SELECT table_name
@@ -768,7 +847,8 @@ def main() -> None:
                                         (
                                             f.attname
                                             for f in through._meta.get_fields()
-                                            if hasattr(f, "related_model") and f.related_model == model
+                                            if hasattr(f, "related_model")
+                                            and f.related_model == model
                                         ),
                                         None,
                                     )
@@ -780,7 +860,10 @@ def main() -> None:
                                             order_by="id",
                                         )
                             except Exception as exc:
-                                print(f"  WARNING: M2M through table for {tbl}: {exc}", file=ERR)
+                                print(
+                                    f"  WARNING: M2M through table for {tbl}: {exc}",
+                                    file=ERR,
+                                )
 
         # Note: djangocms_alias_aliasplugin is discovered and exported via the
         # plugin type loop above (plugin_type = 'AliasPlugin').

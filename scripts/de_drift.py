@@ -56,14 +56,17 @@ def read_de(path: Path) -> bytes:
     return path.read_bytes().replace(b"fragdenstaat_de", b"fragdenstaat_at")
 
 
-def de_package_at(de_repo: Path, ref: str | None) -> tuple[Path, tempfile.TemporaryDirectory | None]:
+def de_package_at(
+    de_repo: Path, ref: str | None
+) -> tuple[Path, tempfile.TemporaryDirectory | None]:
     """Return the DE package dir, checking out ``ref`` into a temp worktree if given."""
     if ref is None:
         return de_repo / "fragdenstaat_de", None
     tmp = tempfile.TemporaryDirectory(prefix="de_drift_")
     subprocess.run(
         ["git", "-C", str(de_repo), "worktree", "add", "--detach", tmp.name, ref],
-        check=True, capture_output=True,
+        check=True,
+        capture_output=True,
     )
     return Path(tmp.name) / "fragdenstaat_de", tmp
 
@@ -71,7 +74,10 @@ def de_package_at(de_repo: Path, ref: str | None) -> tuple[Path, tempfile.Tempor
 def classify(at_root: Path, de_root: Path) -> dict[str, list[str]]:
     ours, theirs = walk(at_root), walk(de_root)
     buckets: dict[str, list[str]] = {
-        "identical": [], "modified": [], "at-only": [], "de-only": []
+        "identical": [],
+        "modified": [],
+        "at-only": [],
+        "de-only": [],
     }
     for rel, path in sorted(ours.items()):
         other = theirs.get(rel)
@@ -86,14 +92,23 @@ def classify(at_root: Path, de_root: Path) -> dict[str, list[str]]:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--de-repo", type=Path, default=DEFAULT_DE)
-    ap.add_argument("--ref", help="DE git ref to compare against (default: working tree)")
-    ap.add_argument("--list", dest="bucket", choices=["identical", "modified", "at-only", "de-only"])
+    ap.add_argument(
+        "--ref", help="DE git ref to compare against (default: working tree)"
+    )
+    ap.add_argument(
+        "--list", dest="bucket", choices=["identical", "modified", "at-only", "de-only"]
+    )
     ap.add_argument("--json", action="store_true")
-    ap.add_argument("--check-max-modified", type=int, metavar="N",
-                    help="exit 1 if more than N files differ (CI drift gate)")
+    ap.add_argument(
+        "--check-max-modified",
+        type=int,
+        metavar="N",
+        help="exit 1 if more than N files differ (CI drift gate)",
+    )
     args = ap.parse_args()
 
     if not args.de_repo.is_dir():
@@ -105,8 +120,18 @@ def main() -> int:
         buckets = classify(HERE / "fragdenstaat_at", de_root)
     finally:
         if tmp is not None:
-            subprocess.run(["git", "-C", str(args.de_repo), "worktree", "remove",
-                            "--force", tmp.name], capture_output=True)
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(args.de_repo),
+                    "worktree",
+                    "remove",
+                    "--force",
+                    tmp.name,
+                ],
+                capture_output=True,
+            )
             tmp._finalizer.detach()  # already removed by git
 
     if args.json:
@@ -125,8 +150,10 @@ def main() -> int:
     if args.check_max_modified is not None:
         n = len(buckets["modified"])
         if n > args.check_max_modified:
-            print(f"\nFAIL: {n} modified files exceeds limit {args.check_max_modified}",
-                  file=sys.stderr)
+            print(
+                f"\nFAIL: {n} modified files exceeds limit {args.check_max_modified}",
+                file=sys.stderr,
+            )
             return 1
         print(f"\nOK: {n} modified files within limit {args.check_max_modified}")
     return 0

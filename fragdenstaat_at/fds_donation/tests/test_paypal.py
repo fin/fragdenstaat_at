@@ -189,6 +189,36 @@ async def try_selectors(
 
 
 LOGIN_TIMEOUT = 60
+LOGIN_URL_RE = re.compile(r"/(signin|webapps/xoonboarding|connect)", re.I)
+
+
+async def left_login_page(page: Page, previous_url: str, timeout: int = 20) -> bool:
+    """Wait until the URL changes away from the login step."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if page.url != previous_url and not LOGIN_URL_RE.search(page.url):
+            return True
+        await asyncio.sleep(0.5)
+    return page.url != previous_url and not LOGIN_URL_RE.search(page.url)
+
+
+async def fail_with_page_state(page: Page, what: str, hint: str):
+    """Raise with the page URL, title, a screenshot and the raw HTML."""
+    slug = what.replace(" ", "-")
+    shot = pathlib.Path(tempfile.gettempdir()) / f"paypal-{slug}.png"
+    html = shot.with_suffix(".html")
+    try:
+        await page.screenshot(path=str(shot), full_page=True)
+        html.write_text(await page.content(), encoding="utf-8")
+        saved = f"  screenshot: {shot}\n  html      : {html}\n"
+    except Exception as exc:  # pragma: no cover - diagnostics only
+        saved = f"  (could not capture page: {exc})\n"
+    raise AssertionError(
+        f"PayPal: {what}.\n"
+        f"  page url  : {page.url}\n"
+        f"  page title: {await page.title()!r}\n"
+        f"{saved}{hint}"
+    )
 
 
 async def retry_selectors(page: Page, selectors, value, what: str, force=False):
@@ -266,11 +296,27 @@ async def login_paypal(page: Page):
     await retry_selectors(
         page, password_selectors, test_password, what="password field"
     )
-    # Submit. Forced, and bounded like the fields above: previously a failure
-    # here returned False and the test carried on *not logged in*, then waited
-    # for a redirect that could never arrive -- which read as a hang rather than
-    # as "the login button was never clicked".
-    await retry_selectors(page, login_selectors, None, what="login button", force=True)
+    # Submit by pressing Enter in the password field rather than clicking.
+    # #btnLogin is overlaid by .loginSignUpSeparator, and force=True is not a
+    # fix for that: it skips the actionability *check*, but the click still
+    # lands on whatever occupies the centre point -- the overlay. That reported
+    # success while never submitting, and the failure only surfaced pages later
+    # as a confusing strict-mode violation on the pay button.
+    login_url = page.url
+    await page.keyboard.press("Enter")
+    if not await left_login_page(page, login_url):
+        # Fall back to the button, still forced, in case Enter is swallowed.
+        await retry_selectors(
+            page, login_selectors, None, what="login button", force=True
+        )
+        if not await left_login_page(page, login_url):
+            await fail_with_page_state(
+                page,
+                "login did not submit",
+                "Filled both fields but the page never left the login step. "
+                "#btnLogin is overlaid by .loginSignUpSeparator, so a click can "
+                "be swallowed by the overlay.",
+            )
 
 
 DONATION_DONE_URL = re.compile(r".*spenden/spende/spenden/abgeschlossen/.*")
@@ -301,7 +347,15 @@ async def test_paypal_once(page: Page, live_server, paypal_setup):
     # Checkout order approved + payment capture completed
     paypal_setup.max_request_count = 2
     with paypal_setup:
-        await page.locator("button", has_text="Pay").click()
+        # Not locator("button", has_text="Pay"): "Pay" is a substring of
+        # "PayPal", so on any page still showing PayPal branding it matches
+        # several buttons and raises a strict-mode violation that says nothing
+        # about the real problem. Target the actual submit control instead.
+        pay_button = page.locator(
+            "#payment-submit-btn, button[data-testid='submit-button-initial']"
+        ).first
+        await pay_button.wait_for(state="visible", timeout=30000)
+        await pay_button.click()
         await page.wait_for_url(DONATION_DONE_URL)
 
         assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()

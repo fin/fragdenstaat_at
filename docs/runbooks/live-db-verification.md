@@ -451,6 +451,13 @@ path. Note it does expose the test server publicly for the duration, and
 `loca.lt` is third-party infrastructure that rate-limits — a tunnel that comes up
 but delivers no webhook is the next thing to suspect, ahead of the test code.
 
+The browser context is pinned to `locale="en-US"` (see
+`fds_donation/tests/conftest.py`), so PayPal renders in English. It otherwise
+picks the language from the buyer's browser and lands on German for an Austrian
+sandbox account, which quietly defeats the English selectors in `login_paypal`.
+This does not affect our own pages: AT's `LANGUAGES` contains only `de-at`, so
+they stay German whatever `Accept-Language` says.
+
 Four variables, not two: the first pair authenticates AT against PayPal, the
 second is a sandbox buyer account the browser logs in *as*. `settings/test.py`
 hardcodes `https://api.sandbox.paypal.com` and the tests assert `"sandbox"` is

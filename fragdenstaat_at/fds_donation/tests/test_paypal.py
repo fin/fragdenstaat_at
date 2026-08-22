@@ -598,7 +598,25 @@ async def test_paypal_cancel(page: Page, live_server, paypal_setup):
     assert donation.received_timestamp is None
     assert donation.payment.status != "pending"
     assert donation.payment.status != "confirmed"
-    await page.locator("#cancelLink").click()
+    # #cancelLink alone is a hardcoded id PayPal has since changed, and a bare
+    # locator gives a 30s timeout naming only the selector. Go through
+    # retry_selectors so a miss captures the page: screenshot, HTML, and
+    # PayPal's own banner if it is showing one. The German variants matter --
+    # this page renders in the buyer's language (locale.x=de_DE) regardless of
+    # the en-US browser context, because PayPal follows country.x.
+    await retry_selectors(
+        page,
+        [
+            "#cancelLink",
+            "[data-testid='cancel-link']",
+            "a:has-text('Abbrechen und zurück')",
+            "a:has-text('Abbrechen')",
+            "a:has-text('Cancel and return')",
+            "a[href*='cancel']",
+        ],
+        None,
+        what="cancel link",
+    )
 
     await page.wait_for_url(DONATION_FAILED_URL)
 

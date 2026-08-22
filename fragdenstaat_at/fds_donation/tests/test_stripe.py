@@ -474,13 +474,29 @@ async def test_sepa_once_donation_additional_fields(
     await page.get_by_role("button", name="Jetzt spenden").click()
 
     with stripe_sepa_setup.wait_for_events(["charge.succeeded"]):
-        # fill() dispatches only an `input` event, but froide-payment's sepa.ts
-        # binds toggleAdditionalInfo to `change` and `keyup` -- so filling alone
-        # sets the value without ever running the handler, and the block stays
-        # hidden with no error anywhere. press_sequentially types character by
-        # character, which fires keyup like a real donor would.
-        await page.locator("#id_iban").press_sequentially(
-            STRIPE_TEST_IBANS["additional_fields"], delay=10
+        # Wait for the page's JS to finish wiring up before touching the form.
+        # The template renders #form-button `disabled` and froide-payment's
+        # ui.ts enables it when setup completes, so that is the ready signal.
+        #
+        # Typing earlier fails in two ways at once, neither of them obvious:
+        # sepa.ts has not attached its keyup listener yet, so the address block
+        # never un-hides, and setup steals focus part-way through -- the field
+        # ended up holding "CH93", the first four characters, with a blur event
+        # right after them.
+        await page.locator("#form-button:not([disabled])").wait_for(
+            state="visible", timeout=30000
+        )
+
+        # press_sequentially, not fill(): fill() dispatches only `input`, while
+        # sepa.ts binds toggleAdditionalInfo to `change` and `keyup`.
+        iban = STRIPE_TEST_IBANS["additional_fields"]
+        await page.locator("#id_iban").press_sequentially(iban, delay=10)
+
+        typed = await page.locator("#id_iban").input_value()
+        assert typed == iban, (
+            f"IBAN was truncated to {typed!r}. The field lost focus while typing, "
+            "which means the page was still initialising -- the #form-button "
+            "wait above should have prevented that."
         )
 
         # A CH IBAN is in SEPAMixin.iban_address_required, so froide-payment's

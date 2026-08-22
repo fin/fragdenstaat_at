@@ -42,3 +42,22 @@ def browser_context_args(browser_context_args):
     Accept-Language says.
     """
     return {**browser_context_args, "locale": "de-AT"}
+
+
+@pytest.fixture(scope="session")
+def browser_type_launch_args(browser_type_launch_args):
+    """Keep Chromium off /dev/shm.
+
+    Docker gives a container 64 MB of shared memory by default, and Chromium
+    puts renderer surfaces there. Exceed it and the tab dies with the unhelpful
+    "Page crashed" -- which is how test_paypal_recurring failed on a plain
+    page.goto() long after the payment itself had succeeded.
+
+    --disable-dev-shm-usage makes Chromium use /tmp instead. Playwright does not
+    pass it by default. The alternative is shm_size on the compose service,
+    which needs a rebuild and does not travel with the repo.
+    """
+    args = list(browser_type_launch_args.get("args", []))
+    if "--disable-dev-shm-usage" not in args:
+        args.append("--disable-dev-shm-usage")
+    return {**browser_type_launch_args, "args": args}

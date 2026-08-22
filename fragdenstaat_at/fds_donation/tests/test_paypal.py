@@ -10,6 +10,7 @@ from django.urls import reverse
 
 import payments.core
 import pytest
+import requests
 from playwright.async_api import Page
 
 from fragdenstaat_at.fds_donation.models import Donation
@@ -72,6 +73,52 @@ class PaypalWebhookForwarder:
         self.seen_event_set.add(data["event_type"])
         return self._real_verify_webhook(request, data)
 
+    PROBE_PATH = "/__tunnel_probe__"
+
+    def tunnel_status(self):
+        """Return None if the tunnel is serving, else why it is not.
+
+        PayPal reports delivery failures as 503 with
+        ``x-localtunnel-status: Tunnel Unavailable`` -- the tunnel URL still
+        resolves at loca.lt's edge, but no client is attached, so the request
+        never reaches us and --print-requests stays silent. From inside the test
+        that is indistinguishable from "PayPal has not sent anything yet", which
+        is how a dead tunnel came to look like a 240s wait for a slow sandbox.
+        """
+        if not self.webhook_url:
+            return "no tunnel URL"
+        if self.proc and self.proc.thread and not self.proc.thread.is_alive():
+            return "the lt process has exited"
+        try:
+            resp = requests.get(
+                self.webhook_url + self.PROBE_PATH,
+                timeout=15,
+                headers={"bypass-tunnel-reminder": "1"},
+            )
+        except requests.RequestException as exc:
+            return f"probe failed: {exc}"
+        status = resp.headers.get("x-localtunnel-status")
+        # Any 5xx on the probe path is the edge failing, not the app: the probe
+        # path does not exist in Django, so a live tunnel answers 404. Measured:
+        # a running tunnel gives 404 with no x-localtunnel-status header, and a
+        # killed one gives 502 -- also with no header. PayPal happened to see 503
+        # *with* the header, so keying on the header alone misses the common
+        # case.
+        if resp.status_code >= 500:
+            detail = f" ({status})" if status else ""
+            return f"HTTP {resp.status_code} from loca.lt{detail}"
+        return None
+
+    def assert_tunnel_alive(self):
+        problem = self.tunnel_status()
+        if problem:
+            raise AssertionError(
+                f"Tunnel {self.webhook_url} is not reachable: {problem}.\n"
+                "PayPal will get 503 and its webhooks are lost. loca.lt is free "
+                "infrastructure and drops tunnels; re-run, and if it recurs "
+                "switch the tunnel command (cloudflared is steadier)."
+            )
+
     def set_webhook_on_paypal(self, webhook_url):
         paypal_provider = payments.core.provider_factory("paypal")
         assert "sandbox" in paypal_provider.endpoint
@@ -92,6 +139,8 @@ class PaypalWebhookForwarder:
             },
         )
         self.paypal_webhook_id = response["id"]
+        # Confirm the tunnel actually serves before relying on it.
+        self.assert_tunnel_alive()
         self.old_webhook_id = paypal_provider.webhook_id
         paypal_provider.webhook_id = self.paypal_webhook_id
         return self.paypal_webhook_id
@@ -130,7 +179,15 @@ class PaypalWebhookForwarder:
                             "check the tunnel is still up before suspecting the "
                             "payment code."
                         )
-                    line = self.proc.readline(timeout=remaining)
+                    try:
+                        line = self.proc.readline(timeout=min(20, remaining))
+                    except TimeoutError:
+                        # Nothing arrived in the last slice. Before assuming
+                        # PayPal is merely slow, check we are still reachable.
+                        self.assert_tunnel_alive()
+                        continue
+                    if self.PROBE_PATH in line:
+                        continue  # our own health check, not a PayPal delivery
                     print("Forwarder Log", repr(line.encode("utf-8")))
                     if self.HTTP_RE.search(line):
                         http_request_count += 1

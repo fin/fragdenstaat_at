@@ -23,18 +23,22 @@ def dummy_user():
 
 @pytest.fixture
 def browser_context_args(browser_context_args):
-    """Render third-party checkout pages in English.
+    """Pin the browser to Austrian German, as a real donor would have it.
 
-    PayPal picks its language from the buyer's browser -- the one-off order path
-    in froide-payment sets brand_name but no locale, so nothing on our side
-    chooses it. With an Austrian sandbox buyer it lands on de_DE, and the
-    English selectors in login_paypal ("Log In", "Next", "Continue") silently
-    never match; the flow only works because the id-based selectors above them
-    do.
+    Third-party checkout pages should render the way donors will actually see
+    them. Concretely, the Stripe tests fill Stripe's own embedded card iframe by
+    German placeholder (``get_by_placeholder("Kartennummer")``), and Stripe
+    Elements follows the browser locale -- an English context renders "Card
+    number" and those tests fail.
 
-    Safe for our own assertions: AT's LANGUAGES contains only de-at, so
-    LocaleMiddleware serves German whatever Accept-Language says. Verified --
-    /spenden/ returns Content-Language: de-at under en-US. Only third-party
-    pages change.
+    An earlier version pinned en-US to make login_paypal's English selectors
+    match. That was doubly wrong: it would have broken the Stripe card tests,
+    and it does not even work on PayPal, which picks its language from
+    country.x (de_DE/de_AT in the checkout URL) rather than Accept-Language.
+    The PayPal selectors are keyed on ids and German text instead.
+
+    Explicit rather than relying on the machine default, and harmless for our
+    own pages: AT's LANGUAGES contains only de-at, so they are German whatever
+    Accept-Language says.
     """
-    return {**browser_context_args, "locale": "en-US"}
+    return {**browser_context_args, "locale": "de-AT"}

@@ -451,12 +451,14 @@ path. Note it does expose the test server publicly for the duration, and
 `loca.lt` is third-party infrastructure that rate-limits — a tunnel that comes up
 but delivers no webhook is the next thing to suspect, ahead of the test code.
 
-The browser context is pinned to `locale="en-US"` (see
-`fds_donation/tests/conftest.py`), so PayPal renders in English. It otherwise
-picks the language from the buyer's browser and lands on German for an Austrian
-sandbox account, which quietly defeats the English selectors in `login_paypal`.
-This does not affect our own pages: AT's `LANGUAGES` contains only `de-at`, so
-they stay German whatever `Accept-Language` says.
+The browser context is pinned to `locale="de-AT"` (see
+`fds_donation/tests/conftest.py`) — third-party checkout pages should look the
+way donors will actually see them. It also matters concretely: the Stripe tests
+fill Stripe's own card iframe by German placeholder (`"Kartennummer"`), and
+Stripe Elements follows the browser locale. PayPal ignores it either way and
+picks its language from `country.x`, so its selectors are keyed on ids and
+German text. Our own pages are unaffected: AT's `LANGUAGES` contains only
+`de-at`.
 
 Four variables, not two: the first pair authenticates AT against PayPal, the
 second is a sandbox buyer account the browser logs in *as*. `settings/test.py`

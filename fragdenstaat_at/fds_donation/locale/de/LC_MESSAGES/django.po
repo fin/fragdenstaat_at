@@ -18,868 +18,1417 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.1.1\n"
 
-#: fragdenstaat_at/fds_donation/admin.py:173
-msgid "Dauerspende"
-msgstr "Dauerspende"
+#: templates/fds_donation/cms_plugins/donation_progress_bar.html
+#, python-format
+#| msgid ""
+#| "\n"
+#| "          %(amount_str)s&nbsp;€ of %(donation_goal_str)s&nbsp;€\n"
+#| "          "
+msgid "%(amount_str)s&nbsp;€ of %(donation_goal_str)s&nbsp;€"
+msgstr "%(amount_str)s&nbsp;€ von %(donation_goal_str)s&nbsp;€"
 
-#: fragdenstaat_at/fds_donation/admin.py:174
-msgid "amount last year"
-msgstr "Betrag letztes Jahr"
+#: templates/fds_donation/forms/_donation_form_step2.html
+msgid "&rarr; Do you want to donate as a company?"
+msgstr "&rarr; Möchten Sie als Firma spenden?"
 
-#: fragdenstaat_at/fds_donation/admin.py:175
-msgid "recurring monthly amount"
-msgstr "wiederkehrender monatlicher Betrag"
+#: export.py
+msgid "A backup of generated document will be stored."
+msgstr "Ein Backup des generierten Dokuments wird gespeichert."
 
-#: fragdenstaat_at/fds_donation/admin.py:176
-msgid "Last donation"
-msgstr "Letzte Spende"
+#: templates/fds_donation/includes/banktransfer_instructions.html
+msgid "Account holder"
+msgstr "Kontoinhaber"
 
-#: fragdenstaat_at/fds_donation/admin.py:183
-msgid "has email"
-msgstr "hat E-Mail-Adresse"
+#: templates/fds_donation/donor_detail.html
+#| msgid "Last donation"
+msgid "Add another donation"
+msgstr "Weitere Spende hinzufügen"
 
-#: fragdenstaat_at/fds_donation/admin.py:184
-msgid "has duplicate"
-msgstr "hat Duplikat"
+#: admin.py
+msgid "Add tag to donors..."
+msgstr "Füge Tag zu Spendis hinzu…"
 
-#: fragdenstaat_at/fds_donation/admin.py:185
-msgid "has user"
-msgstr "hat Nutzerkonto"
+#: models.py
+msgid "Add tag {}"
+msgstr "Füge tag {} hinzu"
 
-#: fragdenstaat_at/fds_donation/admin.py:280
-#: fragdenstaat_at/fds_donation/admin.py:283
-#: fragdenstaat_at/fds_donation/models.py:353
-msgid "donations"
-msgstr "Spenden"
+#: templates/fds_donation/donation_form.html
+msgid "Address"
+msgstr "Adresse"
 
-#: fragdenstaat_at/fds_donation/admin.py:295
-#, python-brace-format
-msgid "Send {count} optin mails."
-msgstr "Sende {count} Opt-In-E-Mails."
+#: actions.py
+msgid "Adds or removes the specified tag on the donor"
+msgstr "Fügt einen Tag hinzu oder entfernt ihn bei einer Spendi"
 
-#: fragdenstaat_at/fds_donation/admin.py:299
-msgid "Send opt-in mail"
-msgstr "Opt-in-E-Mail senden"
+#: templates/fds_donation/includes/recurrence.html
+msgid "Adjust amount, interval or IBAN"
+msgstr "Betrag, Rhythmus oder IBAN anpassen"
 
-#: fragdenstaat_at/fds_donation/admin.py:303
-msgid "Duplicate flags cleared."
-msgstr "Duplikat-Flag entfernt."
+#: admin.py
+msgid "Admin"
+msgstr "Admin"
 
-#: fragdenstaat_at/fds_donation/admin.py:305
-msgid "Clear duplicate flag on donors"
-msgstr "Duplikate-Flags entfernen"
+#: admin.py
+msgid "Advanced"
+msgstr "Fortgeschritten"
 
-#: fragdenstaat_at/fds_donation/admin.py:336
-#, python-brace-format
-msgid "Detected {dup} duplicate sets with {donors} donors"
-msgstr "{dup} Duplikate gefunden bei {donors} Spender:innen"
+#: templates/fds_donation/donor_detail.html
+msgid "All transactions"
+msgstr "Alle Transaktionen"
 
-#: fragdenstaat_at/fds_donation/admin.py:341
-msgid "Detect duplicate donors"
-msgstr "Duplikate erkennen"
-
-#: fragdenstaat_at/fds_donation/admin.py:353
-msgid "Select across not allowed!"
-msgstr "Alle auswählen nicht unterstützt!"
-
-#: fragdenstaat_at/fds_donation/admin.py:359
-msgid "Need to select more than one!"
-msgstr "Mehr als einer muss ausgewählt werden!"
-
-#: fragdenstaat_at/fds_donation/admin.py:380
-#, python-brace-format
-msgid "Merged {count} donors into {donor}"
-msgstr "{count} Spenderinnen wurden vereinigt zu {donor}"
-
-#: fragdenstaat_at/fds_donation/admin.py:402
-#: fragdenstaat_at/fds_donation/templates/admin/fds_donation/donor/merge_donors.html:62
-msgid "Merge donors"
-msgstr "Spender*innen zusammenführen"
-
-#: fragdenstaat_at/fds_donation/admin.py:429
-msgid "Generate ZWB PDFs"
-msgstr "Generiere ZWB-PDFs"
-
-#: fragdenstaat_at/fds_donation/admin.py:435
-#, fuzzy
-#| msgid "Generate ZWB PDFs"
-msgid "Generate ZWB PDFs for current year"
-msgstr "Generiere ZWB-PDFs"
-
-#: fragdenstaat_at/fds_donation/admin.py:445
-msgid "Generate encrypted ZWB PDFs"
-msgstr "Generiere verschlüsselte ZWB-PDFs"
-
-#: fragdenstaat_at/fds_donation/admin.py:462
-msgid "Sending JZWB email to {} donors."
-msgstr "Sende JZWB-E-Mail an {} Spender."
-
-#: fragdenstaat_at/fds_donation/admin.py:466
-msgid "Send JZWB for last year to selected now"
-msgstr "Sende jetzt JZWB für letztes Jahr an alle ausgewählten"
-
-#: fragdenstaat_at/fds_donation/admin.py:498
-msgid "Export ZWB mail merge data"
-msgstr "Exportiere ZWB-Mail-Merge-Daten"
-
-#: fragdenstaat_at/fds_donation/admin.py:512
-#, python-brace-format
-msgid "Prepared mailing of emailable donors with {count} recipients"
-msgstr "Mailing wurde an {count} Empfänger vorbereitet"
-
-#: fragdenstaat_at/fds_donation/admin.py:535
-msgid "Passive donation"
-msgstr "Passive Spende"
-
-#: fragdenstaat_at/fds_donation/admin.py:540
-msgid "active"
-msgstr "aktiv"
-
-#: fragdenstaat_at/fds_donation/admin.py:541
-msgid "passive"
-msgstr "passiv"
-
-#: fragdenstaat_at/fds_donation/admin.py:604
-msgid "Received timestamp"
-msgstr "Zeitpunkt des Erhalts"
-
-#: fragdenstaat_at/fds_donation/admin.py:610
-msgid "amount"
+#: templates/fds_donation/donor_detail.html
+#: templates/fds_donation/includes/banktransfer_instructions.html
+#| msgid "amount"
+msgid "Amount"
 msgstr "Betrag"
 
-#: fragdenstaat_at/fds_donation/admin.py:611
-msgid "Created timestamp"
-msgstr "Zeitpunkt der Erstellung"
+#: admin_utils.py
+msgid "Amount from - to:"
+msgstr "Betrag von - bis:"
 
-#: fragdenstaat_at/fds_donation/admin.py:615
-msgid "Receipt exported"
-msgstr "Spendenbestätigung exportiert"
-
-#: fragdenstaat_at/fds_donation/admin.py:616
-msgid "Receipt sent"
-msgstr "Spendenbestätigung versendet"
-
-#: fragdenstaat_at/fds_donation/admin.py:732
-msgid "Export to CSV"
-msgstr "Exportiere nach CSv"
-
-#: fragdenstaat_at/fds_donation/admin.py:756
-msgid "Need two banktransfer donations from same donor."
-msgstr "Brauche zwei Überweisungsspenden von gleicher Spender:in."
-
-#: fragdenstaat_at/fds_donation/admin.py:769
-msgid "Donations matched."
-msgstr "Spenden zusammengeführt."
-
-#: fragdenstaat_at/fds_donation/admin.py:771
-msgid "Match planned to received banktransfer"
-msgstr "Führe geplante zu empfangenen Überweisungen zusammen"
-
-#: fragdenstaat_at/fds_donation/admin.py:788
-#, python-brace-format
-msgid "Send {sent} donation mails ({resent} resent)."
-msgstr "{sent} Spenden-Mails gesendet ({resent} neu versendet)."
-
-#: fragdenstaat_at/fds_donation/admin.py:794
-msgid "Resend donation email"
-msgstr "Spenden-E-Mail neu verschicken"
-
-#: fragdenstaat_at/fds_donation/admin.py:799
-msgid "Clear receipt date"
-msgstr "Bestätigungsdatum entfernen"
-
-#: fragdenstaat_at/fds_donation/admin.py:812
-#, python-brace-format
-msgid "Send {sent} reminder mails."
-msgstr "Sende {sent} Erinnerungs-E-Mails."
-
-#: fragdenstaat_at/fds_donation/admin.py:816
-msgid "Send donation reminder"
-msgstr "Sende Spenden-Erinnerung"
-
-#: fragdenstaat_at/fds_donation/admin.py:829
-#: fragdenstaat_at/fds_donation/admin.py:857
-msgid "No file provided."
-msgstr "Keine Datei ausgewählt."
-
-#: fragdenstaat_at/fds_donation/admin.py:839
-#: fragdenstaat_at/fds_donation/admin.py:866
-#, python-brace-format
-msgid "Imported {rows} rows, {new} new rows."
-msgstr "{rows} Zeilen importiert, {new} neue Zeilen."
-
-#: fragdenstaat_at/fds_donation/admin.py:895
-msgid "donation received"
-msgstr "Spende erhalten"
-
-#: fragdenstaat_at/fds_donation/admin.py:896
-msgid "has shipped"
-msgstr "wurde versandt"
-
-#: fragdenstaat_at/fds_donation/admin.py:914
-msgid "donation amount"
-msgstr "Spendenbetrag"
-
-#: fragdenstaat_at/fds_donation/admin.py:921
-msgid "donation amount received"
-msgstr "erhaltener Spendenbetrag"
-
-#: fragdenstaat_at/fds_donation/admin.py:928
-msgid "donation received date"
-msgstr "Datum Spende erhalten"
-
-#: fragdenstaat_at/fds_donation/admin.py:935
-#, fuzzy
-#| msgid "recurring monthly amount"
-msgid "recurring amount"
-msgstr "wiederkehrender monatlicher Betrag"
-
-#: fragdenstaat_at/fds_donation/admin.py:946
-#, fuzzy, python-brace-format
-#| msgid "Send {count} optin mails."
-msgid "Send {count} shipped mails."
-msgstr "Sende {count} Opt-In-E-Mails."
-
-#: fragdenstaat_at/fds_donation/admin.py:950
-msgid "notify shipped and set date"
-msgstr ""
-
-#: fragdenstaat_at/fds_donation/apps.py:8
-msgid "FragDenStaat Donations"
-msgstr "FragDenStaat-Spenden"
-
-#: fragdenstaat_at/fds_donation/apps.py:47
-msgid "My donations"
-msgstr "Meine Spenden"
-
-#: fragdenstaat_at/fds_donation/cms_apps.py:9
-msgid "FragDenStaat Donation Gift App"
-msgstr "FragDenStaat-Spenden-Geschenk-App"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:23
-#: fragdenstaat_at/fds_donation/cms_plugins.py:58
-#: fragdenstaat_at/fds_donation/cms_plugins.py:79
-#: fragdenstaat_at/fds_donation/cms_plugins.py:182
-#: fragdenstaat_at/fds_donation/templates/admin/fds_donation/donor/change_form.html:7
-msgid "Donations"
-msgstr "Spenden"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:24
-msgid "Donation Gift Form"
-msgstr "Spenden-Geschenk-Form"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:59
-msgid "Donation Form"
-msgstr "Spendenform"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:117
-msgid "Is donor"
-msgstr "Ist Spender:in"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:125
-msgid "Is not donor"
-msgstr "Ist kein/e Spender/in"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:133
-msgid "Is recurring donor"
-msgstr "Ist Dauerspender:in"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:141
-msgid "Is not recurring donor"
-msgstr "Ist nicht Dauerspender:in"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:149
-msgid "Is recent donor"
-msgstr "Hat vor kurzem gespendet"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:157
-msgid "Is not recent donor"
-msgstr "Hat nicht vor kurzem gespendet"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:165
-msgid "Is contact allowed donor"
-msgstr "Spender:in darf kontaktiert werden"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:173
-msgid "Is contact not allowed donor"
-msgstr "Spender:in darf nicht kontaktiert werden"
-
-#: fragdenstaat_at/fds_donation/cms_plugins.py:183
-msgid "Donation Progress Bar"
-msgstr "Fortschrittsbalken für Spenden"
-
-#: fragdenstaat_at/fds_donation/forms.py:197
-msgid "Donation amount:"
-msgstr "Spendenbetrag:"
-
-#: fragdenstaat_at/fds_donation/forms.py:200
+#: forms.py
 msgid "Amount in Euro, comma as decimal separator"
 msgstr "Betrag in Euro, Komma als Dezimaltrenner"
 
-#: fragdenstaat_at/fds_donation/forms.py:210
-msgid "Frequency"
-msgstr "Spendenrhythmus"
+#: admin.py
+#| msgid "amount last year"
+msgid "Amount last year"
+msgstr "Betrag letztes Jahr"
 
-#: fragdenstaat_at/fds_donation/forms.py:215
-msgid "Donation purpose"
-msgstr "Verwendungszweck"
+#: admin.py
+msgid "Amount total"
+msgstr "Betrag insgesamt"
 
-#: fragdenstaat_at/fds_donation/forms.py:217
-msgid "General donation"
-msgstr "Allgemeine Spende"
+#: admin.py
+msgid "Analytics"
+msgstr "Analytics"
 
-#: fragdenstaat_at/fds_donation/forms.py:226
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:176
-msgid "Payment method"
-msgstr "Zahlungsweise"
-
-#: fragdenstaat_at/fds_donation/forms.py:253
-msgid "once"
-msgstr "einmalig"
-
-#: fragdenstaat_at/fds_donation/forms.py:262
-msgid "monthly"
-msgstr "monatlich"
-
-#: fragdenstaat_at/fds_donation/forms.py:263
-msgid "quarterly"
-msgstr "vierteljährlich"
-
-#: fragdenstaat_at/fds_donation/forms.py:264
-msgid "yearly"
-msgstr "jährlich"
-
-#: fragdenstaat_at/fds_donation/forms.py:272
-msgid "One time donation amount"
-msgstr "Einmaliger Spendenbetrag"
-
-#: fragdenstaat_at/fds_donation/forms.py:301
-msgid ""
-"Your amount is too large for the chosen payment method. Please choose a "
-"different method or contact us."
-msgstr ""
-"Ihr Betrag ist zu groß für diese Zahlungsmethode. Bitte wählen Sie eine "
-"andere Zahlungsmethode oder kontaktieren Sie uns direkt."
-
-#: fragdenstaat_at/fds_donation/forms.py:309
-#: fragdenstaat_at/fds_donation/forms.py:317
-#: fragdenstaat_at/fds_donation/forms.py:322
-#, python-format
-msgid "Donation for %s"
-msgstr "Spende für %s"
-
-#: fragdenstaat_at/fds_donation/forms.py:311
-#, python-brace-format
-msgid "{amount} EUR donation {str_interval} to {site_name}"
-msgstr "{amount} EUR Spende {str_interval} an {site_name}"
-
-#: fragdenstaat_at/fds_donation/forms.py:366
-msgid "Germany"
-msgstr "Deutschland"
-
-#: fragdenstaat_at/fds_donation/forms.py:368
+#: forms.py
 msgid "Austria"
 msgstr "Österreich"
 
-#: fragdenstaat_at/fds_donation/forms.py:369
-msgid "Switzerland"
-msgstr "Schweiz"
+#: templates/fds_donation/includes/banktransfer_instructions.html
+msgid "Bank code"
+msgstr "BLZ"
 
-#: fragdenstaat_at/fds_donation/forms.py:370
+#: tasks.py
+#, python-brace-format
+msgid "Bank transfers imported for {project}"
+msgstr "Überweisungen für {project} importiert"
+
+#: admin.py
+msgid "Banktransfer marked as refunded."
+msgstr ""
+
+#: forms.py
 msgid "Belgium"
 msgstr "Belgien"
 
-#: fragdenstaat_at/fds_donation/forms.py:371
-msgid "Netherlands"
-msgstr "Niederlande"
-
-#: fragdenstaat_at/fds_donation/forms.py:372
-msgid "Luxembourg"
-msgstr "Luxemburg"
-
-#: fragdenstaat_at/fds_donation/forms.py:373
-msgid "France"
-msgstr "Frankreich"
-
-#: fragdenstaat_at/fds_donation/forms.py:374
-msgid "Liechtenstein"
-msgstr "Liechtenstein"
-
-#: fragdenstaat_at/fds_donation/forms.py:375
-msgid "Denmark"
-msgstr "Dänemark"
-
-#: fragdenstaat_at/fds_donation/forms.py:376
-msgid "Poland"
-msgstr "Polen"
-
-#: fragdenstaat_at/fds_donation/forms.py:377
-msgid "Czech Republic"
-msgstr "Tschechien"
-
-#: fragdenstaat_at/fds_donation/forms.py:379
-msgid "Italy"
-msgstr "Italien"
-
-#: fragdenstaat_at/fds_donation/forms.py:380
-msgid "Spain"
-msgstr "Spanien"
-
-#: fragdenstaat_at/fds_donation/forms.py:381
-msgid "Portugal"
-msgstr "Portugal"
-
-#: fragdenstaat_at/fds_donation/forms.py:382
-msgid "Sweden"
-msgstr "Schweden"
-
-#: fragdenstaat_at/fds_donation/forms.py:383
-msgid "Finland"
-msgstr "Finnland"
-
-#: fragdenstaat_at/fds_donation/forms.py:393
-#: fragdenstaat_at/fds_donation/forms.py:397
-msgid "First name"
-msgstr "Vorname"
-
-#: fragdenstaat_at/fds_donation/forms.py:402
-#: fragdenstaat_at/fds_donation/forms.py:405
-msgid "Last name"
-msgstr "Nachname"
-
-#: fragdenstaat_at/fds_donation/forms.py:410
-#: fragdenstaat_at/fds_donation/forms.py:414
-msgid "Street, house number"
-msgstr "Straße, Hausnummer"
-
-#: fragdenstaat_at/fds_donation/forms.py:421
-#: fragdenstaat_at/fds_donation/forms.py:424
-msgid "Postcode"
-msgstr "Postleitzahl"
-
-#: fragdenstaat_at/fds_donation/forms.py:429
-#: fragdenstaat_at/fds_donation/forms.py:432
-msgid "City"
-msgstr "Ort"
-
-#: fragdenstaat_at/fds_donation/forms.py:436
-msgid "Country"
-msgstr "Land"
-
-#: fragdenstaat_at/fds_donation/forms.py:455
-msgid "Salutation"
-msgstr "Anrede"
-
-#: fragdenstaat_at/fds_donation/forms.py:461
-msgid "Company"
-msgstr "Firma"
-
-#: fragdenstaat_at/fds_donation/forms.py:464
-msgid "Company name"
-msgstr "Firmenname"
-
-#: fragdenstaat_at/fds_donation/forms.py:476
-#: fragdenstaat_at/fds_donation/forms.py:501
-#: fragdenstaat_at/fds_donation/forms.py:547
-msgid "No, thank you."
-msgstr "Nein, danke."
-
-#: fragdenstaat_at/fds_donation/forms.py:477
-msgid "Yes, once a year via email."
-msgstr "Ja, einmal im Jahr per E-Mail."
-
-#: fragdenstaat_at/fds_donation/forms.py:482
-msgid "Do you want a donation receipt?"
-msgstr "Möchten Sie eine Spendenbescheinigung?"
-
-#: fragdenstaat_at/fds_donation/forms.py:483
-#: fragdenstaat_at/fds_donation/forms.py:506
-#: fragdenstaat_at/fds_donation/forms.py:518
-msgid "You have to decide."
-msgstr "Sie müssen sich entscheiden."
-
-#: fragdenstaat_at/fds_donation/forms.py:487
-msgid "Email"
-msgstr "E-Mail"
-
-#: fragdenstaat_at/fds_donation/forms.py:490
-msgid "e.g. name@example.org"
-msgstr "z.B. name@beispiel.de"
-
-#: fragdenstaat_at/fds_donation/forms.py:500
-msgid "Yes, please!"
-msgstr "Ja, gerne!"
-
-#: fragdenstaat_at/fds_donation/forms.py:505
-msgid "News"
-msgstr "Neuigkeiten"
-
-#: fragdenstaat_at/fds_donation/forms.py:514
-msgid ""
-"With your donation you can also create a FragDenStaat account where you can "
-"manage your details, donations and requests."
-msgstr ""
-"In Ihrem FragDenStaat-Konto können Sie Ihre Daten pflegen, Ihre Spenden "
-"einsehen sowie Ihre Anfragen verwalten."
-
-#: fragdenstaat_at/fds_donation/forms.py:557
-msgid "Donation gift"
-msgstr "Ihr Dankeschön"
-
-#: fragdenstaat_at/fds_donation/forms.py:581
-msgid "Please complete your shipping address."
-msgstr "Bitte geben Sie eine Versandadresse an."
-
-#: fragdenstaat_at/fds_donation/forms.py:607
-msgid "Your name"
-msgstr "Ihr Name"
-
-#: fragdenstaat_at/fds_donation/forms.py:612
-msgid "Your email address"
-msgstr "Deine E-Mail-Adresse"
-
-#: fragdenstaat_at/fds_donation/forms.py:616
-msgid "Shipping address"
-msgstr "Versandadresse"
-
-#: fragdenstaat_at/fds_donation/forms.py:620
-msgid "Please choose your donation gift"
-msgstr "Wählen Sie Ihr Dankeschön aus"
-
-#: fragdenstaat_at/fds_donation/models.py:24
-msgid "Only once"
-msgstr "Nur einmalig"
-
-#: fragdenstaat_at/fds_donation/models.py:25
-msgid "Only recurring"
-msgstr "Nur mehrfach"
-
-#: fragdenstaat_at/fds_donation/models.py:26
+#: models.py
 msgid "Both"
 msgstr "Beides"
 
-#: fragdenstaat_at/fds_donation/models.py:31
-msgctxt "salutation neutral"
-msgid "Hello"
-msgstr "Hallo"
+#: export.py
+msgid "CSV"
+msgstr "CSV"
 
-#: fragdenstaat_at/fds_donation/models.py:32
-msgctxt "salutation formal"
-msgid "Good day"
-msgstr "Guten Tag"
+#: templates/fds_donation/donation_form.html
+#: templates/fds_donation/donor_change_email.html
+#: templates/fds_donation/donor_form.html
+#| msgid "France"
+msgid "Cancel"
+msgstr "Abbrechen"
 
-#: fragdenstaat_at/fds_donation/models.py:33
-msgctxt "salutation female formal"
-msgid "Dear Ms."
-msgstr "Sehr geehrte Frau"
+#: admin.py
+#| msgid "Clear receipt date"
+msgid "Cancel date"
+msgstr "Kündigungsdatum"
 
-#: fragdenstaat_at/fds_donation/models.py:34
-msgctxt "salutation male formal"
-msgid "Dear Mr."
-msgstr "Sehr geehrter Herr"
+#: templates/fds_donation/includes/recurrence.html
+msgid "Cancel your subscription"
+msgstr "Dauerspende kündigen"
 
-#: fragdenstaat_at/fds_donation/models.py:35
+#: admin.py
+#| msgid "Salutation"
+msgid "Cancellation"
+msgstr "Kündigung"
+
+#: templates/fds_donation/forms/_donation_form.html
+msgid "Change"
+msgstr "Ändern"
+
+#: actions.py
+#| msgid "Clear duplicate flag on donors"
+msgid "Change tag on donor"
+msgstr ""
+
+#: templates/fds_donation/donation_form.html
+msgid "Change this or cancel with your bank."
+msgstr "Ändern oder kündigen über deine Bank."
+
+#: views.py
+#| msgid "Your details"
+msgid "Change your details"
+msgstr "Ändere Deine Angaben"
+
+#: views.py
+#| msgid "Your email address"
+msgid "Change your email address"
+msgstr "Ändere deine E-Mail-Adresse "
+
+#: templates/fds_donation/donation_complete.html
+msgid "Check your emails for your account"
+msgstr "Rufen Sie Ihre E-Mails ab"
+
+#: actions.py
+msgid "Checks if object has recently donated"
+msgstr ""
+
+#: forms.py
+msgid "City"
+msgstr "Ort"
+
+#: admin.py
+msgid "Clear duplicate flag on donors"
+msgstr "Duplikate-Flags entfernen"
+
+#: admin.py
+msgid "Clear receipt date"
+msgstr "Bestätigungsdatum entfernen"
+
+#: templates/fds_donation/donation_complete.html
+#, python-format
+#| msgid ""
+#| "\n"
+#| "              Click the <strong class=\"highlight\">confirmation link</strong> in the email from %(SITE_NAME)s.\n"
+#| "            "
+msgid ""
+"Click the <strong class=\"highlight\">confirmation link</strong> in the "
+"email from %(SITE_NAME)s."
+msgstr ""
+"Klicke <strong class=\"highlight\">den Bestätigungs-Link</strong> in der "
+"E-Mail von %(SITE_NAME)s."
+
+#: templates/fds_donation/includes/banktransfer_modal.html
+msgid "Close"
+msgstr "Schließen"
+
+#: forms.py templates/fds_donation/donation_form.html
+msgid "Company"
+msgstr "Firma"
+
+#: forms.py
+msgid "Company name"
+msgstr "Firmenname"
+
+#: templates/fds_donation/donor_detail.html
+#| msgid "Confirmation pending"
+msgid "Confirmed"
+msgstr "Bestätigt"
+
+#: admin.py
+msgid "Contact"
+msgstr "Kontakt"
+
+#: templates/fds_donation/forms/_donation_form.html
+#: templates/fds_donation/forms/remote_form.html
+msgid "Continue"
+msgstr "Weiter"
+
+#: templates/fds_donation/includes/banktransfer_instructions.html
+msgid "Copy to clipboard"
+msgstr "In Zwischenablage kopieren"
+
+#: tasks.py
+#, python-brace-format
+msgid ""
+"Count: {count}\n"
+"New: {new}"
+msgstr ""
+"Anzahl: {count}\n"
+"Neu: {new}"
+
+#: forms.py
+msgid "Country"
+msgstr "Land"
+
+#: templates/fds_donation/donation_form.html
+#| msgid "General donation"
+msgid "Create a new donation"
+msgstr "Neue Spende anlegen"
+
+#: admin.py
+msgid "Created timestamp"
+msgstr "Zeitpunkt der Erstellung"
+
+#: forms.py
+msgid "Czech Republic"
+msgstr "Tschechien"
+
+#: templates/fds_donation/donor_detail.html
+msgid "Date"
+msgstr "Datum"
+
+#: models.py
 msgctxt "salutation female informal"
 msgid "Dear"
 msgstr "Liebe"
 
-#: fragdenstaat_at/fds_donation/models.py:36
+#: models.py
 msgctxt "salutation male informal"
 msgid "Dear"
 msgstr "Lieber"
 
-#: fragdenstaat_at/fds_donation/models.py:37
+#: models.py
 msgctxt "salutation neutral informal"
 msgid "Dear"
 msgstr "Liebes"
 
-#: fragdenstaat_at/fds_donation/models.py:42
+#: models.py
+msgctxt "salutation male formal"
+msgid "Dear Mr."
+msgstr "Sehr geehrter Herr"
+
+#: models.py
+msgctxt "salutation female formal"
+msgid "Dear Ms."
+msgstr "Sehr geehrte Frau"
+
+#: models.py
 msgid "Default"
 msgstr "Standard"
 
-#: fragdenstaat_at/fds_donation/models.py:48
-msgid "Donor Tag"
-msgstr "Spender*in-Tag"
+#: models.py
+#| msgid "General donation"
+msgid "Deferred Donation"
+msgstr "Zurückgestellte Spenden"
 
-#: fragdenstaat_at/fds_donation/models.py:49
-msgid "Donor Tags"
-msgstr "Spender*innen Tags"
+#: forms.py
+msgid "Denmark"
+msgstr "Dänemark"
 
-#: fragdenstaat_at/fds_donation/models.py:57
-msgid "Tagged Donor"
-msgstr "Getaggte/r Spender*in"
+#: templates/fds_donation/donation_form.html
+msgid "Details / Cancel"
+msgstr "Details / Kündigen"
 
-#: fragdenstaat_at/fds_donation/models.py:58
-msgid "Tagged Donors"
-msgstr "Getaggte Spender*innen"
+#: admin.py
+msgid "Detect duplicate donors"
+msgstr "Duplikate erkennen"
 
-#: fragdenstaat_at/fds_donation/models.py:105
-msgid "donor"
-msgstr "SpenderIn"
+#: admin.py
+#| msgid "Is recurring donor"
+msgid "Detect recurring donations"
+msgstr "Dauerspenden erkennen"
 
-#: fragdenstaat_at/fds_donation/models.py:106
-msgid "donors"
-msgstr "SpenderInnen"
+#: admin.py
+#, python-brace-format
+msgid "Detected {dup} duplicate sets with {donors} donors"
+msgstr "{dup} Duplikate gefunden bei {donors} Spender:innen"
 
-#: fragdenstaat_at/fds_donation/models.py:352
-msgid "donation"
+#: admin.py
+msgid "Detecting recurrences on donors..."
+msgstr "Erkenne Dauerspenden bei Spender*innen…"
+
+#: forms.py
+msgid "Do you want a donation receipt?"
+msgstr "Möchten Sie eine Spendenbescheinigung?"
+
+#: templates/fds_donation/donation_form.html views.py
+#| msgctxt "url pattern"
+#| msgid "donate/"
+msgid "Donate"
+msgstr "Spenden"
+
+#: templates/fds_donation/donation_form.html
+#: templates/fds_donation/forms/_donation_form_step2.html
+msgid "Donate now"
+msgstr "Jetzt spenden"
+
+#: admin.py templates/fds_donation/forms/donation.html
+msgid "Donation"
 msgstr "Spende"
 
-#: fragdenstaat_at/fds_donation/models.py:416
-msgid "donation gift"
-msgstr "Spendengeschenk"
+#: tasks.py
+#| msgid "Donation for %s"
+msgid "Donation Admin Tasks"
+msgstr "Spenden-Admin-Aufgaben"
 
-#: fragdenstaat_at/fds_donation/models.py:417
-msgid "donation gifts"
-msgstr "Spendengeschenke"
+#: cms_plugins.py
+#| msgid "Donation Form"
+msgid "Donation Button"
+msgstr "Spenden-Button"
 
-#: fragdenstaat_at/fds_donation/models.py:451
-msgid "donation gift order"
-msgstr "Spendengeschenk-Bestellung"
+#: cms_plugins.py
+msgid "Donation Form"
+msgstr "Spendenform"
 
-#: fragdenstaat_at/fds_donation/models.py:452
-msgid "donation gift orders"
-msgstr "Spendengeschenk-Bestellungen"
+#: models.py
+#| msgid "Donation Form"
+msgid "Donation Form View Count"
+msgstr "Anzahl der Spendenformularansichten"
 
-#: fragdenstaat_at/fds_donation/templates/admin/fds_donation/donation/change_list.html:10
-msgid "Export CSV"
-msgstr "Exportiere CSV"
+#: models.py
+#| msgid "Donation Form"
+msgid "Donation Form View Counts"
+msgstr "Anzahl der Spendenformularansichten"
 
-#: fragdenstaat_at/fds_donation/templates/admin/fds_donation/donor/merge_donors.html:6
-#: fragdenstaat_at/fds_donation/templates/admin/fds_donation/donor/merge_donors.html:9
-msgid "Merge Donors"
-msgstr "Spender*innen zusammenführen"
+#: cms_plugins.py
+msgid "Donation Gift Form"
+msgstr "Spenden-Geschenk-Form"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/cms_plugins/donation_progress_bar.html:7
-#| msgid "Donation Progress Bar"
-msgid "Donation progress"
-msgstr "Spendenfortschritt"
+#: cms_plugins.py
+msgid "Donation Progress Bar"
+msgstr "Fortschrittsbalken für Spenden"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/cms_plugins/donation_progress_bar.html:11
-#, python-format
-msgid ""
-"\n"
-"          %(amount_str)s&nbsp;€ of %(donation_goal_str)s&nbsp;€\n"
-"          "
-msgstr ""
-"\n"
-"          %(amount_str)s&nbsp;€ von %(donation_goal_str)s&nbsp;€\n"
-"          "
+#: forms.py
+msgid "Donation amount:"
+msgstr "Spendenbetrag:"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_complete.html:7
-msgid "Thank you for your donation!"
-msgstr "Vielen Dank für Ihre Spende!"
+#: admin.py
+#| msgid "Donation amount:"
+msgid "Donation count"
+msgstr "Spendenanzahl"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_complete.html:10
-msgid "You got mail"
-msgstr "Sie haben Post"
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_complete.html:16
-msgid "Please confirm your email address!"
-msgstr "Bitte bestätigen Sie Ihre E-Mail-Adresse!"
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_complete.html:25
-msgid "Check your emails for your account"
-msgstr "Rufen Sie Ihre E-Mails ab"
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_complete.html:29
-#, python-format
-msgid ""
-"\n"
-"              Click the <strong class=\"highlight\">confirmation link</"
-"strong> in the email from %(SITE_NAME)s.\n"
-"            "
-msgstr ""
-"\n"
-"              Klicken Sie <strong class=\"highlight\">den Bestätigungs-Link</"
-"strong> in der E-Mail von %(SITE_NAME)s.\n"
-"            "
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_complete.html:36
-msgid ""
-"Please go to your email account and <strong>click the confirmation link.</"
-"strong>"
-msgstr ""
-"Bitte gehen Sie zu Ihrem E-Mail-Konto und <strong>klicken Sie den "
-"Bestätigungs-Link.</strong>"
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_complete.html:41
-msgid ""
-"\n"
-"          The <strong>donation receipts</strong> that we send at the "
-"beginning of next year can only be sent to <strong>confirmed email addresses!"
-"</strong>\n"
-"          "
-msgstr ""
-"\n"
-"          Die <strong>Spendenbescheinigung</strong>, die wir zu Beginn des "
-"kommenden Jahres versenden, können wir Ihnen nur an eine <strong>bestätigte "
-"E-Mail-Adresse</strong> zukommen lassen!\n"
-"          "
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_failed.html:9
+#: templates/fds_donation/donation_failed.html
 msgid "Donation failed!"
 msgstr "Spende fehlgeschlagen!"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_failed.html:12
-msgid ""
-"\n"
-"    Your donation with your chosen payment provider has not completed "
-"successfully.\n"
-"    "
-msgstr ""
-"\n"
-"    Ihre Spende konnte durch den von Ihnen gewählten Zahlungsanbieter nicht "
-"erfolgreich abgeschlossen werden.\n"
-"    "
+#: forms.py
+#, python-format
+msgid "Donation for %s"
+msgstr "Spende für %s"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donation_failed.html:18
-msgid "Try again"
-msgstr "Nochmal probieren"
+#: forms.py
+msgid "Donation gift"
+msgstr "Ihr Dankeschön"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/donor_detail.html:61
-msgid "Confirmation pending"
-msgstr "Bearbeitung läuft"
+#: templates/fds_donation/cms_plugins/donation_progress_bar.html
+#: templates/fds_donation/cms_plugins/regular_donors_progress_bar.html
+msgid "Donation progress"
+msgstr "Spendenfortschritt"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/email/donation_gift_order_shipped_subject.txt:1
-#, fuzzy
-#| msgid "donation gifts"
-msgid "Your donation gift shipped"
-msgstr "Spendengeschenke"
+#: forms.py
+msgid "Donation purpose"
+msgstr "Verwendungszweck"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:14
-msgid "Your donation frees information"
-msgstr "Mit meiner Spende Informationen befreien"
+#: cms_plugins.py templates/admin/fds_donation/donor/change_form.html
+#: templates/admin/fds_donation/recurrence/change_form.html
+msgid "Donations"
+msgstr "Spenden"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:55
-msgid "Continue"
-msgstr "Weiter"
+#: admin.py
+msgid "Donations matched."
+msgstr "Spenden zusammengeführt."
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:68
-msgid "Your details"
-msgstr "Persönliche Daten"
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:90
-msgid "&rarr; Do you want to donate as a company?"
-msgstr "&rarr; Möchten Sie als Firma spenden?"
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:130
-msgid "Shipping details"
-msgstr "Versandadresse"
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:135
-msgid "Use receipt address"
-msgstr "Adresse der Spendenbescheinigung verwenden"
-
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:181
+#: templates/fds_donation/forms/_donation_form_step2.html
 msgid ""
 "Donations via credit card, SEPA or Paypal do not work via our .onion-site."
 msgstr ""
 "Spenden per Kreditkarte, SEPA-Lastschrift oder Paypal funktionieren leider "
 "nicht über unsere .onion-Seite."
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:188
-msgid "Your payment details will be transmitted securely in the next step."
+#: actions.py admin.py
+#| msgid "donor"
+msgid "Donor"
+msgstr "Spender*innen"
+
+#: models.py
+msgid "Donor Tag"
+msgstr "Spender*in-Tag"
+
+#: models.py
+msgid "Donor Tags"
+msgstr "Spender*innen Tags"
+
+#: templates/fds_donation/donor_detail.html
+msgid "Downloads"
+msgstr "Downloads"
+
+#: admin.py
+msgid "Duplicate flags cleared."
+msgstr "Duplikat-Flag entfernt."
+
+#: cms_plugins.py forms.py templates/fds_donation/donation_form.html
+msgid "Email"
+msgstr "E-Mail"
+
+#: admin.py
+msgid "Email confirmed"
+msgstr "E-Mail bestätigt"
+
+#: widgets.py
+msgid "Enter a number with up to two decimal places."
+msgstr "Gibt eine Zahl mit bis zu zwei Dezimalstellen ein."
+
+#: templates/fds_donation/donor_detail.html
+#| msgid "Do you want a donation receipt?"
+msgid "Enter personal data for donation receipts"
+msgstr "Persönliche Daten für Spendenbescheinigung angeben"
+
+#: admin.py
+#, python-brace-format
+msgid "Error on merge of {ids}: {error}"
+msgstr "Fehler beim Zusammenführen von {ids}: {error}"
+
+#: templates/admin/fds_donation/donor/export_jzwb.html
+msgid "Execute"
+msgstr "Ausführen"
+
+#: templates/admin/fds_donation/donation/change_list.html
+msgid "Export CSV"
+msgstr "Exportiere CSV"
+
+#: admin.py
+msgid "Export JZWB..."
+msgstr "JZWB exportieren…"
+
+#: admin.py
+msgid "Export as Post Internetmarke CSV"
 msgstr ""
-"Die Eingabe Ihrer Zahlungsinformationen erfolgt sicher verschlüsselt im "
-"nächsten Schritt."
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:194
-msgid "Stay up to date"
-msgstr "Auf dem Laufenden bleiben"
+#: forms.py
+msgid "Feedback"
+msgstr "Feedback"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:202
+#: models.py
+msgid "Financial reasons"
+msgstr "Finanzielle Gründe"
+
+#: forms.py
+msgid "Finland"
+msgstr "Finnland"
+
+#: admin.py
+#| msgid "Last donation"
+msgid "First donation"
+msgstr "Erste Spende"
+
+#: forms.py
+msgid "First name"
+msgstr "Vorname"
+
+#: templates/admin/fds_donation/donor/change_form.html
+msgid "Flows"
+msgstr "Abläufe"
+
+#: views.py
+msgid "Form could not be processed."
+msgstr "Das Formular konnte nicht verarbeitet werden."
+
+#: cms_plugins.py
+#| msgid "Is donor"
+msgid "Formal donor"
+msgstr "Spender*in (Siezen)"
+
+#: cms_apps.py
+msgid "FragDenStaat Donation Gift App"
+msgstr "FragDenStaat-Spenden-Geschenk-App"
+
+#: apps.py
+msgid "FragDenStaat Donations"
+msgstr "FragDenStaat-Spenden"
+
+#: forms.py
+msgid "France"
+msgstr "Frankreich"
+
+#: forms.py
+msgid "Frequency"
+msgstr "Spendenrhythmus"
+
+#: templates/fds_donation/donor_detail.html
+msgid "Frequent questions & contact"
+msgstr "Häufige Fragen & Kontakt"
+
+#: apps.py
+msgid "Froide Payment App (no config)"
+msgstr "Froide Zahlungs App (ohne Config)"
+
+#: forms.py
+msgid "General donation"
+msgstr "Allgemeine Spende"
+
+#: forms.py
+msgid "Germany"
+msgstr "Deutschland"
+
+#: templates/fds_donation/donor_login_link_form.html
+msgid "Get a link to your donor profile!"
+msgstr "Link zu Deinem Spendenprofil"
+
+#: templates/fds_donation/forms/_donation_form_step2.html
+msgid "Get an account"
+msgstr "Account bekommen"
+
+#: models.py
+msgctxt "salutation formal"
+msgid "Good day"
+msgstr "Guten Tag"
+
+#: admin_utils.py
+msgid "Has active recurrences"
+msgstr "Hat aktive Dauerspenden"
+
+#: models.py
+#| msgid "Last donation"
+msgid "Has donated since {}"
+msgstr ""
+
+#: models.py
+msgid "Has not donated since {}"
+msgstr ""
+
+#: cms_plugins.py
+#| msgid "Is not recent donor"
+msgid "Has not recently upgraded"
+msgstr "Hat keine Dauerspende/nicht erhöht"
+
+#: admin.py
+#| msgid "Payment method"
+msgid "Has payment record"
+msgstr "Hat Zahlungseingang"
+
+#: cms_plugins.py
+msgid "Has recently upgraded"
+msgstr "Hat kürzlich Dauerspende erhöht"
+
+#: admin.py
+#| msgid "Is recurring donor"
+msgid "Has recurring donations"
+msgstr "Hat Dauerspenden"
+
+#: admin_utils.py
+msgid "Has some"
+msgstr "Hat manche"
+
+#: admin_utils.py
+msgid "Has starting and active recurrences"
+msgstr ""
+
+#: models.py
+msgctxt "salutation neutral"
+msgid "Hello"
+msgstr "Hallo"
+
+#: forms.py
+msgid "How are you feeling about canceling?"
+msgstr "Was sollten wir noch wissen?"
+
+#: models.py
+msgid "I do not want to support this project anymore"
+msgstr "Ich möchte dieses Projekt nicht mehr unterstützen"
+
+#: models.py
+msgid "If checked will remove the tag from the donor instead of adding it."
+msgstr ""
+"Wenn angehakt, wird der Tag von der Spendi entfernt, anstatt ihn "
+"hinzuzufügen."
+
+#: actions.py
+#| msgid "Is recent donor"
+msgid "If has recently donated"
+msgstr ""
+
+#: models.py
+#| msgid "Is not recent donor"
+msgid "If hasn't recently donated"
+msgstr ""
+
+#: templates/fds_donation/donation_form.html
+msgid ""
+"If you want to change the payment method, please cancel your recurring "
+"donation and create a new one here."
+msgstr ""
+"Wenn Du die Zahlungsart ändern willst, kündige bitte Deine Dauerspende und "
+"lege hier eine neue an."
+
+#: admin.py
+msgid "Import will start in background."
+msgstr "Import wird im Hintergrund durchgeführt."
+
+#: views.py
+msgid ""
+"In order to confirm your new email address, you need to be logged into the "
+"right donor profile."
+msgstr ""
+"Um deine neue E-Mail-Adresse zu bestätigen, musst du in deinem Spendenprofil"
+" eingeloggt sein."
+
+#: forms.py
+msgid "In order to receive donation receipts, please fill out this field."
+msgstr "Um Spendenbescheinigungen zu erhalten, fülle bitte dieses Feld aus."
+
+#: admin_utils.py
+msgid "In year:"
+msgstr "Im Jahr:"
+
+#: cms_plugins.py
+#| msgid "Is not donor"
+msgid "Informal donor"
+msgstr "Spender*in (Duzen)"
+
+#: templates/fds_donation/includes/banktransfer_instructions.html
+msgid "Interval"
+msgstr "Turnus"
+
+#: admin_utils.py
+msgid "Invalid amount format: '{}'. Please enter a valid number."
+msgstr "Ungültiger Betrag: '{}'. Bitte geben Sie eine gültige Zahl ein."
+
+#: cms_plugins.py
+msgid "Is contact allowed donor"
+msgstr "Spender:in darf kontaktiert werden"
+
+#: cms_plugins.py
+msgid "Is contact not allowed donor"
+msgstr "Spender:in darf nicht kontaktiert werden"
+
+#: cms_plugins.py
+msgid "Is donor"
+msgstr "Ist Spender:in"
+
+#: cms_plugins.py
+msgid "Is not donor"
+msgstr "Ist kein/e Spender/in"
+
+#: cms_plugins.py
+msgid "Is not recent donor"
+msgstr "Hat nicht vor kurzem gespendet"
+
+#: cms_plugins.py
+msgid "Is not recurring donor"
+msgstr "Ist nicht Dauerspender:in"
+
+#: cms_plugins.py
+msgid "Is recent donor"
+msgstr "Hat vor kurzem gespendet"
+
+#: cms_plugins.py
+msgid "Is recurring donor"
+msgstr "Ist Dauerspender:in"
+
+#: forms.py
+msgid "Italy"
+msgstr "Italien"
+
+#: admin.py
+msgid "Last donation"
+msgstr "Letzte Spende"
+
+#: templates/fds_donation/includes/payment_method.html
+msgid "Last four digits"
+msgstr "Letzte vier Ziffern"
+
+#: forms.py
+msgid "Last name"
+msgstr "Nachname"
+
+#: forms.py
+msgid "Liechtenstein"
+msgstr "Liechtenstein"
+
+#: templates/fds_donation/cms_plugins/donationgiftform.html
+msgid "Log in to your donor profile to select a donation gift."
+msgstr "Logge dich in dein Spendenprofil ein, um ein Geschenk auszuwählen."
+
+#: templates/fds_donation/includes/donor_logout.html
+msgid "Log out of this donor profile"
+msgstr "Aus diesem Spendenprofil ausloggen"
+
+#: forms.py
+msgid "Luxembourg"
+msgstr "Luxemburg"
+
+#: templates/admin/fds_donation/donor/change_form.html
+msgid "Mailings"
+msgstr "Mailings"
+
+#: templates/fds_donation/includes/recurrence.html
+msgid "Manage your PayPal subscriptions"
+msgstr "Paypal-Zahlungen verwalten"
+
+#: templates/admin/fds_donation/donor/merge_donors.html
+#| msgid "has duplicate"
+msgid "Mark as not duplicates"
+msgstr "Markiere als unterschiedlich"
+
+#: admin.py
+#| msgid "Need two banktransfer donations from same donor."
+msgid "Mark banktransfer donation as refunded"
+msgstr ""
+
+#: templates/admin/fds_donation/donor/change_list.html
+#| msgid "Detect duplicate donors"
+msgid "Match duplicate donors"
+msgstr "Spender*innen deduplizieren"
+
+#: admin.py
+msgid "Match planned to received banktransfer"
+msgstr "Führe geplante zu empfangenen Überweisungen zusammen"
+
+#: templates/admin/fds_donation/donor/merge_donors.html
+msgid "Merge Donors"
+msgstr "Spender*innen zusammenführen"
+
+#: admin.py templates/admin/fds_donation/donor/merge_donors.html
+msgid "Merge donors"
+msgstr "Spender*innen zusammenführen"
+
+#: admin.py
+#, python-brace-format
+msgid "Merged {count} donors into {donor}"
+msgstr "{count} Spenderinnen wurden vereinigt zu {donor}"
+
+#: models.py
+msgid "Mistakenly set up, do not remember doing so"
+msgstr "Aus Versehen angefangen, kann mich nicht erinnern"
+
+#: apps.py views.py
+msgid "My donations"
+msgstr "Meine Spenden"
+
+#: admin.py templates/fds_donation/donation_form.html
+msgid "Name"
+msgstr "Name"
+
+#: admin.py
+msgid "Need to select more than one!"
+msgstr "Mehr als einer muss ausgewählt werden!"
+
+#: admin.py
+msgid "Need two banktransfer donations from same donor."
+msgstr "Brauche zwei Überweisungsspenden von gleicher Spender:in."
+
+#: models.py
+#| msgid "Last donation"
+msgid "Negate condition"
+msgstr ""
+
+#: forms.py
+msgid "Netherlands"
+msgstr "Niederlande"
+
+#: forms.py
+msgid "News"
+msgstr "Neuigkeiten"
+
+#: templates/fds_donation/includes/recurrence.html
+#, python-format
+msgid "Next time on %(date)s."
+msgstr "Nächstes Mal am %(date)s."
+
+#: forms.py templates/fds_donation/cms_plugins/donationgiftform.html
+msgid "No donation gifts are available for you at the moment."
+msgstr "Gerade sind keine Spendengeschenke verfügbar."
+
+#: admin.py
+msgid "No donors selected!"
+msgstr "Keine Spender*innen ausgewählt!"
+
+#: admin.py
+#| msgid "Detect duplicate donors"
+msgid "No duplicate donors found!"
+msgstr "Keine Spender*innen-Dubletten gefunden!"
+
+#: admin.py
+msgid "No file provided."
+msgstr "Keine Datei ausgewählt."
+
+#: templates/admin/fds_donation/donor/change_form.html
+msgid "No flows found."
+msgstr "Keine Abläufe gefunden."
+
+#: templates/admin/fds_donation/donor/change_form.html
+msgid "No mailings found."
+msgstr "Keine Mailings gefunden."
+
+#: models.py
+msgid "No quick payment"
+msgstr "Keine Schnellspende"
+
+#: models.py
+msgid "No reason given"
+msgstr "Kein Grund angegeben"
+
+#: templates/fds_donation/forms/_donation_quick.html
+msgid "No time? Donate with one click!"
+msgstr "Keine Zeit? Spende mit einem Klick!"
+
+#: forms.py
+msgid "No, thank you."
+msgstr "Nein, danke."
+
+#: admin_utils.py
+msgid "None"
+msgstr "Nichts"
+
+#: admin.py
+msgid "Not available"
+msgstr "Nicht verfügbar"
+
+#: forms.py
+msgid "One time donation amount"
+msgstr "Einmaliger Spendenbetrag"
+
+#: apps.py
+#| msgid "One time donation amount"
+msgid "One-time donor"
+msgstr "Einmal-Spender*in"
+
+#: apps.py
+msgid "One-time payment/order"
+msgstr "Einmalige Zahlung/Bestellung"
+
+#: models.py
+msgid "Only once"
+msgstr "Nur einmalig"
+
+#: models.py
+msgid "Only quick payment options"
+msgstr "Nur Schnellspende-Möglichkeit"
+
+#: models.py
+msgid "Only recurring"
+msgstr "Nur mehrfach"
+
+#: models.py
+msgid "Other"
+msgstr "Sonstiges"
+
+#: templates/fds_donation/forms/widgets/amount_input.html
+msgid "Other amount"
+msgstr "Anderer Betrag"
+
+#: templates/froide_payment/subscription/_cancel_form.html
+msgid "Otherwise, we welcome your feedback:"
+msgstr "Ansonsten freuen wir uns über dein Feedback:"
+
+#: export.py
+msgid "PDF"
+msgstr "PDF"
+
+#: export.py
+msgid "PDF (encrypted)"
+msgstr "PDF (verschlüsselt)"
+
+#: admin_utils.py
+msgid "Passive donation"
+msgstr "Passive Spende"
+
+#: templates/fds_donation/includes/recurrence.html
+msgid "Pause or cancel your subscription"
+msgstr "Spende pausieren oder kündigen"
+
+#: admin.py
+#| msgid "Payment method"
+msgid "Payment"
+msgstr "Zahlung"
+
+#: admin.py
+#| msgid "Payment method"
+msgid "Payment details"
+msgstr "Zahlungsdetails"
+
+#: forms.py templates/fds_donation/donor_detail.html
+#: templates/fds_donation/forms/_donation_form_step2.html
+msgid "Payment method"
+msgstr "Zahlungsweise"
+
+#: tasks.py
+msgid "Paypal imported"
+msgstr "PayPal importiert"
+
+#: templates/fds_donation/donor_detail.html
+msgid "Pending"
+msgstr "Ausstehend"
+
+#: templates/fds_donation/donor_detail.html
+msgid "Pending banktransfers"
+msgstr "Ausstehende Überweisungen"
+
+#: templates/fds_donation/cms_plugins/upgrade_recurrence.html
+#, python-format
+msgid ""
+"Please adjust your current standing order (%(description)s) with reference "
+"“%(reference)s” in your online banking."
+msgstr ""
+"Bitte passe deinen aktuellen Dauerauftrag (%(description)s) mit dem "
+"Verwendungszweck „%(reference)s“ direkt bei deiner Bank an."
+
+#: templates/fds_donation/cms_plugins/upgrade_recurrence.html
+#, python-format
+msgid "Please adjust your current standing order (%(description)s)."
+msgstr "Bitte passe deinen aktuellen Dauerauftrag (%(description)s) an."
+
+#: forms.py
+msgid "Please complete your shipping address."
+msgstr "Bitte geben Sie eine Versandadresse an."
+
+#: templates/fds_donation/donation_complete.html
+msgid "Please confirm your email address!"
+msgstr "Bitte bestätigen Sie Ihre E-Mail-Adresse!"
+
+#: templates/fds_donation/donor_login_link_form.html
+msgid ""
+"Please enter your email address to receive a link to access your donations."
+msgstr ""
+"Bitte gib deine E-Mail-Adresse ein, um einen Link zu deinem Spenderprofil zu"
+" erhalten."
+
+#: templates/fds_donation/donation_complete.html
+msgid ""
+"Please go to your email account and <strong>click the confirmation "
+"link.</strong>"
+msgstr ""
+"Bitte gehen Sie zu Ihrem E-Mail-Konto und <strong>klicken Sie den "
+"Bestätigungs-Link.</strong>"
+
+#: templates/fds_donation/donation_form.html
+msgid ""
+"Please note that you currently have the following recurring donations "
+"active:"
+msgstr ""
+"Bitte beachte, dass momentan folgende Dauerspenden für Dich aktiv sind:"
+
+#: templates/fds_donation/donor_detail.html
+msgid "Please set up a standing order"
+msgstr "Bitte richte einen Dauerauftrag ein"
+
+#: forms.py
+msgid "Poland"
+msgstr "Polen"
+
+#: forms.py
+msgid "Portugal"
+msgstr "Portugal"
+
+#: forms.py
+msgid "Postcode"
+msgstr "Postleitzahl"
+
+#: admin.py
+#, python-brace-format
+msgid "Prepared mailing of emailable donors with {count} recipients"
+msgstr "Mailing wurde an {count} Empfänger vorbereitet"
+
+#: templates/fds_donation/donor_detail.html
+msgid "Purpose"
+msgstr "Spendenzweck"
+
+#: forms.py models.py
+msgid "Reason for cancellation"
+msgstr "Grund für die Kündigung"
+
+#: admin.py
+msgid "Receipt exported"
+msgstr "Spendenbestätigung exportiert"
+
+#: admin.py
+msgid "Receipt sent"
+msgstr "Spendenbestätigung versendet"
+
+#: templates/fds_donation/donor_login_link_form.html
+#| msgid "Received timestamp"
+msgid "Receive link"
+msgstr "Link erhalten"
+
+#: templates/fds_donation/forms/_donation_form_step2.html
 msgid "Receive our newsletter about freedom of information in German."
 msgstr ""
 "Erhalten Sie Neuigkeiten zum Thema Informationsfreiheit direkt in Ihr "
 "Postfach und erfahren Sie mehr über die Wirkung Ihrer Spende."
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:212
-msgid "FragDenStaat Account"
-msgstr "FragDenStaat-Konto"
+#: admin.py
+#| msgid "Received timestamp"
+msgid "Received"
+msgstr "Erhalten"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:215
-msgid "You can manage your donation in your FragDenStaat account."
+#: admin.py
+msgid "Received timestamp"
+msgstr "Zeitpunkt des Erhalts"
+
+#: apps.py
+#| msgid "Is recent donor"
+msgid "Recent donor"
+msgstr "Kürzlich gespendet"
+
+#: admin.py
+msgid "Recurrence"
+msgstr "Dauerspende"
+
+#: triggers.py
+msgid "Recurrence created"
+msgstr "Dauerspende erstellt"
+
+#: admin.py
+msgid "Recurrence streak start"
+msgstr "Start der Dauerspendenserie"
+
+#: admin.py templates/admin/fds_donation/donor/change_form.html
+msgid "Recurrences"
+msgstr "Dauerspenden"
+
+#: models.py
+#| msgid "Is recurring donor"
+msgid "Recurring donation"
+msgstr "Dauerspende"
+
+#: models.py
+#| msgid "Is recurring donor"
+msgid "Recurring donations"
+msgstr "Dauerspenden"
+
+#: apps.py
+#| msgid "Is recurring donor"
+msgid "Recurring donor"
+msgstr "Dauerspender*in"
+
+#: apps.py
+msgid "Recurring payment/order/subscription"
+msgstr "Wiederkehrende Zahlung/Bestellung/Abonnement"
+
+#. Translators: This is the reference for the bank transfer
+#: templates/fds_donation/includes/banktransfer_instructions.html
+msgid "Reference"
+msgstr "Verwendungszweck"
+
+#: cms_plugins.py
+#| msgid "Donation Progress Bar"
+msgid "Regular Donors Progress Bar"
 msgstr ""
-"Sie können Ihre Spenden in Ihrem FragDenStaat-Konto einsehen und verwalten."
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:219
-msgid "Get an account"
-msgstr "Account bekommen"
+#: templates/fds_donation/email/incomplete_donation_reminder_subject.txt
+msgid "Reminder: Complete your donation"
+msgstr "Erinnerung: Deine Spende abschließen"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/_donation_form.html:239
-msgid "Donate now"
-msgstr "Jetzt spenden"
+#: cms_plugins.py
+#| msgid "Donation Form"
+msgid "Remote Donation Form"
+msgstr "Remote-Spendenform"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/donation.html:4
-msgid "Donation"
-msgstr "Spende"
+#: models.py
+msgid "Remove tag"
+msgstr "Entferne Tag"
 
-#: fragdenstaat_at/fds_donation/templates/fds_donation/forms/widgets/amount_input.html:12
-msgid "Other amount"
-msgstr "Anderer Betrag"
+#: models.py
+msgid "Remove tag {}"
+msgstr "Entferne Tag {}"
 
-#: fragdenstaat_at/fds_donation/urls.py:22
-msgctxt "url pattern"
-msgid "donate/"
-msgstr "spenden/"
+#: admin.py
+msgid "Resend donation email"
+msgstr "Spenden-E-Mail neu verschicken"
 
-#: fragdenstaat_at/fds_donation/urls.py:25
-msgctxt "url pattern"
-msgid "donate/complete/"
-msgstr "spenden/abgeschlossen/"
+#: forms.py
+msgid "Salutation"
+msgstr "Anrede"
 
-#: fragdenstaat_at/fds_donation/urls.py:30
-msgctxt "url pattern"
-msgid "donate/failed/"
-msgstr "spenden/fehlgeschlagen/"
+#: templates/fds_donation/includes/banktransfer_instructions.html
+msgid "Scan this QR code using your banking app."
+msgstr "Scanne diesen QR-Code mit Deiner Banking-App."
 
-#: fragdenstaat_at/fds_donation/urls.py:35
-msgctxt "url pattern"
-msgid "your-donation/"
-msgstr "ihre-spenden/"
+#: admin.py
+msgid "Select across not allowed!"
+msgstr "Alle auswählen nicht unterstützt!"
 
-#: fragdenstaat_at/fds_donation/urls.py:42
+#: admin.py
+msgid "Send donation reminder"
+msgstr "Sende Spenden-Erinnerung"
+
+#: export.py
+#| msgid "Send opt-in mail"
+msgid "Send mailing"
+msgstr "Mailing senden"
+
+#: admin.py
+msgid "Send opt-in mail"
+msgstr "Opt-in-E-Mail senden"
+
+#: admin.py
+#| msgid "Send {count} optin mails."
+msgid "Send shipped email and set date"
+msgstr "Versende Versandbestätigungs-E-Mail und setze Datum"
+
+#: admin.py
 #, python-brace-format
-msgctxt "url pattern"
-msgid ""
-"^your-donation/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-"
-"[0-9a-z]{12})/$"
-msgstr ""
-"^ihre-spenden/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-"
-"[0-9a-z]{12})/$"
+msgid "Send {count} optin mails."
+msgstr "Sende {count} Opt-In-E-Mails."
 
-#: fragdenstaat_at/fds_donation/urls.py:49
-msgctxt "url pattern"
-msgid "your-donation/change/"
-msgstr "ihre-spenden/change/"
-
-#: fragdenstaat_at/fds_donation/urls.py:56
+#: admin.py
 #, python-brace-format
-msgctxt "url pattern"
-msgid ""
-"^your-donation/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-"
-"[0-9a-z]{12})/change/$"
-msgstr ""
-"^ihre-spenden/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-"
-"[0-9a-z]{12})/change/$"
+#| msgid "Send {count} optin mails."
+msgid "Send {count} shipped mails."
+msgstr "Sende {count} Versand-E-Mails."
 
-#: fragdenstaat_at/fds_donation/urls.py:63
-msgctxt "url pattern"
-msgid "your-donation/donate/"
-msgstr "ihre-spenden/spenden/"
-
-#: fragdenstaat_at/fds_donation/urls.py:70
+#: admin.py
 #, python-brace-format
-msgctxt "url pattern"
-msgid ""
-"^your-donation/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-"
-"[0-9a-z]{12})/donate/$"
-msgstr ""
-"^ihre-spenden/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-"
-"[0-9a-z]{12})/spenden/$"
+msgid "Send {sent} donation mails ({resent} resent)."
+msgstr "{sent} Spenden-Mails gesendet ({resent} neu versendet)."
 
-#: fragdenstaat_at/fds_donation/views.py:155
+#: admin.py
+#, python-brace-format
+msgid "Send {sent} reminder mails."
+msgstr "Sende {sent} Erinnerungs-E-Mails."
+
+#: admin.py
+msgid "Sending JZWB email to {} donors."
+msgstr "Sende JZWB-E-Mail an {} Spender."
+
+#: admin.py
+msgid "Set processing date"
+msgstr ""
+
+#: export.py
+#| msgid "Clear receipt date"
+msgid "Set receipt date"
+msgstr "Empfangsdatum setzen"
+
+#: admin.py
+#| msgid "Send {count} optin mails."
+msgid "Set shipped date"
+msgstr "Setze Versanddatum"
+
+#: admin.py
+#, python-brace-format
+msgid "Set {count} order to processing."
+msgstr ""
+
+#: admin.py
+#, python-brace-format
+#| msgid "Send {count} optin mails."
+msgid "Set {count} order to shipped."
+msgstr "Setze {count} Bestellungen auf versandt."
+
+#: templates/fds_donation/forms/_donation_form_shipping.html
+msgid "Shipping details"
+msgstr "Versandadresse"
+
+#: models.py
+msgid "Show quick payment options"
+msgstr "Zeige Schnellspende-Möglichkeit"
+
+#: templates/fds_donation/includes/banktransfer_modal.html
+msgid "Show transfer instructions"
+msgstr "Überweisungsdaten anzeigen"
+
+#: forms.py
+msgid "Spain"
+msgstr "Spanien"
+
+#: admin.py
+#| msgid "Stay up to date"
+msgid "Start date"
+msgstr "Startdatum"
+
+#: admin.py
+msgid "Start workflow for donors..."
+msgstr "Starte Workflow für Spender*innen…"
+
+#: admin.py
+msgid "Stats"
+msgstr "Statistik"
+
+#: templates/fds_donation/donor_detail.html
+msgid "Status"
+msgstr "Status"
+
+#: templates/fds_donation/forms/_donation_form_step2.html
+msgid "Stay informed"
+msgstr "Informiert bleiben"
+
+#: export.py
+msgid "Store backup"
+msgstr "Backup speichern"
+
+#: forms.py
+msgid "Street, house number"
+msgstr "Straße, Hausnummer"
+
+#: templates/fds_donation/cms_plugins/donationgiftform.html
+msgid "Submit"
+msgstr "Abschicken"
+
+#: admin.py
+msgid "Suspicious"
+msgstr "Verdächtig"
+
+#: forms.py
+msgid "Sweden"
+msgstr "Schweden"
+
+#: forms.py
+msgid "Switzerland"
+msgstr "Schweiz"
+
+#: models.py
+msgid "Tagged Donor"
+msgstr "Getaggte/r Spender*in"
+
+#: models.py
+msgid "Tagged Donors"
+msgstr "Getaggte Spender*innen"
+
+#: templates/fds_donation/donation_complete.html
+msgid "Thank you for your donation!"
+msgstr "Vielen Dank für Ihre Spende!"
+
+#: templates/fds_donation/donor_detail.html
+#| msgid "Thank you for your donation!"
+msgid "Thank you for your support!"
+msgstr "Vielen Dank für Deine Spende!"
+
+#: templates/fds_donation/includes/banktransfer_instructions.html
+#| msgid "No, thank you."
+msgid "Thank you!"
+msgstr "Vielen Dank!"
+
+#: templates/fds_donation/donation_complete.html
+#| msgid ""
+#| "\n"
+#| "          The <strong>donation receipts</strong> that we send at the beginning of next year can only be sent to <strong>confirmed email addresses!</strong>\n"
+#| "          "
+msgid ""
+"The <strong>donation receipts</strong> that we send at the beginning of next"
+" year can only be sent to <strong>confirmed email addresses!</strong>"
+msgstr ""
+"Die <strong>Spendenbescheinigung</strong>, die wir zu Beginn des kommenden "
+"Jahres versenden, können wir Dir nur an eine <strong>bestätigte E-Mail-"
+"Adresse</strong> zukommen lassen!"
+
+#: widgets.py
+msgid "The amount needs to be at least {}."
+msgstr "Der Betrag muss mindestens {} sein."
+
+#: forms.py
+msgid "The chosen donation gift is no longer available, sorry!"
+msgstr ""
+"Das ausgewählte Spendengeschenk ist leider nicht mehr verfügbar, sorry!"
+
+#: export.py
+msgid "The donations will be marked as receipted."
+msgstr "Die Spenden werden als erhalten markiert."
+
+#: views.py
+msgid "The link you clicked did not come from this donor profile."
+msgstr ""
+"Den Link, den du aufgerufen hast, gehört nicht zu diesem Spendenprofil."
+
+#: templates/fds_donation/donor_detail.html
+msgid ""
+"The status of donations made by bank transfer is updated at the beginning of"
+" the following month, as account statements are only reconciled then."
+msgstr ""
+"Der Status von Spenden per Überweisung aktualisiert sich erst zu Beginn des "
+"Folgemonats, da erst dann die Kontoauszüge abgeglichen werden."
+
+#: templates/fds_donation/donation_form.html
+msgid ""
+"This Paypal subscription is not managed by us. You can change or cancel your"
+" PayPal subscription in your PayPal account."
+msgstr ""
+"Dieses Paypal-Abo wurde nicht von uns ausgelöst. Du kannst es in deinem "
+"Paypal-Konto ändern oder kündigen."
+
+#: templates/fds_donation/donor_form.html
+msgid "This is the basis for the donation receipts."
+msgstr ""
+"Auf Basis dieser Informationen lassen wir Dir Deine Spendenbescheinigung "
+"zukommen."
+
+#: templates/fds_donation/includes/banktransfer_modal.html
+#| msgid "Your details"
+msgid "Transfer details"
+msgstr "Überweisungsangaben"
+
+#: templates/fds_donation/donation_failed.html
+msgid "Try again"
+msgstr "Nochmal probieren"
+
+#: forms.py
+msgid "Unfortunately, all available donation gifts have been reserved."
+msgstr "Leider sind alle verfügbaren Spendengeschenke schon weg."
+
+#: forms.py
+msgid "Unfortunately, there are no donation gifts available."
+msgstr "Leider sind keine Spendengeschenke verfügbar."
+
+#: templates/fds_donation/donor_form.html
+#| msgid "Your details"
+msgid "Update donor details"
+msgstr "Daten aktualisieren"
+
+#: templates/fds_donation/donor_change_email.html
+#| msgid "Your email address"
+msgid "Update email address"
+msgstr "E-Mail-Adresse aktualisieren"
+
+#: admin.py
+msgid "Update invalid addresses"
+msgstr "Ungültige Adressen aktualisieren"
+
+#: templates/fds_donation/donor_detail.html
+msgid "Update personal data for receipts"
+msgstr "Daten für Spendenbescheinigungen ändern"
+
+#: templates/fds_donation/donation_form.html
+msgid "Update these details"
+msgstr "Angaben aktualisieren"
+
+#: templates/fds_donation/donation_form.html
+#| msgctxt "url pattern"
+#| msgid "your-donation/"
+msgid "Update your donation"
+msgstr "Deine Spende anpassen"
+
+#: templates/fds_donation/donor_form.html
+msgid "Update your donor details"
+msgstr "Aktualisiere die Daten für deine Spendenbescheinigung"
+
+#: templates/fds_donation/donor_change_email.html
+#: templates/fds_donation/donor_detail.html
+#| msgid "Your email address"
+msgid "Update your email address"
+msgstr "E-Mail-Adresse aktualisieren"
+
+#: models.py
+msgid "Upgrade Recurrence ({})"
+msgstr "Dauerspende-Erhöhung ({})"
+
+#: templates/fds_donation/cms_plugins/upgrade_recurrence.html
+#| msgid "Last donation"
+msgid "Upgrade donation"
+msgstr "Spende erhöhen"
+
+#: views.py
+msgid "Upgrade of recurrence failed."
+msgstr "Erhöhung der Dauerspende fehlgeschlagen."
+
+#: cms_plugins.py
+msgid "Upgrade recurrence"
+msgstr "Dauerspende erhöhen"
+
+#: templates/fds_donation/forms/_donation_form_shipping.html
+msgid "Use receipt address"
+msgstr "Adresse der Spendenbescheinigung verwenden"
+
+#: forms.py
+msgid "Use this address for future donation receipts."
+msgstr "Nutze diese Adresse für zukünftige Spendenbescheinigungen."
+
+#: apps.py
+#| msgid "Is donor"
+msgid "User donor"
+msgstr "Spender*in hat Konto"
+
+#: templates/froide_payment/subscription/_cancel_form.html
+msgid ""
+"We are sorry that you want to cancel your support. If you are sorry as well "
+"you can pause your donation or reduce the amount."
+msgstr ""
+"Schade, dass du deinen Dauerauftrag kündigen möchtest. Wenn du das auch "
+"bedauerst, kannst du deine Spende auch erst einmal pausieren oder den Betrag"
+" reduzieren."
+
+#: views.py
 msgid ""
 "We have no associated donations with your account. If you have donated, let "
 "us know! Otherwise feel free to donate below."
@@ -888,41 +1437,584 @@ msgstr ""
 "gespendet haben, lassen Sie es uns wissen! Ansonsten haben Sie weiter unten "
 "die Gelegenheit zu spenden."
 
-#: fragdenstaat_at/fds_donation/views.py:182
+#: views.py
+msgid "We have sent you a link to access your donations."
+msgstr "Wir haben dir einen Link zu deinem Spenderprofil geschickt."
+
+#: views.py
+#| msgid "Please confirm your email address!"
+msgid "We send you an email to confirm your new email address."
+msgstr ""
+"Wir haben dir eine E-Mail gesendet zum Bestätigen deiner neuen E-Mail-"
+"Adresse."
+
+#: forms.py
+msgid ""
+"With your donation you can also create a FragDenStaat account where you can "
+"manage your details, donations and requests."
+msgstr ""
+"In Ihrem FragDenStaat-Konto können Sie Ihre Daten pflegen, Ihre Spenden "
+"einsehen sowie Ihre Anfragen verwalten."
+
+#: forms.py
+msgid "Yes, once a year via email."
+msgstr "Ja, einmal im Jahr per E-Mail."
+
+#: forms.py
+msgid "Yes, please!"
+msgstr "Ja, gerne!"
+
+#: views.py
+#, python-brace-format
+msgid "You are accessing the donor profile of {name} ({email})"
+msgstr "Du bist mit dem Spendenprofil von {name} ({email}) angemeldet."
+
+#: views.py
+msgid ""
+"You are logged in with a different account than the one associated with this"
+" donor."
+msgstr ""
+"Du bist mit einem anderen Konto eingeloggt als das, was mit dem "
+"Spenderprofil verknüpft ist."
+
+#: forms.py
+#, python-brace-format
+msgid "You are paying with {method}."
+msgstr "Du nutzt zur Zahlung {method}."
+
+#: templates/fds_donation/includes/recurrence.html
+msgid ""
+"You can adjust or cancel your donation by changing the standing order with "
+"your bank."
+msgstr ""
+"Du kannst deine Spende ändern oder kündigen, indem du den Dauerauftrag bei "
+"Deiner Bank anpasst."
+
+#: templates/fds_donation/includes/recurrence.html
+#| msgid "You can manage your donation in your FragDenStaat account."
+msgid ""
+"You can change or cancel your PayPal subscription in your PayPal account."
+msgstr ""
+"Dieses Paypal-Abo wurde nicht von uns ausgelöst. Du kannst es in deinem "
+"Paypal-Konto ändern oder kündigen."
+
+#: templates/fds_donation/cms_plugins/upgrade_recurrence.html
+msgid ""
+"You can increase your donation by 5 Euro, 20 percent or double it, as you "
+"feel like!"
+msgstr ""
+"Du kannst deine Dauerspende um 5 Euro oder 20 Prozent erhöhen oder "
+"verdoppeln – ganz wie es zu dir passt!"
+
+#: admin.py
+#| msgid "Need two banktransfer donations from same donor."
+msgid "You can only select one banktransfer donation at a time."
+msgstr ""
+
+#: views.py
+#| msgid "You can manage your donation in your FragDenStaat account."
+msgid "You cannot access this donor with the current account."
+msgstr ""
+"Du kannst auf dieses Spenderprofil mit dem aktuellen Konto nicht zugreifen."
+
+#: templates/fds_donation/donor_detail.html
+#| msgid "Do you want a donation receipt?"
+msgid "You currently do not receive donation receipts."
+msgstr "Du erhältst derzeit keine Spendenbescheinigung."
+
+#: templates/fds_donation/donation_complete.html
+msgid "You got mail"
+msgstr "Sie haben Post"
+
+#: forms.py
+msgid "You have already ordered this donation gift."
+msgstr "Du hast dieses Spendengeschenk schon bestellt."
+
+#: forms.py
+msgid "You have to decide."
+msgstr "Sie müssen sich entscheiden."
+
+#: views.py
+msgid ""
+"You need to be logged in as a donor to order a donation gift. Please request"
+" a login link first."
+msgstr ""
+"Du musst in deinem Spendenprofil eingeloggt sein, um ein Spendengeschenk zu "
+"bestellen. Bitte fordere zuerst einen Login-Link an."
+
+#: templates/fds_donation/donor_detail.html
+msgid ""
+"You will receive a donation receipt at the start of each year via e-mail."
+msgstr ""
+"Du wirst zum Jahresbeginn eine Spendenbescheinigung per E-Mail erhalten."
+
+#: forms.py
+msgid ""
+"Your amount is too large for the chosen payment method. Please choose a "
+"different method or contact us."
+msgstr ""
+"Ihr Betrag ist zu groß für diese Zahlungsmethode. Bitte wählen Sie eine "
+"andere Zahlungsmethode oder kontaktieren Sie uns direkt."
+
+#: templates/fds_donation/donor_change_email.html
+#| msgid "Your email address"
+msgid "Your current email address is:"
+msgstr "Deine aktuelle E-Mail-Adresse ist:"
+
+#: templates/fds_donation/forms/_donation_form_step2.html
+msgid "Your details"
+msgstr "Persönliche Daten"
+
+#: templates/fds_donation/donor_detail.html
+#| msgctxt "url pattern"
+#| msgid "your-donation/"
+msgid "Your donation"
+msgstr "Deine Spende"
+
+#: templates/fds_donation/forms/_donation_form.html
+#: templates/fds_donation/forms/remote_form.html
+msgid "Your donation frees information"
+msgstr "Mit meiner Spende Informationen befreien"
+
+#: templates/fds_donation/email/donation_gift_order_shipped_subject.txt
+#| msgid "donation gifts"
+msgid "Your donation gift shipped"
+msgstr "Dein Spendengeschenk wurde versandt"
+
+#: templates/fds_donation/donation_failed.html
+#| msgid ""
+#| "\n"
+#| "    Your donation with your chosen payment provider has not completed successfully.\n"
+#| "    "
+msgid ""
+"Your donation with your chosen payment provider has not completed "
+"successfully."
+msgstr ""
+"Deine Spende konnte durch den von Dir gewählten Zahlungsanbieter leider "
+"nicht erfolgreich abgeschlossen werden."
+
+#: templates/fds_donation/donor_detail.html
+#| msgid "Your email address"
+msgid "Your donor contact email address is:"
+msgstr "Die E-Mail-Adresse deines Spendenprofils ist:"
+
+#: templates/fds_donation/donor_form.html
+#| msgid "Your details"
+msgid "Your donor details"
+msgstr "Deine Details als Spender*in"
+
+#: views.py
 msgid "Your donor info has been updated!"
 msgstr "Ihre Spender-Informationen wurden aktualisiert!"
 
-#~ msgid "Amount received"
-#~ msgstr "Erhaltener Betrag"
+#: views.py
+#| msgid "Your donor info has been updated!"
+msgid "Your email has been changed."
+msgstr "Deine E-Mail-Adresse wurde geändert."
 
-#~ msgid "From"
-#~ msgstr "Von"
+#: views.py
+msgid "Your link has expired, please request a new one."
+msgstr "Dein Link ist abgelaufen, bitte fordere einen neuen an."
 
-#~ msgid "From date"
-#~ msgstr "Ab Datum"
+#: forms.py
+msgid "Your new amount every {} months:"
+msgstr "Dein neuer Beitrag alle {} Monate:"
 
-#~ msgid "Until"
-#~ msgstr "Bis"
+#: forms.py
+#| msgid "recurring monthly amount"
+msgid "Your new monthly amount:"
+msgstr "Dein neuer monatlicher Beitrag:"
 
-#~ msgid "To date"
-#~ msgstr "Bis Datum"
+#: forms.py
+msgid "Your new quarterly amount:"
+msgstr "Dein neuer vierteljährlicher Beitrag:"
 
-#~ msgid "From - To"
-#~ msgstr "Von - Bis"
+#: forms.py
+msgid "Your new yearly amount:"
+msgstr "Dein neuer jährlicher Beitrag:"
 
-#, python-format
-#~ msgid "By %(filter_title)s"
-#~ msgstr "Nach %(filter_title)s"
+#: views.py
+#| msgid "Your donor info has been updated!"
+msgid "Your order has been created."
+msgstr "Deine Bestellung wurde erstellt."
 
-#~ msgid "Filter"
-#~ msgstr "Filter"
+#: templates/fds_donation/forms/_donation_form_step2.html
+msgid "Your payment details will be transmitted securely in the next step."
+msgstr ""
+"Die Eingabe Ihrer Zahlungsinformationen erfolgt sicher verschlüsselt im "
+"nächsten Schritt."
 
-#~ msgid "Pivot Data"
-#~ msgstr "Pivot Daten"
+#: views.py
+#| msgid "Your donor info has been updated!"
+msgid "Your recurrence has been updated."
+msgstr "Deine Dauerspende wurde aktualisiert."
 
-#~ msgid "Please choose your amount:"
-#~ msgstr "Bitte wähle Deinen Betrag:"
+#: templates/fds_donation/donor_detail.html
+#| msgid "Is recurring donor"
+msgid "Your recurring donation"
+msgid_plural "Your recurring donations"
+msgstr[0] "Deine Dauerspende"
+msgstr[1] "Deine Dauerspenden"
 
-#~ msgctxt "salutation ms"
-#~ msgid "Dear Mr./Ms. %s"
-#~ msgstr "Liebe/r Herr/Frau %s"
+#: forms.py
+#, python-brace-format
+#| msgid "recurring monthly amount"
+msgid "Your {recurring} donation amount"
+msgstr "Deine {recurring}e Spende"
+
+#: urls.py
+msgctxt "url pattern"
+msgid "^email/(?P<donor_id>\\d+)/(?P<token>[^/]+)/$"
+msgstr "^email/(?P<donor_id>\\d+)/(?P<token>[^/]+)/$"
+
+#: urls.py
+msgctxt "url pattern"
+msgid "^go/(?P<donor_id>\\d+)/(?P<token>[^/]+)(?P<next_path>/.*)$"
+msgstr "^go/(?P<donor_id>\\d+)/(?P<token>[^/]+)(?P<next_path>/.*)$"
+
+#: urls.py
+#, python-brace-format
+msgctxt "url pattern"
+msgid ""
+"^your-"
+"donation/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12})/$"
+msgstr ""
+"^ihre-"
+"spenden/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12})/$"
+
+#: urls.py
+#, python-brace-format
+msgctxt "url pattern"
+msgid ""
+"^your-"
+"donation/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12})/change/$"
+msgstr ""
+"^ihre-"
+"spenden/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12})/change/$"
+
+#: urls.py
+#, python-brace-format
+msgctxt "url pattern"
+msgid ""
+"^your-"
+"donation/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12})/donate/$"
+msgstr ""
+"^ihre-"
+"spenden/(?P<token>[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12})/spenden/$"
+
+#: admin_utils.py
+msgid "active"
+msgstr "aktiv"
+
+#: admin.py
+msgid "amount"
+msgstr "Betrag"
+
+#: templates/froide_payment/subscription/default.html
+msgid "back"
+msgstr "zurück"
+
+#: models.py
+msgid "canceled on {}"
+msgstr "gekündigt am {}"
+
+#: urls.py
+msgctxt "url pattern"
+msgid "donate/"
+msgstr "spenden/"
+
+#: urls.py
+msgctxt "url pattern"
+msgid "donate/complete/"
+msgstr "spenden/abgeschlossen/"
+
+#: urls.py
+msgctxt "url pattern"
+msgid "donate/failed/"
+msgstr "spenden/fehlgeschlagen/"
+
+#: models.py
+msgid "donation"
+msgstr "Spende"
+
+#: admin.py
+msgid "donation amount"
+msgstr "Spendenbetrag"
+
+#: admin.py
+msgid "donation amount received"
+msgstr "erhaltener Spendenbetrag"
+
+#: models.py
+msgid "donation gift"
+msgstr "Spendengeschenk"
+
+#: models.py
+msgid "donation gift order"
+msgstr "Spendengeschenk-Bestellung"
+
+#: models.py
+msgid "donation gift orders"
+msgstr "Spendengeschenk-Bestellungen"
+
+#: models.py
+msgid "donation gifts"
+msgstr "Spendengeschenke"
+
+#: admin.py
+msgid "donation received"
+msgstr "Spende erhalten"
+
+#: admin.py
+msgid "donation received date"
+msgstr "Datum Spende erhalten"
+
+#: admin.py models.py
+msgid "donations"
+msgstr "Spenden"
+
+#: models.py
+msgid "donor"
+msgstr "SpenderIn"
+
+#: models.py
+#| msgid "donor"
+msgid "donor event"
+msgstr "Spender*in-Ereignis"
+
+#: models.py
+#| msgid "donors"
+msgid "donor events"
+msgstr "Spender*in-Ereignisse"
+
+#: models.py
+msgid "donors"
+msgstr "SpenderInnen"
+
+#: models.py
+msgid "downgraded recurrence"
+msgstr "Dauerspende verringert"
+
+#: admin_utils.py
+msgid "e.g. 100-500, 1000-, -2000"
+msgstr "z.B. 100-500, 1000-, -2000"
+
+#: forms.py
+msgid "e.g. name@example.org"
+msgstr "z.B. name@beispiel.de"
+
+#: utils.py
+#, python-brace-format
+msgid "every month"
+msgid_plural "every {interval} months"
+msgstr[0] "jeden Monat"
+msgstr[1] "alle {interval} Monate"
+
+#: models.py
+msgid "every six months"
+msgstr "alle sechs Monate"
+
+#: utils.py
+msgid "every year"
+msgstr "jedes Jahr"
+
+#: admin.py
+msgid "export as csv"
+msgstr "Als CSV exportieren"
+
+#: apps.py
+#| msgid "Is donor"
+msgid "formal donor"
+msgstr "Spender*in (Siezen)"
+
+#: admin.py
+#| msgid "Company name"
+msgid "has company name"
+msgstr "hat Firmenname"
+
+#: admin.py
+msgid "has duplicate"
+msgstr "hat Duplikat"
+
+#: admin.py
+msgid "has email"
+msgstr "hat E-Mail-Adresse"
+
+#: admin.py
+msgid "has shipped"
+msgstr "wurde versandt"
+
+#: admin.py
+msgid "has user"
+msgstr "hat Nutzerkonto"
+
+#: admin.py
+msgid "is processing"
+msgstr ""
+
+#: urls.py
+msgctxt "url pattern"
+msgid "logout/"
+msgstr "logout/"
+
+#: models.py
+msgid "modified recurrence"
+msgstr "Dauerspende geändert"
+
+#: models.py
+msgid "monthly"
+msgstr "monatlich"
+
+#: models.py
+msgid "once"
+msgstr "einmalig"
+
+#: templates/fds_donation/forms/_donation_quick.html
+msgid "or continue below with more options"
+msgstr "oder fahre unten fort mit mehr Auswahl"
+
+#: admin.py
+#| msgid "Other amount"
+msgid "order count"
+msgstr "Anzahl Bestellungen"
+
+#: admin.py
+#| msgid "Created timestamp"
+msgid "order timestamp"
+msgstr "Bestellungszeitpunkt"
+
+#: admin_utils.py
+msgid "passive"
+msgstr "passiv"
+
+#: models.py
+msgid "prompt recurrence upgrade"
+msgstr "Aufforderung Dauerspende erhöhen"
+
+#: models.py
+msgid "quarterly"
+msgstr "vierteljährlich"
+
+#: admin.py
+#| msgid "recurring monthly amount"
+msgid "recurring amount"
+msgstr "wiederkehrender Betrag"
+
+#: admin.py
+msgid "recurring monthly amount"
+msgstr "wiederkehrender monatlicher Betrag"
+
+#: admin.py
+#| msgid "recurring monthly amount"
+msgid "remaining count"
+msgstr "Anzahl übrig"
+
+#: urls.py
+msgctxt "url pattern"
+msgid "send-link/"
+msgstr "sende-link/"
+
+#: admin_utils.py
+#| msgid "donation amount"
+msgid "total donation amount in year"
+msgstr "Spendensumme im Jahr"
+
+#: models.py
+msgid "upgraded recurrence"
+msgstr "Dauerspende erhöht"
+
+#: models.py
+msgid "yearly"
+msgstr "jährlich"
+
+#: urls.py
+msgctxt "url pattern"
+msgid "your-donation/"
+msgstr "ihre-spenden/"
+
+#: urls.py
+#| msgctxt "url pattern"
+#| msgid "your-donation/change/"
+msgctxt "url pattern"
+msgid "your-donation/change-email/"
+msgstr "ihre-spenden/email-aendern/"
+
+#: urls.py
+msgctxt "url pattern"
+msgid "your-donation/change/"
+msgstr "ihre-spenden/change/"
+
+#: urls.py
+msgctxt "url pattern"
+msgid "your-donation/donate/"
+msgstr "ihre-spenden/spenden/"
+
+#: forms.py
+#, python-brace-format
+msgid "{amount} EUR donation {str_interval} to {site_name}"
+msgstr "{amount} EUR Spende {str_interval} an {site_name}"
+
+#: models.py
+#, python-brace-format
+msgid "{amount} EUR every month via {method} since {start}."
+msgid_plural ""
+"{amount} EUR every {interval} months via {method} since {start}."
+msgstr[0] "{amount} EUR jeden Monat via {method} seit {start}."
+msgstr[1] "{amount} EUR alle {interval} Monate via {method} seit {start}"
+
+#: forms.py
+#, python-brace-format
+#| msgid "{amount} EUR donation {str_interval} to {site_name}"
+msgid "{amount} EUR {str_interval}."
+msgstr "{amount} EUR {str_interval}."
+
+#: forms.py
+#, python-brace-format
+#| msgid "amount"
+msgid "{amount} EUR."
+msgstr "{amount} EUR."
+
+#: utils.py
+#, python-brace-format
+msgid "{amount} every month"
+msgid_plural "{amount} every {interval} months"
+msgstr[0] "{amount} jeden Monat"
+msgstr[1] "{amount} alle {interval} Monate"
+
+#: utils.py
+#, python-brace-format
+#| msgid "amount last year"
+msgid "{amount} every year"
+msgstr "{amount} jedes Jahr"
+
+#: tasks.py
+#, python-brace-format
+msgid ""
+"{count} deferred donations\n"
+"{url}"
+msgstr ""
+"{count} zurückgestellte Spenden\n"
+"{url}"
+
+#: tasks.py
+#, python-brace-format
+msgid ""
+"{count} new donation gift orders in the last week\n"
+"{url}"
+msgstr ""
+"{count} neue Spendengeschenk-Bestellungen in der letzten Woche\n"
+"{url}"
+
+#: models.py
+msgid "{} days ago"
+msgstr ""
+
+#: admin.py
+#| msgid "My donations"
+msgid "✅ Confirm donations"
+msgstr "✅ Spende bestätigen"
+
+#: admin.py
+#| msgid "General donation"
+msgid "❌ Cancel donations"
+msgstr "❌ Spende abbrechen"

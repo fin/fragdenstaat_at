@@ -1081,6 +1081,7 @@ class DonationFormCMSPlugin(CMSPlugin):
     collapsed = models.BooleanField(default=False)
     hide_contact = models.BooleanField(default=False)
     hide_account = models.BooleanField(default=False)
+    hide_receipt = models.BooleanField(default=False)
     quick_payment = models.CharField(
         blank=True, max_length=20, choices=QUICKPAYMENT_CHOICES
     )
@@ -1137,6 +1138,7 @@ class DonationFormCMSPlugin(CMSPlugin):
             "payment_methods": self.payment_methods or "",
             "hide_contact": self.hide_contact,
             "hide_account": self.hide_account,
+            "hide_receipt": self.hide_receipt,
             "collapsed": self.collapsed,
             "gift_options": ",".join(
                 [str(gift.id) for gift in self.gift_options.all()]

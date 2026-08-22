@@ -26,7 +26,9 @@ async def fill_donation_page(page: Page, donor_email):
     # id, not by get_by_text(...).nth(): DE's form has a third "Nein, danke."
     # (the contact/newsletter opt-in) ahead of these two, which D3 removes on AT,
     # so DE's indices 1 and 2 silently point at the wrong controls here.
-    await page.locator("#id_receipt_0").click()
+    # No #id_receipt_* to click: hide_receipt defaults to True on AT, so the
+    # donation-receipt question is not rendered (see form_settings.py and
+    # MERGE_PLAN.md P4). Restore this if a form ever shows it again.
     await page.locator("#id_account_1").click()
     await page.get_by_label("Was ist drei plus vier?").fill("7")
 

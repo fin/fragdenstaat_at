@@ -59,6 +59,13 @@ class DonationSettingsForm(forms.Form):
     # A CMS editor can still show it per form once that changes.
     hide_contact = forms.BooleanField(required=False, initial=True)
     hide_account = forms.BooleanField(required=False, initial=False)
+    # AT default: hidden. "Spendenbescheinigung" is the German instrument; in
+    # Austria deductibility runs through Sonderausgaben-Datenübermittlung to the
+    # BMF (full name + date of birth), which this form does not collect and
+    # Donor has no field for. Asking the question here would promise something
+    # AT cannot currently deliver. A CMS editor can still show it per form.
+    # See MERGE_PLAN.md P4.
+    hide_receipt = forms.BooleanField(required=False, initial=True)
     collapsed = forms.BooleanField(required=False)
     payment_methods = forms.CharField(
         required=False,
@@ -163,6 +170,7 @@ class DonationFormFactory:
         "payment_methods": [x[0] for x in PAYMENT_METHODS],
         "hide_contact": True,  # AT default -- see the field above (D3)
         "hide_account": False,
+        "hide_receipt": True,  # AT default -- see the field above (P4)
         "quick_payment": "",
     }
     initials = {

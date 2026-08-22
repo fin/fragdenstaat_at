@@ -736,6 +736,12 @@ class DonationForm(SpamProtectionMixin, SimpleDonationForm, DonorForm):
         if self.settings["hide_contact"] and "contact" in self.fields:
             self.fields.pop("contact")
 
+        # Removing the field leaves Donor.receipt at its default of None rather
+        # than False -- "never asked", not "declined" -- so the distinction
+        # survives if AT later starts issuing receipts.
+        if self.settings["hide_receipt"] and "receipt" in self.fields:
+            self.fields.pop("receipt")
+
         DonationGiftLogic.init(self)
 
     def clean(self):

@@ -986,6 +986,26 @@ Once it does, four things must change together — the last is easy to miss:
   and deploy per `docs/runbooks/celery-task-rename.md`; not a code edit.
 - [ ] **Confirm `remind_unreceived_banktransfers` is in the beat config.** It is
   documented "run on the 15th" but nothing in the repo schedules it.
+- [ ] **Set `reverse_id` on the CMS pages the templates link to.** Four
+  `{% page_url %}` lookups resolve to nothing today, because the imported
+  content has **10 pages and 0 reverse_ids**:
+
+  | reverse_id | used by |
+  |---|---|
+  | `help:donations` | `fds_donation/donor_detail.html` — "Häufige Fragen & Kontakt" |
+  | `donate` | donation CTAs |
+  | `beginnersguide` | request flow |
+  | `home` | various |
+
+  `page_url` fails silently: the tag renders an empty string, so the markup
+  becomes `<a href="">`, which looks like a working link and reloads the current
+  page. Nothing errors and nothing logs. Verified by rendering all four against
+  the migrated database — every one came back empty.
+
+  Fix in the CMS: **Page → Advanced settings → ID**, one per page. Worth doing
+  before the content freeze, since it is editor work rather than a deploy step.
+  Re-check with `scripts/verify_render.py` afterwards; note it will *not* catch
+  this on its own, because an empty href still returns 200. **[H]**
 - [ ] **Run the Stripe tests once against real test keys.** They are deselected by
   default (`-m "not stripe"`) because they need Stripe test keys *and* a webhook
   tunnel. The Stripe CLI is now installed in the devcontainer

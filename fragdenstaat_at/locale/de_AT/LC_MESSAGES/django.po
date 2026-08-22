@@ -839,7 +839,8 @@ msgid ""
 "Registered mail is a postal service which allows the sender proof of mailing"
 " via a receipt. The letter can have a special envelope."
 msgstr ""
-"Ein RSa- oder RSb-Brief ist eine förmliche Zustellung mit Zustellungsurkunde."
+"Ein RSa- oder RSb-Brief ist eine förmliche Zustellung mit "
+"Zustellungsurkunde."
 
 #. from froide
 #. de: Gelber Brief: Welches Zustelldatum wurde auf dem Briefumschlag
@@ -847,7 +848,8 @@ msgstr ""
 #: froide/foirequest/views/message.py
 msgid "Registered mail: what is the date stamped on the envelope?"
 msgstr ""
-"RSa-/RSb-Brief: Wann wurde der Brief erfolgreich zugestellt oder zum ersten Mal in der Filiale zur Abholung verfügbar?"
+"RSa-/RSb-Brief: Wann wurde der Brief erfolgreich zugestellt oder zum ersten "
+"Mal in der Filiale zur Abholung verfügbar?"
 
 #. from froide
 #. de: Es handelt sich um einen gelben Brief
@@ -1239,4 +1241,10 @@ msgstr ""
 #. de: Deine Dauerspende wurde nicht geändert.
 #: views.py
 msgid "The subscription was not modified."
+msgstr ""
+
+#. from fds_donation
+#. de: BLZ
+#: templates/fds_donation/includes/banktransfer_instructions.html
+msgid "Bank code"
 msgstr ""

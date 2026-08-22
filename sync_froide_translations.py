@@ -30,6 +30,7 @@ Usage:
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 
@@ -73,6 +74,80 @@ TARGET_HEADER = """\
 """
 
 
+# Patterns that mean "this names Germany". Broader than KEYWORDS, because these
+# are matched against source text rather than translations: a German IBAN, BIC
+# or Bankleitzahl in a template is not a wording problem, it is the wrong bank.
+HARDCODED_PATTERNS = [
+    (r"fragdenstaat\.de", "German domain"),
+    (r"okfn\.de", "German domain"),
+    (r"Open Knowledge Foundation Deutschland", "German legal entity"),
+    (r"\bDE\d{2}[ ]?[0-9 ]{16,}", "German IBAN"),
+    (r"\bGENODE[A-Z0-9]+", "German BIC"),
+    (r"GLS Bank", "German bank"),
+    (r"gelbe[rn]? Brief", "Deutsche Post product"),
+    (r"Zuwendungsbest\w+", "German donation receipt"),
+    (r"\bBLZ\b|Bankleitzahl", "German bank code (AT statements have none)"),
+]
+
+# Where AT's own source lives. Third-party packages are not ours to fix.
+SCAN_ROOTS = ("fragdenstaat_at",)
+SCAN_SUFFIXES = (".html", ".txt", ".py")
+SCAN_SKIP_DIRS = {"node_modules", ".venv", "locale", "migrations", "build", "static"}
+
+
+def scan_hardcoded(root=HERE):
+    """Report Germany-specific strings hardcoded in AT's own source.
+
+    Translation tooling cannot see these: a hardcoded IBAN in a template is not
+    a msgid, so no catalog will ever flag it. This is how
+    banktransfer_instructions.html shipped Open Knowledge Foundation
+    Deutschland's account details -- account holder, IBAN, BIC, Bankleitzahl and
+    a SEPA QR code -- on an Austrian site.
+    """
+    compiled = [(re.compile(pat), why) for pat, why in HARDCODED_PATTERNS]
+    hits = []
+    for scan_root in SCAN_ROOTS:
+        base = os.path.join(root, scan_root)
+        for dirpath, dirnames, filenames in os.walk(base):
+            dirnames[:] = [d for d in dirnames if d not in SCAN_SKIP_DIRS]
+            for name in filenames:
+                if not name.endswith(SCAN_SUFFIXES):
+                    continue
+                path = os.path.join(dirpath, name)
+                try:
+                    text = open(path, encoding="utf-8", errors="replace").read()
+                except OSError:
+                    continue
+                for lineno, line in enumerate(text.splitlines(), 1):
+                    for rx, why in compiled:
+                        m = rx.search(line)
+                        if m:
+                            hits.append(
+                                (os.path.relpath(path, root), lineno, why, m.group(0))
+                            )
+    return hits
+
+
+def report_hardcoded(root=HERE):
+    hits = scan_hardcoded(root)
+    if not hits:
+        print("\nNo Germany-specific strings hardcoded in AT's own source.")
+        return 0
+    print(
+        f"\n⚠ {len(hits)} hardcoded Germany-specific string(s) in AT's own source."
+        "\n  These are not translations -- no catalog can override them; the source"
+        "\n  itself has to change.\n"
+    )
+    by_file = {}
+    for path, lineno, why, match in hits:
+        by_file.setdefault(path, []).append((lineno, why, match))
+    for path in sorted(by_file):
+        print(f"  {path}")
+        for lineno, why, match in by_file[path]:
+            print(f"      line {lineno:<5} {why:<38} {match[:40]!r}")
+    return len(hits)
+
+
 def contains_keyword(text):
     if not text:
         return False
@@ -90,9 +165,27 @@ def entry_texts(entry):
     return texts
 
 
-def entry_matches(entry):
+OWN_PATTERN = re.compile("|".join(pat for pat, _why in HARDCODED_PATTERNS), re.I)
+
+
+def entry_matches(entry, own=False):
+    """Does this entry need an Austrian override?
+
+    Two different questions depending on whose catalog it is.
+
+    For a third-party app, any Germany-flavoured wording is worth a look, so the
+    broad KEYWORDS list applies -- "Spende" in froide's catalog is a hint that
+    the string was written for a donation site.
+
+    For AT's own catalogs it is the opposite: this is AT's own German, so
+    "Spende" is simply the right word and flagging it produces 172 candidates,
+    nearly all noise. Only unambiguously German things matter here -- the domain,
+    the German entity, a German IBAN or BIC, Deutsche Post's gelber Brief.
+    """
     if entry.obsolete:
         return False
+    if own:
+        return any(OWN_PATTERN.search(t) for t in entry_texts(entry) if t)
     return any(contains_keyword(t) for t in entry_texts(entry))
 
 
@@ -116,9 +209,13 @@ def discover_sources(only=None, all_apps=False):
     the ones AT could end up forking, and the ones whose German wording is worth
     overriding. Third-party wheels out of site-packages (django-cms,
     localflavor, ...) are skipped unless --all-apps is given: they match keywords
-    like "IBAN" through generic validator messages, which is noise. AT's own apps
-    are always skipped, since their German belongs in AT's own `de` catalog
-    rather than in an override of itself.
+    like "IBAN" through generic validator messages, which is noise.
+
+    AT's own apps are included too. The strategy is to keep AT's `de` catalogs a
+    close mirror of DE's, so future syncs stay cheap, and to express every
+    Austrian deviation as a `de_AT` override -- the same relationship AT already
+    has with froide. So AT's own German is a legitimate scan target: anything in
+    it that names Germany needs an override here.
     """
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fragdenstaat_at.settings.test")
     os.environ.setdefault("DJANGO_CONFIGURATION", "Test")
@@ -130,18 +227,21 @@ def discover_sources(only=None, all_apps=False):
     from django.apps import apps
     from django.conf import settings
 
-    own = os.path.join(HERE, "fragdenstaat_at")
-    target_locale = os.path.dirname(os.path.dirname(os.path.dirname(TARGET_PO)))
     seen_dirs = set()
 
     def emit(label, locale_dir):
+        # Note we do not skip AT's own locale directory: we read `de/` from it
+        # and write `de_AT/` into it, which are different catalogs.
         locale_dir = os.path.realpath(locale_dir)
-        if locale_dir in seen_dirs or locale_dir == os.path.realpath(target_locale):
+        if locale_dir in seen_dirs:
             return None
         if only and label not in only:
             return None
         seen_dirs.add(locale_dir)
-        return (label, locale_dir, find_repo(locale_dir))
+        own = locale_dir.startswith(
+            os.path.realpath(os.path.join(HERE, "fragdenstaat_at"))
+        )
+        return (label, locale_dir, find_repo(locale_dir), own)
 
     for locale_dir in map(os.fspath, settings.LOCALE_PATHS):
         repo = find_repo(locale_dir)
@@ -157,8 +257,6 @@ def discover_sources(only=None, all_apps=False):
     for config in apps.get_app_configs():
         locale_dir = os.path.join(config.path, "locale")
         if not os.path.isdir(locale_dir):
-            continue
-        if config.path.startswith(own):
             continue
         if not all_apps and find_repo(config.path) is None:
             continue
@@ -297,6 +395,12 @@ def main():
         "checkouts (noisy: generic IBAN/validator strings match)",
     )
     parser.add_argument(
+        "--no-hardcoded-check",
+        action="store_true",
+        help="skip the final scan for Germany-specific strings hardcoded in "
+        "AT's own templates and code",
+    )
+    parser.add_argument(
         "--no-scan",
         action="store_true",
         help="skip the keyword scan; adopt only",
@@ -324,7 +428,7 @@ def main():
     skipped_obsolete = []
     redundant = []
 
-    for label, locale_dir, repo in discover_sources(
+    for label, locale_dir, repo, is_own in discover_sources(
         set(args.app) or None, all_apps=args.all_apps
     ):
         repo_name = os.path.basename(repo) if repo else None
@@ -395,7 +499,7 @@ def main():
         for entry in polib.pofile(de_po):
             if entry.msgstr:
                 de_text.setdefault(key(entry), entry.msgstr)
-            if not entry_matches(entry) or key(entry) in seen:
+            if not entry_matches(entry, own=is_own) or key(entry) in seen:
                 continue
             # An entry already carrying a hand-written override needs no stub.
             if key(entry) in translated:
@@ -446,6 +550,8 @@ def main():
 
     if args.dry_run:
         print("\nDry run -- not writing.")
+        if not args.no_hardcoded_check:
+            report_hardcoded()
         return
 
     os.makedirs(os.path.dirname(TARGET_PO), exist_ok=True)
@@ -457,6 +563,9 @@ def main():
     target.save(TARGET_PO)
     print(f"\nSaved {len(target)} entries to {TARGET_PO}")
     print("Run `django-admin compilemessages --locale de_AT` to compile.")
+
+    if not args.no_hardcoded_check:
+        report_hardcoded()
 
 
 if __name__ == "__main__":

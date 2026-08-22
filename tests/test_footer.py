@@ -143,6 +143,7 @@ class LiveFooterTest(TestCase):
 
     def _render(self):
         from django.template import Template
+
         from sekizai.context import SekizaiContext
 
         from fragdenstaat_at.fds_cms.utils import get_request

@@ -12,10 +12,11 @@ from datashow.table import RowQueryset
 from djangocms_picture.cms_plugins import PicturePlugin as BasePicturePlugin
 
 from froide.foirequest.models import FoiRequest
-# AT-only: HomepageHeroPlugin counts public bodies.
-from froide.publicbody.models import PublicBody
 from froide.helper.auth import is_crew
 from froide.helper.utils import get_redirect_url
+
+# AT-only: HomepageHeroPlugin counts public bodies.
+from froide.publicbody.models import PublicBody
 
 from fragdenstaat_at.fds_cms.forms import DesignContainerForm
 
@@ -872,6 +873,7 @@ class SearchAlertPlugin(CMSPluginBase):
 # scaffolding that DE deleted; AT still has 17 live instances of it (MERGE_PLAN
 # 1a), so it stays until those are migrated onto the modern grid.
 # ---------------------------------------------------------------------------
+
 
 @plugin_pool.register_plugin
 class RowPlugin(CMSPluginBase):

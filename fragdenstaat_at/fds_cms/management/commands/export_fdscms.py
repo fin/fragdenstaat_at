@@ -17,5 +17,5 @@ class Command(DumpataCommand):
                 "djangocms_picture",
                 "djangocms_video",
             ],
-            **options
+            **options,
         )

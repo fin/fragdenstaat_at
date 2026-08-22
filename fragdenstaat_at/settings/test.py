@@ -35,9 +35,29 @@ class Test(FragDenStaatBase):
 
     GEOIP_PATH = None
 
-    DATABASES = values.DatabaseURLValue(
-        "postgis://fragdenstaat_at:fragdenstaat_at@localhost:5436/fragdenstaat_at"
-    )
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.contrib.gis.db.backends.postgis",
+            "NAME": env("DATABASE_NAME", "fragdenstaat_at"),
+            # Bound how long a statement waits to *acquire* a lock. The
+            # live_server fixture makes a test transactional, so teardown runs
+            # `flush` -> TRUNCATE over every table, which needs ACCESS
+            # EXCLUSIVE. If the live_server thread still holds a transaction on
+            # one of them the TRUNCATE waits forever: a Ctrl-C then lands in
+            # psycopg's execute with no indication of what it was waiting for.
+            # With this it raises OperationalError naming the lock instead.
+            #
+            # lock_timeout, not statement_timeout: this must not kill a slow but
+            # progressing query. Test-database creation runs the full migration
+            # set through this same connection.
+            "OPTIONS": {"options": "-c lock_timeout=15s"},
+            "HOST": env("DATABASE_HOST", "localhost"),
+            "USER": env("DATABASE_USER", "fragdenstaat_at"),
+            "PASSWORD": env("DATABASE_PASSWORD", "fragdenstaat_at"),
+            "PORT": "5432",
+        }
+    }
     # Adopted from DE's test settings alongside its fds_donation tests, which
     # exercise every variant. The Stripe/PayPal ones need test keys from the
     # environment; the tests that use them are marked and deselected by default

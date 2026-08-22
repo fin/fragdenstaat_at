@@ -1,5 +1,4 @@
 import pytest
-
 from froide_payment.models import Plan
 
 # AT's real plan name: DONATION_SITE_NAME_OVERRIDE is the legal recipient,

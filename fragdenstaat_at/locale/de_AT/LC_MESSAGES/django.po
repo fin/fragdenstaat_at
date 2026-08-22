@@ -648,19 +648,19 @@ msgstr ""
 #. de: Nichts
 #: froide/helper/admin_utils.py
 msgid "None"
-msgstr "None"
+msgstr "Nichts"
 
 #. from froide
 #. de: Behörden-Typ
 #: froide/publicbody/forms.py
 msgid "Classification"
-msgstr "Klassifikation"
+msgstr "Behörden-Typ"
 
 #. from froide
 #. de: Monat(e)
 #: froide/publicbody/models.py
 msgid "Month(s) (DE)"
-msgstr "Monat(e) (DE)"
+msgstr "Monat(e)"
 
 #. from froide
 #. de: Informationsfreiheitsgesetze
@@ -839,6 +839,7 @@ msgid ""
 "Registered mail is a postal service which allows the sender proof of mailing"
 " via a receipt. The letter can have a special envelope."
 msgstr ""
+"Ein RSa- oder RSb-Brief ist eine förmliche Zustellung mit Zustellungsurkunde."
 
 #. from froide
 #. de: Gelber Brief: Welches Zustelldatum wurde auf dem Briefumschlag
@@ -846,12 +847,13 @@ msgstr ""
 #: froide/foirequest/views/message.py
 msgid "Registered mail: what is the date stamped on the envelope?"
 msgstr ""
+"RSa-/RSb-Brief: Wann wurde der Brief erfolgreich zugestellt oder zum ersten Mal in der Filiale zur Abholung verfügbar?"
 
 #. from froide
 #. de: Es handelt sich um einen gelben Brief
 #: froide/foirequest/views/message.py
 msgid "The letter is registered mail"
-msgstr ""
+msgstr "Es handelt sich um einen RSa/RSb-Brief"
 
 #. from froide_payment
 #. de: {success}/{total} Dauerspenden gekündigt.

@@ -850,17 +850,17 @@ Decide each, or consciously decline it:
 | ✅~~`MATOMO_SITE_ID`~~ | **Resolved: Matomo is removed entirely.** The module, its commented import and the vestigial `_paq` calls in `top-banner.ts` are gone; nothing in the tree or the bundle references it. Introducing analytics is now a deliberate addition, and would need a decision about the host — DE's pointed at OKF *Deutschland's* instance |
 | ✅~~`CMS_COLOR_SCHEME`, `CMS_COLOR_SCHEME_TOGGLE`~~ | **Resolved: shipping without dark mode is fine.** Verified that *nothing installed reads either setting* — not AT, not froide, not django-cms — so omitting them is a no-op, not a risk. AT has no dark palette anyway: `frontend/styles/darkmode.scss` is never imported, so the compiled CSS carries no dark theme (2 stray `data-bs-theme` form-control rules and nothing else), and `onion-darkmode.ts` only fires on `.onion` hostnames. DE's `DarkModeToggle` plugin arrived with its `fds_cms` and is now **unregistered in `fds_cms/apps.py`**, so editors are not offered a control that would do nothing. Reverse that block if AT ever builds a dark palette. |
 | ✅`THUMBNAIL_ALIASES`, `THUMBNAIL_DEFAULT_ALIAS`, `FDS_THUMBNAIL_ENABLE_AVIF` | Image sizes and whether to serve AVIF. Affects storage and CDN volume. **Also gates adopting DE's `djangocms_picture`/`djangocms_video` templates**, which are otherwise stale copies (P2 step 6) |
-| `LEAFLET_CONFIG` | Map defaults. DE's centre/zoom are German — needs Austrian values if AT ever enables maps |
-| `DEFAULT_CURRENCY_LABEL`, `DEFAULT_CURRENCY_SYMBOL` | Cosmetic; both sites are EUR |
+| ✅`LEAFLET_CONFIG` | Map defaults. DE's centre/zoom are German — needs Austrian values if AT ever enables maps |
+| ✅`DEFAULT_CURRENCY_LABEL`, `DEFAULT_CURRENCY_SYMBOL` | Cosmetic; both sites are EUR |
 | `CREW_GROUP` | Name of the staff group froide treats as crew. Must match the group that actually exists in AT's database |
 | `FDS_LEGAL_BACKUP_URL`, `FDS_LEGAL_BACKUP_CREDENTIALS` | **Now honoured.** A WebDAV target for the retention backup taken when a user cancels their account. Unset means no backup is kept — decide whether AT needs one, since it is a data-protection commitment either way |
-| `CMS_REDIRECT_TO_LOWERCASE_SLUG` | URL normalisation. Changing it on a live site changes canonical URLs — check for SEO impact |
-| `VERSIONING_ALIAS_MODELS_ENABLED` | Whether Aliases are versioned. Now relevant, since D10 moved static content into Aliases |
-| `FILER_REMOVE_FILE_VALIDATORS`, `DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL`, `APP_SITE_URL`, ~~`PAYMENT_SUBSCRIPTION_ACCESS_FUNC`~~ | Small; adopt with the app that needs them |
+| ✅`CMS_REDIRECT_TO_LOWERCASE_SLUG` | URL normalisation. Changing it on a live site changes canonical URLs — check for SEO impact |
+| ✅`VERSIONING_ALIAS_MODELS_ENABLED` | Whether Aliases are versioned. Now relevant, since D10 moved static content into Aliases |
+| ✅`FILER_REMOVE_FILE_VALIDATORS`, `DJANGOCMS_VIDEO_YOUTUBE_EMBED_URL`, `APP_SITE_URL`, ~~`PAYMENT_SUBSCRIPTION_ACCESS_FUNC`~~ | Small; adopt with the app that needs them |
 
-Also review `SECRET_URLS["admin"]`, currently the literal `"admin"` on both sites.
+Also review ✅`SECRET_URLS["admin"]`, currently the literal `"admin"` on both sites.
 
-Also: **review the rewritten `base.html` meta description** — it is AT's search
+Also: ✅**review the rewritten `base.html` meta description** — it is AT's search
 snippet and was written here from the German original, not by anyone who owns the
 messaging. And **add AT's own `google-site-verification` token** if AT uses Search
 Console; DE's was removed rather than replaced.

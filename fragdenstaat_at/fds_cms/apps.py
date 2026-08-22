@@ -14,10 +14,6 @@ class FdsCmsConfig(AppConfig):
     verbose_name = "FragDenStaat CMS"
 
     def ready(self):
-        from froide.account import account_merged
-
-        from . import listeners  # noqa
-
         # AT ships no dark mode: darkmode.scss is never imported, so the
         # compiled CSS has no dark theme, and the toggle would flip an attribute
         # almost nothing responds to. DE's DarkModeToggle arrived with its
@@ -26,6 +22,9 @@ class FdsCmsConfig(AppConfig):
         # Delete this block if AT ever builds a dark palette.
         from cms.plugin_pool import plugin_pool
 
+        from froide.account import account_merged
+
+        from . import listeners  # noqa
         from .cms_plugins import DarkModeToggle
 
         try:

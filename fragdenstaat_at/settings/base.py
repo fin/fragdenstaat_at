@@ -705,6 +705,11 @@ class FragDenStaatBase(German, Base):
     DEFAULT_FROM_EMAIL = "FragDenStaat.at <info@fragdenstaat.at>"
     EMAIL_SUBJECT_PREFIX = "[AdminFragDenStaat] "
 
+    DEFAULT_CURRENCY = "EUR"
+    DEFAULT_CURRENCY_LABEL = "Euro"
+    DEFAULT_CURRENCY_SYMBOL = "€"
+    DEFAULT_DECIMAL_PLACES = 2
+
     # EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 
     EMAIL_BACKEND = "fragdenstaat_at.theme.email_backend.CustomCeleryEmailBackend"
@@ -908,6 +913,18 @@ class FragDenStaatBase(German, Base):
     DJANGOCMS_ICON_SETS = [
         ("fontawesome4", "fa", "Font Awesome 4", "4.7.0"),
     ]
+
+    LEAFLET_CONFIG = {
+        "TILES": [
+            (
+                "Carto",
+                "https://mapsneu.wien.gv.at/basemap/bmapgrau/{type}/google3857/{z}/{y}/{x}.{png}",
+                '&copy; Datenquelle: <a href="https://www.basemap.at">basemap.at</a>',
+            )
+        ],
+        "DEFAULT_CENTER": (47.7, 13.35),  # roughly centre of Austria
+        "DEFAULT_ZOOM": 7,
+    }
 
     COOKIE_CONSENT_LOG_ENABLED = False
     COOKIE_CONSENT_SECURE = False

@@ -2,7 +2,7 @@
 {% load fds_cms_tags %}
 {% load djangocms_alias_tags %}
 
-{% block metadescription %}Das Portal für Informationsfreiheit in Österreich. Stellen Sie ein Auskunftsbegehren nach dem Informationsfreiheitsgesetz (IFG) an Behörden und Ämter – für Bürgerinnen und Bürger, Initiativen und Vereine. Informieren Sie sich über Informationsfreiheit, IFG-Anfragen, Transparenz, Behördeninformationen und Ihr Recht auf Zugang zu amtlichen Informationen.{% endblock metadescription %}
+{% block metadescription %}FragDenStaat.at hilft Ihnen, Informationsanfragen an Behörden zu stellen{% endblock metadescription %}
 
 {% block body_extra_attributes %} data-staticurl="{{ STATIC_URL }}"{% if request.user.is_staff and SENTRY_JS_URL %} data-sentry="{{ SENTRY_JS_URL}}"{% endif %}{% endblock %}
 

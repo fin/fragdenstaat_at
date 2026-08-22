@@ -438,9 +438,16 @@ DONATION_DONE_URL = re.compile(r".*spenden/spende/spenden/abgeschlossen/.*")
 DONATION_FAILED_URL = re.compile(r".*spenden/spende/spenden/fehlgeschlagen/.*")
 
 
+# Pinned to one xdist worker. These register webhooks with event_types "*"
+# on a single shared sandbox app, so PayPal delivers every event to every
+# registered webhook and concurrent tests would consume each other's. They
+# also mutate the shared provider singleton (verify_webhook, webhook_id):
+# set-then-restore is safe serially, but in parallel the last writer wins
+# and teardown restores a stale value.
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.paypal
+@pytest.mark.xdist_group(name="sequential")
 async def test_paypal_once(page: Page, live_server, paypal_setup):
     donor_email = "peter.parker@example.com"
 
@@ -488,6 +495,7 @@ async def test_paypal_once(page: Page, live_server, paypal_setup):
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.paypal
+@pytest.mark.xdist_group(name="sequential")
 async def test_paypal_recurring(page: Page, live_server, paypal_setup):
     donor_email = "peter.parker@example.com"
 
@@ -558,6 +566,7 @@ async def test_paypal_recurring(page: Page, live_server, paypal_setup):
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.paypal
+@pytest.mark.xdist_group(name="sequential")
 async def test_paypal_cancel(page: Page, live_server, paypal_setup):
     donor_email = "peter.parker@example.com"
 

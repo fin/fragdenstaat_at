@@ -183,9 +183,12 @@ async def fill_donation_page(page: Page, donor_email):
 DONATION_DONE_URL = re.compile(r".*spenden/spende/spenden/abgeschlossen/.*")
 
 
+# Pinned to one xdist worker: each test drives the Stripe CLI forwarder and
+# a real browser against one shared sandbox account.
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.stripe
+@pytest.mark.xdist_group(name="sequential")
 async def test_sepa_recurring_donation_success(
     page: Page, live_server, stripe_sepa_setup
 ):
@@ -322,6 +325,7 @@ def stripe_mocked_time(time_machine, monkeypatch):
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.stripe
+@pytest.mark.xdist_group(name="sequential")
 async def test_sepa_shorten_recurring_interval(
     page: Page, live_server, stripe_sepa_setup, stripe_mocked_time
 ):
@@ -456,6 +460,7 @@ async def test_sepa_shorten_recurring_interval(
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.stripe
+@pytest.mark.xdist_group(name="sequential")
 async def test_sepa_once_donation_additional_fields(
     page: Page, live_server, stripe_sepa_setup
 ):
@@ -517,6 +522,7 @@ async def test_sepa_once_donation_additional_fields(
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.stripe
+@pytest.mark.xdist_group(name="sequential")
 async def test_sepa_recurring_donation_failed(
     page: Page, live_server, stripe_sepa_setup
 ):
@@ -565,6 +571,7 @@ async def test_sepa_recurring_donation_failed(
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.stripe
+@pytest.mark.xdist_group(name="sequential")
 async def test_sepa_once_donation_disputed(page: Page, live_server, stripe_sepa_setup):
     donor_email = "peter.parker@example.com"
 
@@ -602,6 +609,7 @@ async def test_sepa_once_donation_disputed(page: Page, live_server, stripe_sepa_
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.stripe
+@pytest.mark.xdist_group(name="sequential")
 async def test_creditcard_recurring_donation_success(
     page: Page, live_server, stripe_sepa_setup
 ):
@@ -651,6 +659,7 @@ async def test_creditcard_recurring_donation_success(
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.stripe
+@pytest.mark.xdist_group(name="sequential")
 async def test_creditcard_once_donation_success(
     page: Page, live_server, stripe_sepa_setup
 ):
@@ -700,6 +709,7 @@ async def test_creditcard_once_donation_success(
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.django_db
 @pytest.mark.stripe
+@pytest.mark.xdist_group(name="sequential")
 def test_quick_donation(client, unsuspicious):
     path = reverse("fds_donation:donate")
     email = "testing@example.com"

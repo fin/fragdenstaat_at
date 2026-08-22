@@ -505,25 +505,37 @@ async def test_paypal_recurring(page: Page, live_server, paypal_setup):
     await page.get_by_text("Paypal", exact=True).click()
     await fill_donation_page(page, donor_email)
 
-    # Sometimes: Billing plan created + catalog product created, billing subscription created
-    # Always: payment sale completed + billing subscription activated
+    await page.get_by_role("button", name="Jetzt spenden").click()
+
+    await login_paypal(page)
+
+    donation = Donation.objects.filter(
+        donor__email=donor_email, amount=5, recurring=True, method="paypal"
+    ).latest("timestamp")
+    assert donation.received_timestamp is None
+    assert donation.payment.status != "pending"
+    assert donation.payment.status != "confirmed"
+
+    # Open the tunnel as late as possible, immediately before approval, the way
+    # test_paypal_once does. Both awaited events follow approval:
+    # BILLING.SUBSCRIPTION.ACTIVATED when the buyer approves, and
+    # PAYMENT.SALE.COMPLETED when the first payment is taken. The earlier
+    # "sometimes" events (billing plan / catalog product / subscription created)
+    # fire during the submit above, but froide-payment implements no handler for
+    # any of them -- only ACTIVATED, CANCELLED, PAYMENT.CAPTURE.COMPLETED and
+    # PAYMENT.SALE.COMPLETED -- and target_event_set, not max_request_count, is
+    # what ends the wait, so missing them costs nothing.
+    #
+    # Holding the tunnel open across login instead cost 30-60s of exposure, and
+    # loca.lt dropping the tunnel mid-test is exactly the observed failure:
+    # PayPal reported 503 "Tunnel Unavailable" while --print-requests stayed
+    # silent.
     paypal_setup.max_request_count = 5
     paypal_setup.target_event_set = {
         "BILLING.SUBSCRIPTION.ACTIVATED",
         "PAYMENT.SALE.COMPLETED",
     }
     with paypal_setup:
-        await page.get_by_role("button", name="Jetzt spenden").click()
-
-        await login_paypal(page)
-
-        donation = Donation.objects.filter(
-            donor__email=donor_email, amount=5, recurring=True, method="paypal"
-        ).latest("timestamp")
-        assert donation.received_timestamp is None
-        assert donation.payment.status != "pending"
-        assert donation.payment.status != "confirmed"
-
         await page.locator('[data-test-id="continueButton"]').click()
 
         await page.wait_for_url(DONATION_DONE_URL)

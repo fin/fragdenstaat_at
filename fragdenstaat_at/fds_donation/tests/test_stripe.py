@@ -26,10 +26,10 @@ WebhookEvent = namedtuple("WebhookEvent", ["timestamp", "name", "event_id"])
 WebhookDelivered = namedtuple("WebhookDelivered", ["status_code", "event_id"])
 
 STRIPE_TEST_IBANS = {
-    "success": "DE89370400440532013000",
-    "success_delayed": "DE08370400440532013003",
-    "failed": "DE62370400440532013001",
-    "disputed": "DE35370400440532013002",
+    "success": "AT611904300234573201",
+    "success_delayed": "AT321904300235473204",
+    "failed": "AT861904300235473202",
+    "disputed": "AT591904300235473203",
     "additional_fields": "CH9300762011623852957",
 }
 STRIPE_TEST_CARDS = {
@@ -474,11 +474,26 @@ async def test_sepa_once_donation_additional_fields(
 
     with stripe_sepa_setup.wait_for_events(["charge.succeeded"]):
         await page.locator("#id_iban").fill(STRIPE_TEST_IBANS["additional_fields"])
-        await page.get_by_role("button", name="Jetzt spenden").click()
+
+        # A CH IBAN is in SEPAMixin.iban_address_required, so froide-payment's
+        # sepa.ts un-hides #additional-sepa-info once the IBAN matches
+        # data-ibanpattern. Wait for that rather than submitting straight away:
+        # the block starts `hidden`, and a submit that races it posts empty
+        # address fields.
+        await page.locator("#additional-sepa-info").wait_for(
+            state="visible", timeout=15000
+        )
 
         await page.get_by_placeholder("Adresse").fill("Teststraße 1")
         await page.get_by_placeholder("Ort").fill("Zürich")
         await page.get_by_placeholder("Postleitzahl").fill("1234")
+        # country is a CountryField select, required=False, whose initial comes
+        # from order.country -- empty here, because the donation form only
+        # collects a name and email. Leaving it unset sends
+        # billing_details[address][country]="" and Stripe rejects the request
+        # outright ("cannot be unset"), which surfaces as a generic "Fehler beim
+        # Überprüfen Ihrer Angaben" rather than a field error.
+        await page.locator("#id_country").select_option("CH")
 
         await page.get_by_role("button", name="Jetzt spenden").click()
 

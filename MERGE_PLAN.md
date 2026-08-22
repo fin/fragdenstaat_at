@@ -1006,6 +1006,30 @@ Once it does, four things must change together — the last is easy to miss:
   before the content freeze, since it is editor work rather than a deploy step.
   Re-check with `scripts/verify_render.py` afterwards; note it will *not* catch
   this on its own, because an empty href still returns 200. **[H]**
+- [ ] **Fill in the six missing `content_urls`.** Same class of silent failure
+  as the `reverse_id`s above, found by scanning froide and froide-payment too.
+  `get_content_url()` is `CONTENT_URLS.get(name, "/")` — a missing key returns
+  the **homepage**, so the link works, looks deliberate, and goes somewhere
+  wrong. AT configures four of the ten keys froide references:
+
+  | key | AT | DE has |
+  |---|---|---|
+  | `pseudonym` | **→ /** | `/hilfe/datenschutz-und-privatsphare/pseudonyme-nutzung/` |
+  | `throttled` | **→ /** | `/hilfe/erste-anfrage/wie-viele-anfragen-kann-ich-stellen/` |
+  | `help_request_public` | **→ /** | `…/anfrage-nicht-oeffentlich-stellen/` |
+  | `help_request_privacy` | **→ /** | `/hilfe/datenschutz-und-privatsphare/` |
+  | `help_attachments_management` | **→ /** | `…/anhange-verwalten/` |
+  | `help_postupload_redaction` | **→ /** | `…/schwaerzungen-durchfuehren/` |
+
+  All six are rendered from froide, not AT: `account/forms.py` (pseudonym),
+  `foirequest/utils.py` (throttled), `foirequest/views/make_request.py` and
+  `foirequest/views/message.py`. So they appear in the request flow and the
+  account forms — user-facing paths, not admin.
+
+  Each needs an AT help page to point at, so it is content work plus a settings
+  line, not a settings line alone. `page_url` and `content_urls` are the only
+  two such indirections: neither froide nor froide-payment uses
+  `{% page_url %}` at all. **[H]**
 - [ ] **Run the Stripe tests once against real test keys.** They are deselected by
   default (`-m "not stripe"`) because they need Stripe test keys *and* a webhook
   tunnel. The Stripe CLI is now installed in the devcontainer

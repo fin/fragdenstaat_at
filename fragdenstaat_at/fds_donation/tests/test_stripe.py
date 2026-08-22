@@ -20,6 +20,7 @@ from playwright.async_api import Page
 from fragdenstaat_at.fds_donation.forms import QuickDonationForm
 from fragdenstaat_at.fds_donation.models import Donation
 
+from .conftest import dump_page_state
 from .utils import ProcessReader
 
 WebhookEvent = namedtuple("WebhookEvent", ["timestamp", "name", "event_id"])
@@ -462,7 +463,7 @@ async def test_sepa_shorten_recurring_interval(
 @pytest.mark.stripe
 @pytest.mark.xdist_group(name="sequential")
 async def test_sepa_once_donation_additional_fields(
-    page: Page, live_server, stripe_sepa_setup
+    page: Page, live_server, stripe_sepa_setup, page_diagnostics
 ):
     donor_email = "peter.parker@example.com"
 
@@ -473,27 +474,62 @@ async def test_sepa_once_donation_additional_fields(
     await page.get_by_role("button", name="Jetzt spenden").click()
 
     with stripe_sepa_setup.wait_for_events(["charge.succeeded"]):
-        await page.locator("#id_iban").fill(STRIPE_TEST_IBANS["additional_fields"])
+        # fill() dispatches only an `input` event, but froide-payment's sepa.ts
+        # binds toggleAdditionalInfo to `change` and `keyup` -- so filling alone
+        # sets the value without ever running the handler, and the block stays
+        # hidden with no error anywhere. press_sequentially types character by
+        # character, which fires keyup like a real donor would.
+        await page.locator("#id_iban").press_sequentially(
+            STRIPE_TEST_IBANS["additional_fields"], delay=10
+        )
 
         # A CH IBAN is in SEPAMixin.iban_address_required, so froide-payment's
         # sepa.ts un-hides #additional-sepa-info once the IBAN matches
         # data-ibanpattern. Wait for that rather than submitting straight away:
         # the block starts `hidden`, and a submit that races it posts empty
         # address fields.
-        await page.locator("#additional-sepa-info").wait_for(
-            state="visible", timeout=15000
-        )
+        try:
+            await page.locator("#additional-sepa-info").wait_for(
+                state="visible", timeout=15000
+            )
+        except Exception:
+            # The block staying hidden means sepa.ts did not react to the IBAN.
+            # Capture enough to tell "the bundle never loaded" from "it loaded
+            # and threw" from "it ran but the pattern did not match".
+            await dump_page_state(
+                page,
+                "sepa-additional-fields",
+                page_diagnostics,
+                extra_selectors=(
+                    "#additional-sepa-info",
+                    "#id_iban",
+                    "#id_country",
+                    "#card-errors",
+                ),
+            )
+            print(
+                "  iban value:",
+                await page.locator("#id_iban").input_value(),
+            )
+            print(
+                "  ibanpattern:",
+                await page.locator("#additional-sepa-info").get_attribute(
+                    "data-ibanpattern"
+                ),
+            )
+            raise
 
         await page.get_by_placeholder("Adresse").fill("Teststraße 1")
         await page.get_by_placeholder("Ort").fill("Zürich")
         await page.get_by_placeholder("Postleitzahl").fill("1234")
-        # country is a CountryField select, required=False, whose initial comes
-        # from order.country -- empty here, because the donation form only
-        # collects a name and email. Leaving it unset sends
-        # billing_details[address][country]="" and Stripe rejects the request
-        # outright ("cannot be unset"), which surfaces as a generic "Fehler beim
-        # Überprüfen Ihrer Angaben" rather than a field error.
-        await page.locator("#id_country").select_option("CH")
+        # sepa.ts also derives the country from the IBAN prefix and selects it.
+        # Assert that rather than setting it blindly: country is a CountryField
+        # select whose initial comes from order.country, which is empty here
+        # (the donation form only collects a name and email), and an unset
+        # country reaches Stripe as "" -- which it rejects outright ("cannot be
+        # unset"), surfacing as a generic "Fehler beim Überprüfen Ihrer Angaben"
+        # rather than a field error.
+        assert await page.locator("#id_country").input_value() == "CH"
 
         await page.get_by_role("button", name="Jetzt spenden").click()
 

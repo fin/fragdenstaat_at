@@ -45,6 +45,7 @@ KEYWORDS = [
     "gelben Brief",
     "Spende",
     "IBAN",
+    "Presseanfrage",
 ]
 
 # Matched as-is (case-sensitive substring). "DE" as a word would match far too
@@ -87,6 +88,17 @@ HARDCODED_PATTERNS = [
     (r"gelbe[rn]? Brief", "Deutsche Post product"),
     (r"Zuwendungsbest\w+", "German donation receipt"),
     (r"\bBLZ\b|Bankleitzahl", "German bank code (AT statements have none)"),
+    # The label above only catches a *described* Bankleitzahl. DE's BLZ also
+    # appeared bare, as data-copy-text="43060967" on a button whose label had
+    # been removed -- a clipboard icon silently offering a German bank code with
+    # nothing to indicate what it was. Both the spaced display form (430 609 67)
+    # and the bare eight digits are matched.
+    #
+    # Bare 8-digit numbers are inherently ambiguous; across AT's own source there
+    # is exactly one other (a byte limit), so the noise is one line. Austrian
+    # statements have no BLZ at all, which is what makes any of these wrong here.
+    (r"(?<!\d)\d{3}[ ]\d{3}[ ]\d{2}(?!\d)", "German bank code (spaced BLZ)"),
+    (r"(?<!\d)\d{8}(?!\d)", "possible German bank code (bare BLZ)"),
 ]
 
 # Where AT's own source lives. Third-party packages are not ours to fix.

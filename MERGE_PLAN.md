@@ -402,7 +402,12 @@ design or legal judgement.
   - [x] tighten `--check-max-modified` 260 → 140 (measured 127)
   - [x] record the new baseline commit
   - [x] delete commented-out DE code in `theme/views.py`, `theme/urls.py`
-- [ ] **P6** — translations *(deliberately last)*
+- [ ] **P6** — translations *(mostly done; D5 exit and 44 strings remain)*
+  - [x] `de_AT` override catalog built, pruned to real overrides, annotated
+  - [x] AT's own German ported from DE (`locale`, `fds_donation`, `fds_cms`)
+  - [x] sync script covers AT's own catalogs and flags hardcoded German
+  - [ ] 44 strings still untranslated (26 + 17 + 1), mostly admin-side
+  - [ ] **D5 exit:** drop `de_AT` from the froide fork, repin `okfde/froide@main`
 
 ### Ported: DE's `theme/tests/` — and what they caught
 
@@ -837,6 +842,56 @@ one blocked on someone outside the team.
 Things that must be decided or done before this branch reaches production. None
 of them block the merge work itself.
 
+### 9.0 Blockers — nothing ships until these are done
+
+Ordered by what goes wrong if you skip them. Everything below this subsection is
+either a decision, a verification, or a nice-to-have; these are the ones that put
+wrong data in front of real people or break the deploy.
+
+**Wrong content reaching users**
+
+- [ ] **German identity in the mailing templates.** `fds_mailing/templates/email/
+      default/base.html` carries `fragdenstaat.de` five times plus Open Knowledge
+      Foundation Deutschland; `formal/base.html` one more. Every mailing AT sends
+      goes out with German footers and links. Find them with
+      `python sync_froide_translations.py --dry-run` (§9.12). Same class as the
+      bank details, which are now fixed.
+- [ ] **Four dead `reverse_id` links and six `content_urls` pointing at the
+      homepage** — §9.3. `throttled` and `pseudonym` fire exactly when a user is
+      already confused. Both need AT help pages to exist, so this is content work
+      with a lead time, not a settings edit.
+
+**Security**
+
+- [ ] **`django` 5.2.6 → 5.2.15** — nine patch releases behind *inside* the
+      existing pin. Django patch releases are where security fixes ship.
+- [ ] **`urllib3` 1.26.13 → 2.7.0** — a major behind, with known advisories.
+
+**Deploy mechanics, in order**
+
+- [ ] **Check the `fds_cms/0005` precondition, then `migrate --fake`** (D9, §9.3).
+      Must not run where those columns are absent — check `information_schema`
+      first.
+- [ ] **Celery task rename** — drain, then deploy, per
+      `docs/runbooks/celery-task-rename.md`.
+- [ ] **`uv sync --locked`**, shipping `uv.lock` and `pyproject.toml` with the
+      code (§9.10). A plain `uv sync` may re-resolve and hand production an
+      untested set.
+- [ ] **Rebuild the Elasticsearch image** (8.19.3; also picks up `init: true`),
+      and confirm production ES is **≥ 8.16** — below that `no_sub_matches` is
+      silently ignored and search quality degrades with no error.
+- [ ] **Confirm `django-payments` resolves to 3.x** — free resolution picks
+      4.1.0, which nothing has run against froide-payment.
+
+**Never rehearsed**
+
+- [ ] **P3: migrate a real production dump** — `docs/runbooks/live-db-verification.md`.
+      Everything so far has run against an extract with **zero donation rows**,
+      and the donation tables are where the forward-ported migrations bite. §11 of
+      that runbook (Stripe/PayPal) is written but has never been run end to end.
+
+---
+
 ### 9.1 Settings that are product decisions, not merge mechanics
 
 DE defines these and AT does not. All are optional — nothing crashes without them
@@ -962,7 +1017,7 @@ The intentional divergences, for the record: `LANGUAGE_CODE`/`LANGUAGES`/
 `ELASTICSEARCH_INDEX_PREFIX`, and `TEXT_ADDITIONAL_ATTRIBUTES` (AT allows
 `iframe src`, which DE's set omits — see §9.5).
 
-### 9.2 Enabling `fds_ogimage`
+### 9.2 Nice to have: enabling `fds_ogimage`
 
 The app is kept on purpose; the external rendering service does not exist yet.
 Once it does, four things must change together — the last is easy to miss:
@@ -1066,7 +1121,7 @@ Once it does, four things must change together — the last is easy to miss:
   do this before trusting recurring card donations.
   (The Plan.slug overflow that broke the recurring flows is fixed — §9.8.)
 
-### 9.4 Verify before trusting
+### 9.4 Verification owed before trusting the deploy
 
 - [ ] **Rehearse the migrations against a real production dump.**
   📖 **Procedure: `docs/runbooks/live-db-verification.md`** — ten ordered steps
@@ -1091,7 +1146,7 @@ Once it does, four things must change together — the last is easy to miss:
   were both changed. The plugin query was hand-checked against an extract whose
   donation tables are empty — that proves the SQL valid, not the arithmetic.
 
-### 9.5 Known live defects to fix before or with the deploy
+### 9.5 Known live defects — fix with the deploy, none are blockers
 
 - [ ] **The footer alias hardcodes hash-stamped static URLs** (four sponsor logos).
   They are orphans from a deployment that used manifest storage; production no
@@ -1112,7 +1167,7 @@ Once it does, four things must change together — the last is easy to miss:
 - [ ] **If mailing is ever enabled, a working unsubscribe route is legally required.**
   Three DE test modules are currently ignored for exactly this reason.
 
-### 9.6 Deferred: georegion loading
+### 9.6 Nice to have (deferred): georegion loading
 
 `theme/management/commands/update_georegion.py` and
 `fds_cms/management/commands/load_georegion.py` are both German: they are built
@@ -1126,7 +1181,7 @@ depends on regional data (map plugins, region-scoped search, `LEAFLET_CONFIG`).
 Until then they are harmless, and deleting them would throw away the shape of a
 working loader.
 
-### 9.7 Filesystem caveat for macOS developers
+### 9.7 Nice to have: filesystem caveat for macOS developers
 
 This workspace is a **case-insensitive** bind mount, so `Inter-Italic-latin.woff2`
 and `inter-italic-latin.woff2` are one path locally but two on CI and production
@@ -1215,14 +1270,19 @@ column that could hold 256, which matters not at all for a field nothing reads.
 ⚠️ This paragraph previously claimed three migrations would arrive unapplied.
 That was wrong — checked against `fds_final` and corrected.
 
-**Still open — three behavioural patches, all Austria-specific. [H]**
+**Resolved by pinning the fork; upstreaming is what remains. [H]**
 
-- [ ] **Stripe locale.** Without `9c24aed`, `get_stripe_locales()` returns `[]`
-  for `de-at`, so Stripe checkout stops being forced to German. Not patchable by
-  configuration — it reads `settings.LANGUAGE_CODE` against a hardcoded dict.
-  Needs a provider subclass or, better, a one-line upstream PR.
-- [ ] **PayPal locale.** Without `134cc6f`, PayPal receives `locale: "de-at"`
-  rather than `"de"`. Same shape of fix.
+- [x] **Stripe locale** (`9c24aed`) and **PayPal locale** (`134cc6f`) — both are
+  rebased onto current `okfde/main` as `fin/froide-payment@2026-08-de-sync`, and
+  `pyproject.toml` pins it (lock records `f7d3120`). The PayPal one is not
+  hypothetical: `application_context.locale` was sending `de-at`, which is not
+  valid BCP-47 — the region subtag must be uppercase — so PayPal rejected every
+  recurring subscription with "violates schema". `test_paypal_recurring` proves
+  the fix. A third one-liner was added on the branch: the same locale bug in the
+  subscription-*modify* flow, which upstream had introduced after the 2023 fork.
+- [ ] **Upstream all three to `okfde/froide-payment` and repin to `@main`.** They
+  are one-liners any non-German deployment needs. Until then AT depends on a
+  personal fork, which is the D5 exit criterion.
 - [ ] **`stripe.api_version`.** `b303254` pins the API version to `2020-08-27` at
   import. This one should probably **not** be carried over verbatim — it is a
   2023-era pin against a since-upgraded Stripe library, and silently freezing the
@@ -1272,7 +1332,7 @@ uv pip install -e ../froide --config-setting editable_mode=compat --no-deps
 uv pip install -e ../froide-payment --config-setting editable_mode=compat --no-deps
 ```
 
-### 9.11 Housekeeping
+### 9.11 Nice to have: housekeeping
 
 - The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
   origin; this branch exists only in the dev container.

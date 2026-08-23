@@ -1336,3 +1336,38 @@ uv pip install -e ../froide-payment --config-setting editable_mode=compat --no-d
 
 - The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
   origin; this branch exists only in the dev container.
+
+---
+
+### 9.12 Finding Germany-specific strings that no catalog can reach
+
+`sync_froide_translations.py` ends with a scan of AT's own templates and code for
+hardcoded German identity. This is deliberately separate from the translation
+work: a hardcoded IBAN is not a msgid, so no `de_AT` override can ever fix it —
+the source has to change.
+
+```bash
+python sync_froide_translations.py --dry-run     # scan runs at the end
+python sync_froide_translations.py --no-hardcoded-check   # skip it
+```
+
+It looks for German domains (`fragdenstaat.de`, `okfn.de`), the German legal
+entity, German IBANs and BICs, GLS Bank, Deutsche Post's *gelber Brief*,
+*Zuwendungsbestätigung*, and bank codes in both the spaced display form
+(`430 609 67`) and bare (`43060967`).
+
+This is how `banktransfer_instructions.html` was found still holding Open
+Knowledge Foundation Deutschland's account holder, IBAN, BIC, Bankleitzahl and
+SEPA QR code on an Austrian donation page. That file is now clean.
+
+Current state: **17 hits across 7 files**, of which
+
+- `fds_mailing/templates/email/{default,formal}/base.html` — the blocker in §9.0.
+- `fds_donation/templates/fds_donation/pdf/zwb.html` — moot while the ZWB export
+  stays behind the §9.8 kill switch, and superseded by the P4 decision.
+- `templates/footer.html` — **intentional**, the OKF Deutschland *supporter*
+  credit. Leave it.
+- One known false positive: `settings/production.py:34`, an 8-digit byte limit
+  caught by the bare-BLZ pattern. Kept, because the alternative is missing a
+  wrong bank code.
+

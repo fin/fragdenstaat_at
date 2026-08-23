@@ -861,11 +861,13 @@ wrong data in front of real people or break the deploy.
       already confused. Both need AT help pages to exist, so this is content work
       with a lead time, not a settings edit.
 
-**Security**
+**Security** — both done
 
-- [ ] **`django` 5.2.6 → 5.2.15** — nine patch releases behind *inside* the
-      existing pin. Django patch releases are where security fixes ship.
-- [ ] **`urllib3` 1.26.13 → 2.7.0** — a major behind, with known advisories.
+- [x] **`django` 5.2.6 → 5.2.17** and **`urllib3` 1.26.13 → 2.7.0.** Neither was
+      constrained: `pyproject.toml` already allowed them (`django>=5.2,<5.3`),
+      and every dependent's bound was satisfied — the tightest on Django is
+      `<5.3` (AT, froide, django-payments) and on urllib3 `<3`. Both were stale
+      lock entries from the 2023 fork, not decisions.
 
 **Deploy mechanics, in order**
 
@@ -887,11 +889,8 @@ wrong data in front of real people or break the deploy.
 
 - [x] **P3: migrate a real production dump** — done, and it went through cleanly.
       `docs/runbooks/live-db-verification.md` is the procedure.
-- [ ] **Run §11 of that runbook (Stripe/PayPal) end to end.** Written this
-      session, never completed: the PayPal flow now reaches
-      `BILLING.SUBSCRIPTION.ACTIVATED` and `PAYMENT.SALE.COMPLETED`, but
-      `test_paypal_cancel` and the eight Stripe tests have not all been green in
-      one run.
+- [x] **Run §11 of that runbook (Stripe/PayPal) end to end.** All eleven payment
+      tests pass against the sandboxes — three PayPal, eight Stripe.
 
 ---
 

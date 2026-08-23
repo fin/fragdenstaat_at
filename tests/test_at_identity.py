@@ -17,6 +17,7 @@ site footer credits OKF Deutschland as a supporter, which is correct. Only the
 German *bank* details are.
 """
 
+import re
 from decimal import Decimal
 
 from django.contrib.auth.models import AnonymousUser
@@ -48,9 +49,32 @@ DE_BANK_MARKERS = [
 ]
 
 
+# Allowed in the footer and nowhere else: the site credits OKF Deutschland as a
+# supporter, which is correct. Anywhere else it means DE content leaked in.
+DE_ORG = "Open Knowledge Foundation Deutschland"
+
+FOOTER_RE = re.compile(r"<footer[^>]*id=\"footer\".*?</footer>", re.S | re.I)
+
+
+def strip_footer(html):
+    """Remove the footer element so page checks can ban DE_ORG everywhere else.
+
+    Every page extends base.html, which renders the footer alias, so a
+    whole-body check would trip on the legitimate supporter credit.
+    """
+    return FOOTER_RE.sub("", html)
+
+
 def assert_no_german_bank(text, where):
     found = [m for m in DE_BANK_MARKERS if m in text]
     assert not found, f"German bank details in {where}: {found}"
+
+
+def assert_no_german_org(text, where):
+    assert DE_ORG not in text, (
+        f"{DE_ORG!r} appears in {where}. It belongs only in the footer's "
+        "supporter credit -- anywhere else is leaked DE content."
+    )
 
 
 class FakeOrder:
@@ -80,6 +104,7 @@ def test_banktransfer_details_are_austrian(template):
     assert AT_IBAN_SPACED in out or AT_IBAN_PLAIN in out, f"{template}: no AT IBAN"
     assert AT_BIC in out, f"{template}: no AT BIC"
     assert_no_german_bank(out, template)
+    assert_no_german_org(out, template)
 
 
 class FooterTest(TestCase):
@@ -109,6 +134,14 @@ class FooterTest(TestCase):
     def test_footer_credits_the_austrian_organisation(self):
         self.assertIn(ORG, self._footer())
 
+    def test_footer_may_credit_okf_as_supporter(self):
+        """The one place DE_ORG is legitimate, asserted so nobody "cleans" it up.
+
+        If this fails the credit was removed -- a content decision rather than a
+        leak. Delete this test along with it.
+        """
+        self.assertIn(DE_ORG, self._footer())
+
 
 class PageTest(TestCase):
     fixtures = ["cms.json"]
@@ -116,14 +149,16 @@ class PageTest(TestCase):
     def test_homepage(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        assert_no_german_bank(response.content.decode("utf-8", "replace"), "homepage")
+        body = response.content.decode("utf-8", "replace")
+        assert_no_german_bank(body, "homepage")
+        assert_no_german_org(strip_footer(body), "homepage (outside the footer)")
 
     def test_donation_form_page(self):
         response = self.client.get(reverse("fds_donation:donate"))
         self.assertEqual(response.status_code, 200)
-        assert_no_german_bank(
-            response.content.decode("utf-8", "replace"), "donation form"
-        )
+        body = response.content.decode("utf-8", "replace")
+        assert_no_german_bank(body, "donation form")
+        assert_no_german_org(strip_footer(body), "donation form (outside the footer)")
 
     def test_donor_page(self):
         """/spenden/spende/ihre-spenden/ lists pending bank transfers."""
@@ -134,4 +169,6 @@ class PageTest(TestCase):
         # (/ihre-spenden/spenden/), so a single GET returns another 302.
         response = self.client.get(response.url, follow=True)
         self.assertEqual(response.status_code, 200)
-        assert_no_german_bank(response.content.decode("utf-8", "replace"), "donor page")
+        body = response.content.decode("utf-8", "replace")
+        assert_no_german_bank(body, "donor page")
+        assert_no_german_org(strip_footer(body), "donor page (outside the footer)")

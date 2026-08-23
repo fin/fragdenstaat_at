@@ -395,7 +395,7 @@ design or legal judgement.
   - [x] 8. Footer gate in force (now joined by the page-render harness)
 - [ ] **P3** — migrations
   - [x] forward-port as `fds_cms/0008` and `fds_donation/0046`
-  - [ ] **rehearse against a production dump with real donation rows** — see `docs/runbooks/live-db-verification.md`
+  - [x] **rehearsed against a production dump** — went through cleanly; see `docs/runbooks/live-db-verification.md`
 - [ ] **P4** — Austrian donation receipts *(not started; needs external tax/legal input)*
 - [x] **P5** — repeatable sync
   - [x] drift job wired into CI
@@ -883,12 +883,15 @@ wrong data in front of real people or break the deploy.
 - [ ] **Confirm `django-payments` resolves to 3.x** — free resolution picks
       4.1.0, which nothing has run against froide-payment.
 
-**Never rehearsed**
+**Rehearsal**
 
-- [ ] **P3: migrate a real production dump** — `docs/runbooks/live-db-verification.md`.
-      Everything so far has run against an extract with **zero donation rows**,
-      and the donation tables are where the forward-ported migrations bite. §11 of
-      that runbook (Stripe/PayPal) is written but has never been run end to end.
+- [x] **P3: migrate a real production dump** — done, and it went through cleanly.
+      `docs/runbooks/live-db-verification.md` is the procedure.
+- [ ] **Run §11 of that runbook (Stripe/PayPal) end to end.** Written this
+      session, never completed: the PayPal flow now reaches
+      `BILLING.SUBSCRIPTION.ACTIVATED` and `PAYMENT.SALE.COMPLETED`, but
+      `test_paypal_cancel` and the eight Stripe tests have not all been green in
+      one run.
 
 ---
 
@@ -1123,7 +1126,7 @@ Once it does, four things must change together — the last is easy to miss:
 
 ### 9.4 Verification owed before trusting the deploy
 
-- [ ] **Rehearse the migrations against a real production dump.**
+- [x] **Rehearse the migrations against a real production dump.** Done.
   📖 **Procedure: `docs/runbooks/live-db-verification.md`** — ten ordered steps
   including the `fds_cms/0005` fake and how to check its precondition first, the
   full 54-migration sequence, and what to do if anything else wants faking.

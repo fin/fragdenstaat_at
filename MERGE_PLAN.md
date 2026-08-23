@@ -1030,6 +1030,33 @@ Once it does, four things must change together — the last is easy to miss:
   line, not a settings line alone. `page_url` and `content_urls` are the only
   two such indirections: neither froide nor froide-payment uses
   `{% page_url %}` at all. **[H]**
+- [ ] **Decide whether the proof-of-identity widget should be law-specific.**
+  Today it is not gated at all: `MakeRequestView.get_proof_form()` returns a
+  form for every authenticated user, on every request, regardless of law or
+  public body — the only condition is `is_authenticated`. The view does not even
+  resolve a law at that point.
+
+  The data model already anticipates the gate but nothing uses it.
+  `FoiLaw.requires_signature` exists and is exposed through the publicbody
+  serializer and the generated API types, so the frontend can see it per law —
+  but the only references in froide are the model field, the serializer and two
+  generated type files. No view, form or template reads it.
+
+  Two ways to wire it, with different reach:
+
+  - **Server-side, AT-only.** Override `get_proof_form()` to return `None`
+    unless the law has `requires_signature`. Small and contained, but the law is
+    chosen client-side in the Vue flow *after* the page renders, so this only
+    works where a single public body is preselected — not the search flow.
+  - **Client-side, upstream.** Show or hide the proof section reactively as the
+    selected law changes, keyed on `requires_signature`, which the API already
+    returns. Correct for every flow, but it is a froide frontend change and so
+    needs upstreaming or a fork (D5).
+
+  Either way the laws have to be marked first: `requires_signature` defaults to
+  `False` and nothing sets it, so gating on it today would hide the widget for
+  every AT law. Which laws genuinely require identity proof is a question about
+  the IFG, not about the code. **[H]**
 - [ ] **Run the Stripe tests once against real test keys.** They are deselected by
   default (`-m "not stripe"`) because they need Stripe test keys *and* a webhook
   tunnel. The Stripe CLI is now installed in the devcontainer

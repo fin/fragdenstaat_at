@@ -475,9 +475,28 @@ Acted on, because it was on a live path:
 - [x] **`django-payments` 1.0.0 → 3.1.0.** froide-payment declares it
   unconstrained and it is the library froide-payment is built on. AT sat two
   majors behind DE while running `froide-payment@main`, which upstream develops
-  against 3.x. Left free it resolves to **4.1.0**, which no deployment we can
-  check has run against froide-payment, so `[tool.uv] constraint-dependencies`
-  now tracks DE's major (`>=3.1,<4`). Revisit when DE moves.
+  against 3.x. Left free it resolves to **4.1.0**, so `[tool.uv]
+  constraint-dependencies` pins `>=3.1,<4`.
+
+  The cap is a hard incompatibility, not caution. **4.0.0 dropped
+  `StripeProvider`** (deprecated in 3.0.0); 4.1.0's `payments/stripe/` exports
+  `StripeProviderV3` and nothing else — the old name appears nowhere in the
+  package. `froide_payment/provider/stripe.py:21` still does `from
+  payments.stripe import StripeProvider` and subclasses it at line 1140 for
+  `StripeSofortProvider`, and `provider/__init__.py` imports that
+  unconditionally. On 4.x, `import froide_payment.provider` raises
+  `ImportError` and the site does not boot — taking down the Stripe and PayPal
+  providers AT does use, not just Sofort.
+
+  Lifting the cap is a froide-payment change, not a bump here: port
+  `StripeSofortProvider` to `StripeProviderV3`, or drop it (AT already has it
+  commented out at `settings/production.py:104`). 4.0 also drops Django < 5.2
+  and Python < 3.10 — AT satisfies both — and fixes a `StripeProviderV3`
+  `captured_amount` bug that breaks refunds, which is worth having eventually.
+
+  DE is on 3.1.0 too, but by **lock inertia, not decision**: DE declares no
+  bound either, and its 2026-08-17 "Update dependencies" commit changed a
+  single unrelated `uv.lock` line. Do not read DE's 3.1.0 as a tested ceiling.
 
 Worth a decision, not yet acted on:
 
@@ -856,8 +875,8 @@ wrong data in front of real people or break the deploy.
       goes out with German footers and links. Find them with
       `python sync_froide_translations.py --dry-run` (§9.12). Same class as the
       bank details, which are now fixed.
-- [ ] **Four dead `reverse_id` links and six `content_urls` pointing at the
-      homepage** — §9.3. `throttled` and `pseudonym` fire exactly when a user is
+- [x] **Five dead `reverse_id` links (three of them unguarded) and six
+      `content_urls` pointing at the homepage** — §9.3. `throttled` and `pseudonym` fire exactly when a user is
       already confused. Both need AT help pages to exist, so this is content work
       with a lead time, not a settings edit.
 
@@ -883,7 +902,9 @@ wrong data in front of real people or break the deploy.
       and confirm production ES is **≥ 8.16** — below that `no_sub_matches` is
       silently ignored and search quality degrades with no error.
 - [ ] **Confirm `django-payments` resolves to 3.x** — free resolution picks
-      4.1.0, which nothing has run against froide-payment.
+      4.1.0, where `StripeProvider` no longer exists and
+      `import froide_payment.provider` raises `ImportError`. The site does not
+      boot. Verified against the 4.1.0 wheel, see §7.
 
 **Rehearsal**
 
@@ -909,7 +930,7 @@ Decide each, or consciously decline it:
 | ✅`THUMBNAIL_ALIASES`, `THUMBNAIL_DEFAULT_ALIAS`, `FDS_THUMBNAIL_ENABLE_AVIF` | Image sizes and whether to serve AVIF. Affects storage and CDN volume. **Also gates adopting DE's `djangocms_picture`/`djangocms_video` templates**, which are otherwise stale copies (P2 step 6) |
 | ✅`LEAFLET_CONFIG` | Map defaults. DE's centre/zoom are German — needs Austrian values if AT ever enables maps |
 | ✅`DEFAULT_CURRENCY_LABEL`, `DEFAULT_CURRENCY_SYMBOL` | Cosmetic; both sites are EUR |
-| `CREW_GROUP` | Name of the staff group froide treats as crew. Must match the group that actually exists in AT's database |
+| ✅`CREW_GROUP` | Name of the staff group froide treats as crew. Must match the group that actually exists in AT's database |
 | `FDS_LEGAL_BACKUP_URL`, `FDS_LEGAL_BACKUP_CREDENTIALS` | **Now honoured.** A WebDAV target for the retention backup taken when a user cancels their account. Unset means no backup is kept — decide whether AT needs one, since it is a data-protection commitment either way |
 | ✅`CMS_REDIRECT_TO_LOWERCASE_SLUG` | URL normalisation. Changing it on a live site changes canonical URLs — check for SEO impact |
 | ✅`VERSIONING_ALIAS_MODELS_ENABLED` | Whether Aliases are versioned. Now relevant, since D10 moved static content into Aliases |
@@ -950,7 +971,7 @@ off, `CMS_COLOR_SCHEME*` — no dark mode). What is left:
   register flowcontrol actions and triggers, and `fds_newsletter/0001` depends on
   `flowcontrol.0007` — only the configuration was missing. Now set:
 
-  - `FLOWCONTROL_CONTENT_TYPES = ["fds_donation.donor",
+  - ✅ `FLOWCONTROL_CONTENT_TYPES = ["fds_donation.donor",
     "fds_newsletter.subscriber", "account.user"]`, matching DE. Correcting an
     earlier note in this plan: unset does **not** mean flows have nothing to
     attach to, it means the opposite — `get_content_type_choices()` returns an
@@ -1043,26 +1064,47 @@ Once it does, four things must change together — the last is easy to miss:
   and deploy per `docs/runbooks/celery-task-rename.md`; not a code edit.
 - [ ] **Confirm `remind_unreceived_banktransfers` is in the beat config.** It is
   documented "run on the 15th" but nothing in the repo schedules it.
-- [ ] **Set `reverse_id` on the CMS pages the templates link to.** Four
-  `{% page_url %}` lookups resolve to nothing today, because the imported
-  content has **10 pages and 0 reverse_ids**:
+- [x] **Set `reverse_id` on the CMS pages the templates link to.** **Five**
+  `{% page_url %}` string literals appear in AT's templates (the earlier count
+  of four missed `help`), and all five resolve to nothing today, because the
+  imported content has **10 pages and 0 reverse_ids**.
 
-  | reverse_id | used by |
-  |---|---|
-  | `help:donations` | `fds_donation/donor_detail.html` — "Häufige Fragen & Kontakt" |
-  | `donate` | donation CTAs |
-  | `beginnersguide` | request flow |
-  | `home` | various |
+  They are not equally bad — two were written with a fallback:
 
-  `page_url` fails silently: the tag renders an empty string, so the markup
-  becomes `<a href="">`, which looks like a working link and reloads the current
-  page. Nothing errors and nothing logs. Verified by rendering all four against
-  the migrated database — every one came back empty.
+  | reverse_id | used by | on miss |
+  |---|---|---|
+  | `help` | `cms/help_base.html:19` — "Topics" | **dead link** |
+  | `help:donations` | `fds_donation/donor_detail.html:38` — "Häufige Fragen & Kontakt" | **dead link** |
+  | `donate` | `fds_donation/donation_failed.html:13` — "Try again" button | **dead link** |
+  | `home` | `header.html:16`, `cms/breadcrumbs.html:5` | falls back, `\|default:'/'` |
+  | `beginnersguide` | `header.html:99` | link hidden, wrapped in `{% if %}` |
 
-  Fix in the CMS: **Page → Advanced settings → ID**, one per page. Worth doing
-  before the content freeze, since it is editor work rather than a deploy step.
-  Re-check with `scripts/verify_render.py` afterwards; note it will *not* catch
-  this on its own, because an empty href still returns 200. **[H]**
+  `page_url` fails silently by design: with the `as` form it returns `""` rather
+  than raising, regardless of `DEBUG`
+  (`cms/templatetags/cms_tags.py`, `PageUrl.get_value_for_context` swallows
+  `Page.DoesNotExist` and `NoReverseMatch`). So the three unguarded ones render
+  `<a href="">` — a link that looks live and silently reloads the current page.
+  Note the tag is registered under **two** names, `page_url` and `page_id_url`.
+
+  A string argument is looked up as `reverse_id`; the tag also accepts a page
+  **pk**, a **dict** of filter kwargs, or a `Page` object (`cms/pub_base.html`
+  passes one, which is why it cannot be checked statically).
+
+  Fix in the CMS: **Page → Advanced settings → ID**, one per page. Editor work
+  rather than a deploy step, so worth doing before the content freeze.
+  `scripts/verify_render.py` will *not* catch this — an empty href still
+  returns 200. Guarded instead by `tests/test_at_identity.py`:
+
+  - `test_page_url_ids_are_all_accounted_for` runs green now. It scans the
+    templates and fails if a new `page_url` literal appears that the file does
+    not classify as guarded-or-required, or if a classified id loses its last
+    reference. That is precisely how the three unguarded links got in.
+  - `PageUrlResolutionTest` covers the content gap itself and is
+    `xfail(strict=True)`. Setting the `reverse_id`s in the CMS **and refreshing
+    `tests/fixtures/cms.json`** turns it into an XPASS, which fails the suite
+    and prompts removing the marker — so it cannot rot into a passing no-op.
+    Confirmed non-vacuous: assigning the ids in a scratch test made the tag
+    resolve to real URLs. **[H]**
 - [ ] **Fill in the six missing `content_urls`.** Same class of silent failure
   as the `reverse_id`s above, found by scanning froide and froide-payment too.
   `get_content_url()` is `CONTENT_URLS.get(name, "/")` — a missing key returns
@@ -1317,9 +1359,11 @@ carry the lock, not just the source.
   review of `pandas` 3.0.3 against the bank-statement import. All three are
   detailed under "Library drift beyond the test tooling" in §7. **[R]**
 - [ ] **Check `django-payments` resolves to 3.x.** `[tool.uv]
-  constraint-dependencies` pins `>=3.1,<4` deliberately (§9.9 context): free
-  resolution picks 4.1.0, which nothing has run against froide-payment. If a
-  future lock refresh drops the constraint, this silently regresses.
+  constraint-dependencies` pins `>=3.1,<4` deliberately (§7): 4.0.0 dropped
+  `StripeProvider`, which `froide_payment/provider/stripe.py` imports at module
+  level, so 4.x turns every payment page into an `ImportError` at startup. If a
+  future lock refresh drops the constraint this regresses — loudly at boot
+  rather than silently, but only once something imports the app.
 
 **Developer trap, not a deploy step:** `uv sync` replaces the editable sibling
 checkouts (`froide`, `froide-payment`, `django-filingcabinet`) with the git pins

@@ -185,10 +185,20 @@ dev = [
 override-dependencies = ["numpy<2.4.0"]
 # django-payments comes in through froide-payment, which declares it
 # unconstrained. AT's lock had pinned it at 1.0.0 since the 2023 fork -- two
-# majors behind DE -- while froide-payment@main is developed against 3.x. Left
-# to resolve freely it jumps to 4.x, which no deployment we can check has run
-# against froide-payment. Track DE's major instead: that is the combination
-# upstream actually tests. Revisit when DE moves.
+# majors behind DE -- while froide-payment@main is developed against 3.x.
+#
+# The cap is not caution, it is a hard incompatibility. django-payments 4.0.0
+# dropped StripeProvider (deprecated in 3.0.0); 4.1.0's payments/stripe/
+# exports StripeProviderV3 and nothing else. froide_payment/provider/stripe.py
+# still does `from payments.stripe import StripeProvider` and subclasses it for
+# StripeSofortProvider, and provider/__init__.py imports that unconditionally,
+# so on 4.x `import froide_payment.provider` raises ImportError and the site
+# does not boot -- including the Stripe/PayPal providers AT does use.
+#
+# Lifting the cap needs a froide-payment change (port StripeSofortProvider to
+# StripeProviderV3, or drop it -- AT has it commented out in production.py
+# already), not a version bump here. DE is on 3.1.0 too, but by lock inertia
+# rather than by decision: DE declares no bound either.
 constraint-dependencies = ["django-payments>=3.1,<4"]
 
 [build-system]

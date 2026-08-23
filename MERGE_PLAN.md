@@ -1327,7 +1327,7 @@ That was wrong — checked against `fds_final` and corrected.
 - [ ] **Upstream all three to `okfde/froide-payment` and repin to `@main`.** They
   are one-liners any non-German deployment needs. Until then AT depends on a
   personal fork, which is the D5 exit criterion.
-- [ ] **`stripe.api_version`.** `b303254` pins the API version to `2020-08-27` at
+- [x] **`stripe.api_version`.** `b303254` pins the API version to `2020-08-27` at
   import. This one should probably **not** be carried over verbatim — it is a
   2023-era pin against a since-upgraded Stripe library, and silently freezing the
   API version is exactly the kind of thing that misleads later. Decide
@@ -1358,25 +1358,56 @@ carry the lock, not just the source.
   ship), `urllib3` 1.26.13 → 2.7.0 (a major behind, with advisories), and a
   review of `pandas` 3.0.3 against the bank-statement import. All three are
   detailed under "Library drift beyond the test tooling" in §7. **[R]**
-- [ ] **Check `django-payments` resolves to 3.x.** `[tool.uv]
+- [x] **Check `django-payments` resolves to 3.x.** `[tool.uv]
   constraint-dependencies` pins `>=3.1,<4` deliberately (§7): 4.0.0 dropped
   `StripeProvider`, which `froide_payment/provider/stripe.py` imports at module
   level, so 4.x turns every payment page into an `ImportError` at startup. If a
   future lock refresh drops the constraint this regresses — loudly at boot
   rather than silently, but only once something imports the app.
 
-**Developer trap, not a deploy step:** `uv sync` replaces the editable sibling
-checkouts (`froide`, `froide-payment`, `django-filingcabinet`) with the git pins
-from `pyproject.toml`, because that is what the manifest declares. After any
-`uv sync` in the devcontainer, re-run the three editable installs from
-`devsetup.sh` or you will be testing against upstream `main` instead of your
-local checkouts — with no visible sign that anything changed:
+**Developer trap, not a deploy step — now guarded.** `uv sync` replaces the
+editable sibling checkouts (`froide`, `froide-payment`,
+`django-filingcabinet`) with the git pins from `pyproject.toml`, because that is
+what the manifest declares. That is correct for production, which has no
+siblings and deploys with `uv sync --locked`. In the devcontainer it means you
+silently start testing upstream `main` instead of your own checkout.
+
+Re-apply the editable installs with:
 
 ```
-uv pip install -e ../django-filingcabinet --no-deps
-uv pip install -e ../froide --config-setting editable_mode=compat --no-deps
-uv pip install -e ../froide-payment --config-setting editable_mode=compat --no-deps
+./scripts/sync-editables.sh            # idempotent; --check reports only, exit 1 if stale
 ```
+
+`fragdenstaat_at.theme.checks` (`fragdenstaat_at.E001`) now makes this loud:
+`manage.py check` — and therefore `runserver`, `migrate` and the test suite —
+**refuses to start** when a sibling checkout exists on disk but the package
+resolves somewhere else. It names only the affected packages and points at the
+script. The check scopes itself by the presence of the sibling directory, so it
+is a silent no-op in production.
+
+**There is no uv setting that avoids the trap**, which is why this is a guard
+rather than a fix. Tested against uv 0.12.5:
+
+- `[tool.uv.sources]` with `path = "../froide", editable = true` does work for
+  dev, but it needs bare-name `override-dependencies` to defeat froide's own
+  transitive git pin on `django-filingcabinet`, and it rewrites `uv.lock` to
+  `source = { editable = "../froide" }` — production can then no longer install
+  from that lock at all.
+- The two cannot coexist in one lockfile. `uv.lock` holds a single source per
+  package, and `--locked` asserts the lock matches what `pyproject.toml`
+  currently means, so `uv sync --locked` fails outright: *"The lockfile at
+  `uv.lock` needs to be updated, but `--locked` was provided."*
+- `uv.toml` cannot carry `sources` (uv rejects it: *"`sources` is only
+  applicable in the context of a project"*), so there is no gitignored local
+  override either.
+- Extra-conditional sources (`{ path = ..., extra = "localforks" }`) are
+  accepted by uv but had no effect here — both plain sync and
+  `--extra localforks` still installed from git.
+- **Do not reach for `uv lock --no-sources` as an escape hatch.** Combined with
+  the bare-name overrides above it strips the git URLs too, and resolves
+  `froide` from **PyPI** — an unrelated package of the same name — with no
+  error. Verified: the lock came back with
+  `source = { registry = "https://pypi.org/simple" }`.
 
 ### 9.11 Nice to have: housekeeping
 

@@ -17,8 +17,10 @@ class ThemeConfig(AppConfig):
         from fragdenstaat_at.fds_mailing import gather_mailing_preview_context
         from fragdenstaat_at.fds_newsletter import tag_subscriber
 
+        from .checks import register_checks
         from .forms import SignupUserCheckExtra
 
+        register_checks()
         user_extra_registry.register("registration", SignupUserCheckExtra())
         account_future_canceled.connect(start_legal_backup)
         tag_subscriber.connect(tag_subscriber_froide_user)

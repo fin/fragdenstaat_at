@@ -45,6 +45,7 @@ sitemap_urlpatterns = [
 ]
 
 urlpatterns = [
+    path("fax/", include("froide_fax.urls")),
     path("payments/", include("froide_payment.payments_urls")),
     path("payment/", include("froide_payment.urls")),
     path("fcdocs_annotate/", FDSAnnotationView.as_view(), name="annotate-view"),

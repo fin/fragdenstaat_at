@@ -895,6 +895,9 @@ wrong data in front of real people or break the deploy.
       first.
 - [ ] **Celery task rename** — drain, then deploy, per
       `docs/runbooks/celery-task-rename.md`.
+- [ ] **`migrate froide_fax`** — four migrations (`0001_initial` ..
+      `0004_faxoverride`), all new tables, nothing pre-existing is touched.
+      Introduced by enabling the app, see §9.13.
 - [ ] **`uv sync --locked`**, shipping `uv.lock` and `pyproject.toml` with the
       code (§9.10). A plain `uv sync` may re-resolve and hand production an
       untested set.
@@ -1413,6 +1416,50 @@ rather than a fix. Tested against uv 0.12.5:
 
 - The working branch `sync/de-head-2026-08` is **not pushed**. `main` is safe on
   origin; this branch exists only in the dev container.
+
+---
+
+### 9.13 froide-fax is now in the dependency set
+
+Added on a **branch pin**, `fin/froide-fax@docs/live-tests`, which is
+`fin/main` plus webhook hardening (replay and malformed-envelope rejection),
+classification of permanently-undeliverable faxes so they stop being retried,
+Telnyx's OpenAPI examples as fixtures, and `README_LIVE_TESTS.md`. AT is running
+**ahead of okfde here**, so unlike the froide-payment pin (§9.9) there is no
+"repin to upstream" exit criterion yet — upstream would have to catch up first.
+
+Wired into five places, all committed:
+
+| where | change |
+|---|---|
+| `pyproject.toml` | `froide-fax @ git+…@docs/live-tests` |
+| `uv.lock` | `froide-fax 0.0.1 (62871695)`, plus `pynacl`, `pytz` |
+| `settings/base.py` | `froide_fax.apps.FroideFaxConfig` uncommented |
+| `theme/urls.py` | `path("fax/", include("froide_fax.urls"))`, DE's mount point |
+| `devsetup.sh` | `froide-fax` added to `REPOS` |
+
+Python-only, so it is deliberately **not** in `FRONTEND`/`FRONTEND_DIR` — same
+as DE. It is also covered by the editable-fork guard (§9.10,
+`fragdenstaat_at.E001`) and by `scripts/sync-editables.sh`.
+
+`uv lock` added only `froide-fax`, `pynacl` and `pytz`; no existing pin moved.
+
+**Still owed before fax actually sends anything:**
+
+- [ ] **Set the four `TELNYX_*` env vars in production.** `settings/base.py`
+      already reads `TELNYX_API_KEY`, `TELNYX_APP_ID`, `TELNYX_PUBLIC_KEY` and
+      `TELNYX_FROM_NUMBER`, each defaulting to `""` — so the app loads and the
+      URLs resolve with no credentials, and fails only when a fax is sent.
+- [ ] **Decide whether to enable the fax message handler.** `base.py` still has
+      `# 'fax': 'froide_fax.fax.FaxMessageHandler'` commented out in
+      `FROIDE_CONFIG["message_handlers"]`. DE enables it. Left off deliberately:
+      turning it on changes how messages reach public bodies and costs money per
+      fax, which is a product decision, not merge mechanics. Until it is on, the
+      app is installed and reachable but sends nothing.
+- [ ] **Run the live Telnyx test once** (`README_LIVE_TESTS.md` on the branch,
+      ~20 min and one fax). It closes the one gap no offline test covers: every
+      signature test generates its own keypair, so they prove nacl agrees with
+      nacl, not that we interoperate with Telnyx's signing.
 
 ---
 

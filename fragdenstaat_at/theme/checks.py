@@ -29,6 +29,7 @@ from django.core.checks import Error, register
 EDITABLE_FORKS = {
     "froide": "froide",
     "froide_payment": "froide-payment",
+    "froide_fax": "froide-fax",
     "filingcabinet": "django-filingcabinet",
 }
 

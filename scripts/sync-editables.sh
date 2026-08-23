@@ -18,7 +18,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORKSPACE="$(dirname "$REPO_ROOT")"
 PYTHON="$REPO_ROOT/.venv/bin/python"
-REPOS=("froide" "froide-payment" "django-filingcabinet")
+REPOS=("froide" "froide-payment" "froide-fax" "django-filingcabinet")
 
 [ -x "$PYTHON" ] || { echo "error: no virtualenv at $REPO_ROOT/.venv" >&2; exit 1; }
 
@@ -27,6 +27,7 @@ module_for() {
   case "$1" in
     froide)               echo froide ;;
     froide-payment)       echo froide_payment ;;
+    froide-fax)           echo froide_fax ;;
     django-filingcabinet) echo filingcabinet ;;
   esac
 }

@@ -120,7 +120,7 @@ class FragDenStaatBase(German, Base):
                 # "froide_crowdfunding.apps.FroideCrowdfundingConfig",
                 # "froide_food.apps.FroideFoodConfig",
                 # "django_amenities.apps.AmenitiesConfig",
-                # "froide_fax.apps.FroideFaxConfig",
+                "froide_fax.apps.FroideFaxConfig",
                 # "froide_exam",
                 # "froide_govplan.apps.FroideGovPlanConfig",
                 # "legal_advice_builder.apps.LegalAdviceBuilderConfig",
@@ -130,7 +130,7 @@ class FragDenStaatBase(German, Base):
         )
         return installed.default
 
-    
+
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -537,7 +537,7 @@ class FragDenStaatBase(German, Base):
                 },
             },
         }
-    
+
 
     @property
     def FILER_SERVERS(self):

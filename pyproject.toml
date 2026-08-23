@@ -119,6 +119,15 @@ dependencies = [
   # Exit criterion: upstream them to okfde/froide-payment and repin to @main.
   # Tracked in MERGE_PLAN.md 9.9.
   "froide-payment @ git+https://github.com/fin/froide-payment.git@2026-08-de-sync",
+  # Branch pin, not a fork of convenience: docs/live-tests is fin/main plus
+  # webhook hardening (replay + malformed-envelope rejection), classification of
+  # permanently-undeliverable faxes so they stop being retried, Telnyx's OpenAPI
+  # examples as fixtures, and README_LIVE_TESTS.md covering the one thing no
+  # offline test can prove -- that our signature verification interoperates with
+  # Telnyx's signing, rather than nacl agreeing with nacl.
+  #
+  # Not on okfde: AT is running ahead of upstream here.
+  "froide-fax @ git+https://github.com/fin/froide-fax.git@docs/live-tests",
   "sortabletable @ git+https://github.com/stefanw/djangocms-sortabletable.git@main",
   "fcdocs-annotate @ git+https://github.com/okfde/fcdocs-annotate.git@main",
   "qrcode>=7.3.1",

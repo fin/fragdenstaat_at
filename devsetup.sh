@@ -11,7 +11,7 @@ fi
 
 MAIN=fragdenstaat_at
 # REPOS=("froide" "froide-campaign" "froide-legalaction" "froide-food" "froide-payment" "froide-crowdfunding" "froide-govplan" "froide-fax" "froide-exam" "django-filingcabinet")
-REPOS=("froide" "froide-payment" "django-filingcabinet" )
+REPOS=("froide" "froide-payment" "froide-fax" "django-filingcabinet" )
 # FRONTEND_DIR=("froide" "froide_food" "froide_exam" "froide_campaign" "froide_payment" "froide_legalaction" "filingcabinet")
 FRONTEND_DIR=("froide" "froide-payment" "django-filingcabinet")
 # FRONTEND=("froide" "froide_food" "froide_exam" "froide_campaign" "froide_payment" "froide_legalaction" "@okfde/filingcabinet")

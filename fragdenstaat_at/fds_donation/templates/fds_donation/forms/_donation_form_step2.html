@@ -22,9 +22,11 @@
     <div class="row mt-3 collapse" id="company-field">
         <div class="col-12">{% render_field form.company_name stacked=True %}</div>
     </div>
-    {# Guarded like form.contact below: hide_receipt removes the field entirely,
+    {% comment %}
+       Guarded like form.contact below: hide_receipt removes the field entirely,
        and render_field on a missing field resolves to '' and raises
-       AttributeError: 'str' object has no attribute 'errors'. #}
+       AttributeError: 'str' object has no attribute 'errors'.
+    {% endcomment %}
     {% if form.receipt %}
         <div class="row mt-3">
             <div class="col-12">{% render_field form.receipt inline=True %}</div>

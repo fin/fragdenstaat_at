@@ -58,13 +58,13 @@ msgstr ""
 #. de: Bitte bestätigen Sie Ihre E-Mail-Adresse bevor Sie sich anmelden.
 #: froide/account/forms.py
 msgid "Please activate your mail address before logging in."
-msgstr "Bitte bestätigen Sie Ihre E-Mail-Adresse bevor Sie sich einloggen."
+msgstr "Bitte bestätigen Sie Ihre E-Mail-Adresse bevor Sie sich anmelden."
 
 #. from froide
 #. de: Der:die eingeloggte Nutzer:in passt nicht zu dem geklickten Link!
 #: froide/account/forms.py
 msgid "Logged in user does not match this link!"
-msgstr "Der eingeloggte Nutzer passt nicht zu dem geklickten Link!"
+msgstr "Der:die eingeloggte Nutzer:in passt nicht zu dem geklickten Link!"
 
 #. from froide
 #. de: Informationsfreiheitsgesetz
@@ -76,25 +76,25 @@ msgstr "Informationsgesetz"
 #. de: Bestätigungs-Satz
 #: froide/account/forms.py
 msgid "Confirmation Phrase"
-msgstr "Bestätitungs-Satz"
+msgstr "Bestätigungs-Satz"
 
 #. from froide
 #. de: << Anfragesteller:in >>
 #: froide/account/models.py
 msgid "<< Name Not Public >>"
-msgstr "Anfragesteller/in"
+msgstr "<< Anfragesteller:in >>"
 
 #. from froide
 #. de: << Antragsteller:in >>
 #: froide/account/services.py
 msgid "<< Name removed >>"
-msgstr "Antragsteller/in"
+msgstr "<< Antragsteller:in >>"
 
 #. from froide
 #. de: Sende E-Mail an Nutzer:innen
 #: froide/account/templates/account/admin_send_mail.html
 msgid "Send mail to users"
-msgstr "Sende E-Mail an Nutzer"
+msgstr "Sende E-Mail an Nutzer:innen"
 
 #. from froide
 #: froide/account/templates/account/admin_send_mail.html
@@ -109,19 +109,19 @@ msgstr[1] ""
 #: froide/account/templates/account/go.html
 #: froide/letter/templates/letter/default.html
 msgid "Continue"
-msgstr "zum nächsten Schritt"
+msgstr "Weiter"
 
 #. from froide
 #. de: Noch kein Konto? Klicken Sie hier, um ein Konto zu erstellen!
 #: froide/account/templates/account/login.html
 msgid "Don't have an account? Click here to sign up!"
-msgstr "Noch keinen Account? Klicken Sie hier, um sich anzumelden!"
+msgstr "Noch kein Konto? Klicken Sie hier, um ein Konto zu erstellen!"
 
 #. from froide
 #. de: Anmelden
 #: froide/account/templates/account/login.html
 msgid "Log In"
-msgstr "Einloggen"
+msgstr "Anmelden"
 
 #. from froide
 #. de: Ihre IFG-Anfragen werden nicht gelöscht. Nur die persönlichen
@@ -138,7 +138,7 @@ msgstr ""
 #. de: Ihre Konto-Einstellungen
 #: froide/account/templates/account/show.html
 msgid "Your account settings"
-msgstr "Ihre Nutzerkonto-Einstellungen"
+msgstr "Ihre Konto-Einstellungen"
 
 #. from froide
 #. de: Konto erstellen
@@ -150,37 +150,37 @@ msgstr "Anmelden"
 #. de: Anfragen des:der Nutzer:in
 #: froide/account/templates/admin/account/user/change_form.html
 msgid "This users requests"
-msgstr "Anfragen des Nutzers"
+msgstr "Anfragen des:der Nutzer:in"
 
 #. from froide
 #. de: Markiere ausgewählte Informationsfreiheitsanfragen als gesehen
 #: froide/foirequest/admin.py
 msgid "Mark selected requests as checked"
-msgstr "Markiere ausgewählte Anfragen als gesehen"
+msgstr "arkiere ausgewählte Informationsfreiheitsanfragen als gesehen"
 
 #. from froide
 #. de: Markiere ausgewählte Anfragen als nicht-IFG
 #: froide/foirequest/admin.py
 msgid "Mark selected requests as not FoI"
-msgstr "Markiere ausgewählte Anfragen als nicht-IF"
+msgstr "Markiere ausgewählte Anfragen als nicht-IFG"
 
 #. from froide
 #. de: %d Anfrage(n) erfolgreich als nicht-IFG markiert.
 #: froide/foirequest/admin.py
 #, python-format
 msgid "%d request(s) successfully marked as not FoI."
-msgstr "%d "
+msgstr "%d Anfrage(n) erfolgreich als nicht-IFG markiert."
 
 #. from froide
 #. de: Siehe IFG-Nachricht
 #: froide/foirequest/admin.py
 msgid "See FoiMessage"
-msgstr "Siehe Nachricht"
+msgstr "Siehe IFG-Nachricht"
 
 #. from froide
 #. de: Informationsfreiheitsanfrage
 msgid "FOI Request"
-msgstr "Anfrage"
+msgstr "Informationsfreiheitsanfrage"
 
 #. from froide
 #. de: Informationsfreiheitsanfragen %(by)s auf %(sitename)s
@@ -226,37 +226,37 @@ msgstr ""
 #: froide/foirequest/templates/foirequest/foiproject_detail.html
 #: froide/foirequest/views/account_requests.py
 msgid "status"
-msgstr "status"
+msgstr "Zustand"
 
 #. from froide
 #. de: Unbekannte:r IFG-Mail-Empfänger:in
 #: froide/foirequest/foi_mail.py froide/foirequest/tests/test_mail.py
 msgid "Unknown FoI-Mail Recipient"
-msgstr "Unbekannter Antwortmail-Empfänger"
+msgstr "Unbekannte:r IFG-Mail-Empfänger:in"
 
 #. from froide
 #. de: Absender:in
 #: froide/foirequest/forms/message.py
 msgid "Sender Name"
-msgstr "Absender"
+msgstr "Absender:in"
 
 #. from froide
 #. de: Sie dürfen einige der erhaltenen Dokumente nicht veröffentlichen..
 #: froide/foirequest/forms/message.py
 msgid "You are not allowed to publish some received documents"
-msgstr "Sie dürfen einige der erhaltenen Dokumente nicht veröffentlichen."
+msgstr "Sie dürfen einige der erhaltenen Dokumente nicht veröffentlichen.."
 
 #. from froide
 #. de: Beschreiben Sie Ihre Anfrage möglichst kurz und präzise hier ...
 #: froide/foirequest/forms/request.py
 msgid "Specify your request here..."
-msgstr "Beschreiben Sie Ihre Anfrage hier ..."
+msgstr "Beschreiben Sie Ihre Anfrage möglichst kurz und präzise hier ..."
 
 #. from froide
 #. de: Bitte geben Sie ein Ergebnis dieser Anfrage an
 #: froide/foirequest/forms/request.py
 msgid "Please give a resolution to this request"
-msgstr "Bitte schreiben Sie eine Zusammenfassung des Ergebnisses"
+msgstr "Bitte geben Sie ein Ergebnis dieser Anfrage an"
 
 #. from froide
 #. de: Nutzer:in kann genehmigen
@@ -708,7 +708,7 @@ msgid ""
 "Support Froide by <a href=\"https://okfn.de/spenden/\">donating to Open "
 "Knowledge Foundation Germany</a>"
 msgstr ""
-"Wir kämpfen für Transparenz! <a href=\"https://fragdenstaat.at/\">Kämpfen "
+"Wir kämpfen für Transparenz! <a href=\"https://fragdenstaat.at/spenden/\">Kämpfen "
 "Sie mit und unterstützen Sie uns.</a>"
 
 #. from froide
@@ -720,7 +720,7 @@ msgid ""
 "https://okfn.de/spenden/\n"
 msgstr ""
 "Wir kämpfen für Transparenz! Kämpfen Sie mit und unterstützen Sie uns:\n"
-"https://fragdenstaat.at/\n"
+"https://fragdenstaat.at/spenden/\n"
 
 #. from froide
 #. de: Jede:r Bürger:in hat nach den Informations&shy;gesetzen das Recht,
@@ -1248,3 +1248,18 @@ msgstr ""
 #: templates/fds_donation/includes/banktransfer_instructions.html
 msgid "Bank code"
 msgstr ""
+
+#. from froide
+#. de: Sie müssen in der Regel nicht Ihre Identität nachweisen! Dies ist nur
+#. in seltenen Fällen nötig, etwa wenn Sie Informationen zu sich selbst
+#. anfragen oder eine Presseanfrage stellen.
+#: froide/proof/widgets.py
+msgid ""
+"You usually do not need to prove your identity! This is only required in "
+"rare cases, for example when requesting information about yourself or to "
+"prove you are a journalist."
+msgstr ""
+"Bei Anfragen an Behörden ist ein Nachweis der Identität in der Regel nicht nötig. "
+"Nur bei Anfragen an private Informationspflichtige ist gesetzlich vorgeschrieben, dass "
+"die Identität „glaubhaft gemacht“ werden muss. Hier empfehlen wir eine weitere Email mit "
+"ID-Austria-Signatur oder Ausweiskopie."

@@ -46,6 +46,7 @@ class FragDenStaatBase(German, Base):
     USER_LANGUAGES = LANGUAGES
     LANGUAGE_CODE = "de-at"
     TESSERACT_LANGUAGE = "de"
+    EASYLANG_ENABLED = False
 
     @property
     def INSTALLED_APPS(self):
@@ -128,6 +129,20 @@ class FragDenStaatBase(German, Base):
             ]
         )
         return installed.default
+
+    
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "overwrite": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {"allow_overwrite": True},
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
 
     @property
     def TEMPLATES(self):
@@ -215,6 +230,7 @@ class FragDenStaatBase(German, Base):
     CMS_RAW_ID_USERS = 50
     CMS_CONFIRM_VERSION4 = True
     CMS_MIGRATION_USER_ID = 1
+    VERSIONING_ALIAS_MODELS_ENABLED = True
 
     CMS_LANGUAGES = {
         # Customize this
@@ -299,7 +315,10 @@ class FragDenStaatBase(German, Base):
             # Single source of truth: EmailBodyPlugin.child_classes reads
             # EMAIL_BODY_PLUGINS, so deriving the placeholder conf from it keeps
             # the two from drifting apart.
-            "plugins": EMAIL_BODY_PLUGINS,
+            "plugins": [
+                            "EmailBodyPlugin",
+                        ]
+                        + EMAIL_BODY_PLUGINS,
             "text_only_plugins": [],
             "name": _("E-Mail Body"),
             "language_fallback": True,
@@ -308,7 +327,7 @@ class FragDenStaatBase(German, Base):
             "parent_classes": {},
         }
     }
-    CMS_PLUGIN_CONTEXT_PROCESSORS = ["fragdenstaat_at.fds_mailing.utils.add_style"]
+    CMS_PLUGIN_CONTEXT_PROCESSORS = [] #["fragdenstaat_at.fds_mailing.utils.add_style"]
 
     DJANGOCMS_PICTURE_NESTING = True
 
@@ -377,6 +396,11 @@ class FragDenStaatBase(German, Base):
         "embed": {"type", "src", "width", "height"},
         "summary": {"class"},
         "details": {"class", "open"},
+        "textarea": {"class", "id", "name", "rows", "cols", "readonly"},
+        "form": {"method", "action", "target"},
+        "label": {"for"},
+        "input": {"placeholder", "type", "name", "value", "required"},
+        "button": {"type", "name", "value"},
         "*": {"style", "class", "id", "hidden", "disabled"},
     }
     TEXT_ADDITIONAL_PROTOCOLS = ("bank",)
@@ -387,7 +411,7 @@ class FragDenStaatBase(German, Base):
     # actually running. theme/editor.py additionally turns inline editing off.
     TEXT_EDITOR = "fragdenstaat_at.theme.editor.ckeditor4"
 
-    CKEDITOR_SETTINGS = {
+    TEXT_EDITOR_SETTINGS = {
         "language": "{{ language }}",
         "skin": "moono-lisa",
         "toolbar": "CMS",
@@ -438,6 +462,7 @@ class FragDenStaatBase(German, Base):
         "entities": False,
         "stylesSet": "default:/static/js/cms/ckeditor.wysiwyg.js",
         "contentsCss": "/static/css/main.css",
+        "height": "500px",
     }
 
     DJANGOCMS_PICTURE_TEMPLATES = [("hero", _("Hero")), ("email", _("Email"))]
@@ -512,6 +537,7 @@ class FragDenStaatBase(German, Base):
                 },
             },
         }
+    
 
     @property
     def FILER_SERVERS(self):
@@ -677,7 +703,7 @@ class FragDenStaatBase(German, Base):
     PAYMENT_HOST = "localhost:8000"
     PAYMENT_USES_SSL = False
     PAYMENT_MODEL = "froide_payment.Payment"
-    PAYMENT_CHECK_THRESHOLD = int(env("PAYMENT_CHECK_THRESHOLD", "1000"))
+    PAYMENT_CHECK_THRESHOLD = int(env("PAYMENT_CHECK_THRESHOLD", "2000"))
     PAYMENT_VARIANTS = {
         "lastschrift": ("froide_payment.provider.LastschriftProvider", {}),
         "banktransfer": ("froide_payment.provider.BanktransferProvider", {}),
@@ -701,6 +727,8 @@ class FragDenStaatBase(German, Base):
 
     ALLOWED_HOSTS = ("*",)
     ALLOWED_REDIRECT_HOSTS = ("*",)
+
+    CREW_GROUP = 2
 
     DEFAULT_FROM_EMAIL = "FragDenStaat.at <info@fragdenstaat.at>"
     EMAIL_SUBJECT_PREFIX = "[AdminFragDenStaat] "
@@ -739,7 +767,7 @@ class FragDenStaatBase(German, Base):
                 "user_can_hide_web": True,
                 "public_body_officials_public": False,
                 "public_body_officials_email_public": False,
-                "default_law": 1,
+                "default_law": 13,
                 "doc_conversion_binary": "/usr/bin/libreoffice",
                 "dryrun": env("FROIDE_DRY_RUN", False),
                 "read_receipt": True,
@@ -758,7 +786,7 @@ class FragDenStaatBase(German, Base):
                 "allow_pseudonym": True,
                 "api_activated": True,
                 "search_engine_query": (
-                    "http://www.google.at/search?as_q=%(query)s&as_epq=&as_oq=&as_eq=&"
+                    "http://www.google.de/search?as_q=%(query)s&as_epq=&as_oq=&as_eq=&"
                     "hl=en&lr=&cr=&as_ft=i&as_filetype=&as_qdr=all&as_occt=any&"
                     "as_dt=i&as_sitesearch=%(domain)s&as_rights=&safe=images"
                 ),
@@ -775,6 +803,7 @@ class FragDenStaatBase(German, Base):
                     (6, 6 * 60 * 60),
                     (8, 24 * 60 * 60),
                 ],
+                "target_countries": ("DE", "CH", "AT"),
                 "greetings": [
                     rec(r"Sehr geehrte Damen und Herren,?"),
                     rec(r"^\s*Name des Absenders\s+(.*)"),
@@ -792,10 +821,17 @@ class FragDenStaatBase(German, Base):
                     rec(r"^\s*Sehr (geehrte[\*:_]?[sr]?\s+(?!Damen und Herren).+)"),
                     rec(r"^\s*(?:Von|An|Cc|To|From): (.*)"),
                     rec(r"^\s*Guten\s+Tag\s+(.+)"),
+                    rec(r"^\s*(?:Von|An|Cc|To|From): (.*)"),
+                    rec(
+                        r"^\s*Guten\s+(?:Tag|Morgen|Mittag|Abend),?[ \t\f\v]+([^\r\n]+)"
+                    ),
+                    rec(r"^\s*(.*) möchte die Nachricht .* zurückrufen\."),
+
                 ],
                 "custom_replacements": [
                     rec(r"[Bb][Gg]-[Nn][Rr]\.?\s*\:?\s*([a-zA-Z0-9\s/]+)"),
-                    rec(r"Ihr Kennwort lautet: (.*)"),
+                    rec(r"(?:Kennwort|Passwort) (?:ist|lautet): (.*)"),
+                    rec(r"(?:Kennwort|Passwort): (.*)"),
                     rec(r"Token: ([A-Z0-9]+)"),
                     rec(r"(https://wetransfer.com/downloads/.*)"),
                     rec(r"(https://send.firefox.com/download/.*)"),
@@ -867,9 +903,15 @@ class FragDenStaatBase(German, Base):
                 "content_urls": {
                     "terms": "/info/nutzungsbedingungen/",
                     "privacy": "/info/datenschutz/",
-                    # "pseudonym": "/hilfe/datenschutz-und-privatsphare/pseudonyme-nutzung/",
                     "about": "/info/ueber/",
                     "help": "/hilfe/",
+                    "pseudonym": "/hilfe/fragen-antworten/pseudonyme-nutzung/",
+                    "throttled": "/hilfe/fragen-antworten/anfragenanzahl/",
+                    "help_postupload_redaction": "/hilfe/plain/fragen-antworten/schwarzungen-durchfuhren/",
+                    "help_attachments_management": "/hilfe/plain/fragen-antworten/anhange-verwalten/",
+                    "help_request_public": "/hilfe/plain/fragen-antworten/anfrage-nicht-offentlich-stellen/",
+                    "help_request_privacy": "/hilfe/datenschutz-und-privatsphare/",  # not /plain/, regular link
+
                 },
                 "bounce_enabled": True,
                 "bounce_max_age": 60 * 60 * 24 * 14,  # 14 days

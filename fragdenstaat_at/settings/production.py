@@ -33,18 +33,26 @@ class FragDenStaat(FragDenStaatBase):
 
     DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB
     DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
+
+
     # Django 5.1 removed STATICFILES_STORAGE; this used to point at a
     # MyStaticFilesStorage subclass and had been silently ignored ever since,
     # falling back to plain StaticFilesStorage. STORAGES below states that
     # explicitly rather than relying on the fallback.
     #
-    # NOT ManifestStaticFilesStorage: AT dropped hashing deliberately (a missing
+    # previously NOT ManifestStaticFilesStorage: AT dropped hashing deliberately (a missing
     # sourcemap makes the manifest backend raise on collectstatic). Verified
     # against the live site -- every template-rendered asset is unhashed.
     STORAGES = {
-        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "overwrite": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {"allow_overwrite": True},
+        },
         "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
         },
     }
     STATIC_URL = env("STATIC_URL", "https://static.frag.denstaat.at/static/")

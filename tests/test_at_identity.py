@@ -19,6 +19,7 @@ German *bank* details are.
 
 import re
 from decimal import Decimal
+from pathlib import Path
 
 from django.contrib.auth.models import AnonymousUser
 from django.template import Context, Template
@@ -172,3 +173,108 @@ class PageTest(TestCase):
         body = response.content.decode("utf-8", "replace")
         assert_no_german_bank(body, "donor page")
         assert_no_german_org(strip_footer(body), "donor page (outside the footer)")
+
+
+# ---------------------------------------------------------------------------
+# {% page_url %} links, MERGE_PLAN 9.3
+#
+# django-cms's page_url tag resolves a *string* argument as a page's reverse_id
+# (Page -> Advanced settings -> ID). When no page matches it returns "" rather
+# than raising -- a deliberate upstream decision, so that the "as" form never
+# raises regardless of DEBUG (cms/templatetags/cms_tags.py, PageUrl). The cost
+# is that a missing reverse_id is invisible: the page still returns 200, with a
+# clickable link that goes nowhere.
+#
+# AT's imported CMS content has 10 pages and 0 reverse_ids, so every one of
+# these is unresolved in production today.
+# ---------------------------------------------------------------------------
+
+# Referenced with a fallback, so a missing page degrades rather than breaking.
+SAFE_PAGE_URL_IDS = {
+    "home": "wrapped in |default:'/' at header.html and cms/breadcrumbs.html",
+    "beginnersguide": "wrapped in {% if %} at header.html, link hidden if unset",
+}
+
+# Referenced bare: these render href="" and produce a dead visible link.
+REQUIRED_PAGE_URL_IDS = {
+    "help": "cms/help_base.html -- 'Topics' link",
+    "help:donations": "fds_donation/donor_detail.html -- 'Frequent questions & contact'",
+    "donate": "fds_donation/donation_failed.html -- 'Try again' button",
+}
+
+# {% page_url "x" %} / {% page_url 'x' %}, string literals only. Variable
+# lookups (cms/pub_base.html passes a Page object) can't be checked statically.
+PAGE_URL_LITERAL_RE = re.compile(r"{%\s*page_url\s+(['\"])(?P<id>[^'\"]+)\1")
+
+
+def _scan_template_page_url_ids():
+    """Every reverse_id referenced by a string literal in AT's own templates."""
+    root = Path(__file__).resolve().parent.parent / "fragdenstaat_at"
+    found = {}
+    for path in root.rglob("*.html"):
+        for match in PAGE_URL_LITERAL_RE.finditer(
+            path.read_text(encoding="utf-8", errors="replace")
+        ):
+            found.setdefault(match.group("id"), []).append(str(path.relative_to(root)))
+    return found
+
+
+def test_page_url_ids_are_all_accounted_for():
+    """Fails when a {% page_url %} appears that this file doesn't classify.
+
+    This is the part that runs green today. It doesn't check the CMS content --
+    it checks that nobody adds a new page_url link without deciding whether it
+    needs a fallback, which is how the three unguarded ones got in.
+    """
+    found = _scan_template_page_url_ids()
+    known = set(SAFE_PAGE_URL_IDS) | set(REQUIRED_PAGE_URL_IDS)
+    unclassified = {k: v for k, v in found.items() if k not in known}
+    assert not unclassified, (
+        "New {% page_url %} reverse_id(s) not classified in this file: "
+        + ", ".join(f"{k!r} ({', '.join(v)})" for k, v in sorted(unclassified.items()))
+        + ". Give the link a fallback and add it to SAFE_PAGE_URL_IDS, or add it "
+        "to REQUIRED_PAGE_URL_IDS and set the reverse_id on the CMS page."
+    )
+    # And the reverse: a classified id that no template uses any more is stale.
+    stale = known - set(found)
+    assert not stale, (
+        f"No template references {sorted(stale)} any more -- drop from this file."
+    )
+
+
+class PageUrlResolutionTest(TestCase):
+    """The CMS content gap itself: MERGE_PLAN 9.3.
+
+    xfail because the fixture mirrors production, where no page carries a
+    reverse_id. strict=True so that once the reverse_ids are set (in the CMS,
+    and in tests/fixtures/cms.json) this fails as XPASS and the marker gets
+    removed, rather than passing quietly and rotting.
+    """
+
+    fixtures = ["cms.json"]
+
+    def _render(self, reverse_id):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        request.current_page = None
+        template = Template("{% load cms_tags %}{% page_url page_id as url %}{{ url }}")
+        return template.render(
+            Context({"request": request, "page_id": reverse_id})
+        ).strip()
+
+    @pytest.mark.xfail(
+        strict=True,
+        reason="MERGE_PLAN 9.3: no CMS page carries a reverse_id yet",
+    )
+    def test_required_page_urls_resolve(self):
+        unresolved = {
+            page_id: where
+            for page_id, where in sorted(REQUIRED_PAGE_URL_IDS.items())
+            if not self._render(page_id)
+        }
+        assert not unresolved, (
+            "These {% page_url %} lookups render an empty href, so the link is "
+            "visible but dead:\n"
+            + "\n".join(f"  {k!r}: {v}" for k, v in unresolved.items())
+            + "\nFix in the CMS: Page -> Advanced settings -> ID."
+        )

@@ -1432,6 +1432,65 @@ rather than a fix. Tested against uv 0.12.5:
 
 ---
 
+### 9.14 GitHub Actions is dead scaffolding
+
+`.github/workflows/ci.yml` is untouched from the 2023 fork. The repo modernised
+around it — uv, pnpm, ruff, Python 3.13, Elasticsearch 8, django-cms 5 — and the
+workflow still describes the old world. It cannot pass in its current form:
+
+| step | why it fails |
+|---|---|
+| `pip-sync requirements-dev.txt` | the file does not exist; deleted in the uv migration |
+| `python-version: '3.10'` | `requires-python = ">=3.12"`, so resolution fails regardless |
+| `flake8` / `black==22.12.0` / `isort` | none are configured or installed; the repo lints with **ruff** |
+| `yarn install` / `node-version: 16` | the repo is on **pnpm 9.15**; `yarn.lock` is a stale leftover |
+| `elasticsearch:7.5.1` | `no_sub_matches` needs **≥ 8.16**; dev runs 8.19.3 |
+| `postgis:12-3.0` | `compose-dev.yaml` uses `postgis:16-3.4` |
+| `actions/checkout@v1`, `setup-python@v1`, `cache@v1` | Node 16 actions, no longer runnable on current runners |
+
+`make testci` itself is fine (`coverage run -m pytest --reuse-db`), and
+`pytest.ini` is correct — the failure is entirely in the workflow's environment
+setup.
+
+**Not verified:** whether Actions is enabled on the repo at all, or how long it
+has been red. There is no `gh` CLI in the devcontainer to check run history.
+
+**Differences from DE, and whether each is still justified:**
+
+| | DE | AT | keep? |
+|---|---|---|---|
+| install | `uv sync --locked` | `pip-tools` | **no** — port DE's |
+| python | 3.12 / 3.13 / 3.14 matrix | 3.10 | **no** |
+| lint | `prek-action` | flake8 + black + isort | **no** — but see below |
+| node | pnpm, node 24 | yarn, node 16 | **no** |
+| services | `docker compose -f compose-dev.yaml up --wait` | inline `services:` | **no** — AT has the compose file |
+| DB cache | restore a cached dump | none | optional; DE-specific speedup |
+| translations | `translations.yml`, `translations-pr.yml` | none | **deferred** — translation work is last (P6) |
+| `de-drift` job | none | yes, `continue-on-error` | **yes** — AT-only and legitimate |
+| pytest config | `[tool.pytest]` in pyproject | `pytest.ini` | **AT is correct**; see below |
+| compilemessages | `-i node_modules -l de` | all locales | **AT is correct** — it must compile `de_AT` |
+
+Two places AT is *ahead* of DE and must not be "aligned" backwards:
+
+- **`pytest.ini`.** DE declares markers and addopts under `[tool.pytest]` in
+  `pyproject.toml`, which pytest does not read (it wants
+  `[tool.pytest.ini_options]`), so upstream they have no effect and DE's CI
+  passes `-n auto` on the command line instead. AT's `pytest.ini` works.
+- **`compilemessages`.** DE compiles `-l de` only. AT needs `de_AT` compiled or
+  the Austrian overrides never load.
+
+**Before adopting `prek-action`:** AT's `.pre-commit-config.yaml` has the ruff
+hooks **commented out**, so prek currently runs eslint and nothing else. That is
+why local commits report only `eslint ... Skipped`. Uncomment them, or CI
+lints nothing.
+
+- [ ] Port DE's `ci.yml`, keeping the `de-drift` job, `pytest.ini` and the
+      full-locale `compilemessages`. **[H]**
+- [ ] Uncomment the ruff hooks in `.pre-commit-config.yaml`.
+- [ ] Delete the stale `yarn.lock`.
+
+---
+
 ### 9.13 froide-fax is now in the dependency set
 
 Added on a **branch pin**, `fin/froide-fax@docs/live-tests`, which is

@@ -1501,10 +1501,24 @@ lints nothing.
       it `pytest --cov` would measure `.venv` too. Reports 43% over 18204
       statements.
 
+- [x] **Made `de-drift` mean something.** The job does work — both repos are
+      checked out side by side under `$GITHUB_WORKSPACE`, so
+      `../fragdenstaat_de` resolves, and `de_drift.py` is stdlib-only and
+      compares working trees, so it needs no install and does not care that
+      checkout is shallow. But it was **permanently tripped and invisible**:
+      the gate was 140 while the real count is 142, so it failed on every run,
+      and `continue-on-error` meant that could never surface. The limit is now a
+      ratchet at the true 142, and the table is written to
+      `$GITHUB_STEP_SUMMARY` — otherwise the numbers stay buried in a log
+      nobody opens, which is the sense in which the job really was doing
+      nothing.
+
 Verified locally rather than by pushing: `prek run --all-files` passes all three
-hooks, `pytest -n auto --cov --cov-report=` gives 269 passed / 1 skipped, and
-`coverage report --format=markdown` renders. The workflow itself has **not** run
-on GitHub yet — the branch is still unpushed (§9.11).
+hooks, `pytest -n auto --cov --cov-report=` gives 269 passed / 1 skipped,
+`coverage report --format=markdown` renders, and `de_drift.py` exits 0 at the
+new limit — checked both in place and in a CI-shaped directory layout. The
+workflow itself has **not** run on GitHub yet — the branch is still unpushed
+(§9.11).
 
 ---
 

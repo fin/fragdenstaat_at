@@ -73,6 +73,11 @@ jobs:
   # AT-only: DE is upstream and has no equivalent. Informational
   # (continue-on-error) -- a growing drift number is not a build failure, just a
   # signal to check MERGE_PLAN.md.
+  #
+  # The two checkouts land side by side under $GITHUB_WORKSPACE, so
+  # `../fragdenstaat_de` resolves the same way it does in a dev container.
+  # de_drift.py is stdlib-only and compares working trees, so it needs no
+  # dependency install and is unaffected by checkout being shallow.
   de-drift:
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -87,6 +92,28 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
+      # The limit is a ratchet set to the current count, so any *increase* shows
+      # up. It was 140 while the real figure was 142, which meant the check
+      # failed on every run and its warning became noise. Raise it deliberately
+      # when a sync genuinely widens the surface; never to silence it.
+      #
+      # The result goes to the run summary because continue-on-error hides the
+      # job's status -- without this the numbers are buried in the log and the
+      # job is, in effect, doing nothing.
       - name: Run drift check (non-blocking)
         working-directory: fragdenstaat_at
-        run: python scripts/de_drift.py --de-repo ../fragdenstaat_de --check-max-modified 140
+        shell: bash
+        run: |
+          set +e
+          python scripts/de_drift.py --de-repo ../fragdenstaat_de \
+            --check-max-modified 142 > drift.txt 2>&1
+          status=$?
+          cat drift.txt
+          {
+            echo '## Drift from fragdenstaat_de'
+            echo
+            echo '```'
+            cat drift.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $status

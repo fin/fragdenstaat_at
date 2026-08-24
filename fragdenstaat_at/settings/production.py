@@ -34,7 +34,6 @@ class FragDenStaat(FragDenStaatBase):
     DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB
     DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
-
     # Django 5.1 removed STATICFILES_STORAGE; this used to point at a
     # MyStaticFilesStorage subclass and had been silently ignored ever since,
     # falling back to plain StaticFilesStorage. STORAGES below states that

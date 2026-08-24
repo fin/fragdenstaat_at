@@ -130,7 +130,6 @@ class FragDenStaatBase(German, Base):
         )
         return installed.default
 
-
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -316,9 +315,9 @@ class FragDenStaatBase(German, Base):
             # EMAIL_BODY_PLUGINS, so deriving the placeholder conf from it keeps
             # the two from drifting apart.
             "plugins": [
-                            "EmailBodyPlugin",
-                        ]
-                        + EMAIL_BODY_PLUGINS,
+                "EmailBodyPlugin",
+            ]
+            + EMAIL_BODY_PLUGINS,
             "text_only_plugins": [],
             "name": _("E-Mail Body"),
             "language_fallback": True,
@@ -327,7 +326,7 @@ class FragDenStaatBase(German, Base):
             "parent_classes": {},
         }
     }
-    CMS_PLUGIN_CONTEXT_PROCESSORS = [] #["fragdenstaat_at.fds_mailing.utils.add_style"]
+    CMS_PLUGIN_CONTEXT_PROCESSORS = []  # ["fragdenstaat_at.fds_mailing.utils.add_style"]
 
     DJANGOCMS_PICTURE_NESTING = True
 
@@ -537,7 +536,6 @@ class FragDenStaatBase(German, Base):
                 },
             },
         }
-
 
     @property
     def FILER_SERVERS(self):
@@ -826,7 +824,6 @@ class FragDenStaatBase(German, Base):
                         r"^\s*Guten\s+(?:Tag|Morgen|Mittag|Abend),?[ \t\f\v]+([^\r\n]+)"
                     ),
                     rec(r"^\s*(.*) möchte die Nachricht .* zurückrufen\."),
-
                 ],
                 "custom_replacements": [
                     rec(r"[Bb][Gg]-[Nn][Rr]\.?\s*\:?\s*([a-zA-Z0-9\s/]+)"),
@@ -911,7 +908,6 @@ class FragDenStaatBase(German, Base):
                     "help_attachments_management": "/hilfe/plain/fragen-antworten/anhange-verwalten/",
                     "help_request_public": "/hilfe/plain/fragen-antworten/anfrage-nicht-offentlich-stellen/",
                     "help_request_privacy": "/hilfe/datenschutz-und-privatsphare/",  # not /plain/, regular link
-
                 },
                 "bounce_enabled": True,
                 "bounce_max_age": 60 * 60 * 24 * 14,  # 14 days

@@ -6,97 +6,87 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v6
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
         with:
-          python-version: '3.10'
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-          cache: 'yarn'
-      - uses: actions/cache@v1
-        with:
-          key: v0-${{ runner.os }}-pip-lint-${{ hashFiles('setup.py') }}
-          path: ~/.cache/pip
-          restore-keys: |
-            v0-${{ runner.os }}-pip-lint-
-            v0-${{ runner.os }}-pip-
+          node-version: 24
+          cache: pnpm
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8 black==22.12.0 isort flake8-bugbear
-          yarn install
-      - name: Run flake8
-        run: flake8 fragdenstaat_at --statistics
-      - name: Run black
-        run: black --check fragdenstaat_at
-      - name: Run isort
-        run: isort --check fragdenstaat_at
-
-      - name: Run eslint
-        run: yarn lint
+        run: pnpm install
+      # Runs .pre-commit-config.yaml: ruff, ruff-format and eslint.
+      - uses: j178/prek-action@v1
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10']
+        # Dev and production both run 3.13. DE additionally tests 3.12 and
+        # 3.14; widen this once the workflow is reliably green, not before --
+        # `requires-python` is >=3.12, so the lock supports it.
+        python-version: ['3.13']
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v6
+      # compose-dev.yaml is the same stack developers run: postgis 16-3.4 and
+      # the locally built Elasticsearch 8.19.3 with the German decompounder
+      # dictionaries. Neither service declares a healthcheck, so `--wait` only
+      # waits for "running"; the install steps below are what actually give
+      # Elasticsearch time to come up.
+      - name: Start services
+        run: docker compose -f compose-dev.yaml up --wait
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           python-version: ${{ matrix.python-version }}
+          activate-environment: true
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
       - name: Install system-level dependencies
         run: sudo apt-get update && sudo apt-get install libxml2-dev libxslt1-dev python3-dev libgdal-dev gdal-bin libmagic-dev libmagickwand-dev gettext libpoppler-cpp-dev
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip pip-tools
-          pip-sync requirements-dev.txt
+          uv sync --locked
           playwright install --with-deps chromium
-          pip install -e .
-          bash devsetup.sh frontend
+          pnpm install
       - name: Build frontend
-        run: yarn run build
+        run: pnpm run build
+      # No `-l de`, unlike DE: AT's Austrian overrides live in de_AT, and
+      # restricting the locale would leave them uncompiled and silently unused.
       - name: Compile translations
-        run: python manage.py compilemessages
-      - name: Run flake8 and tests
-        run: make testci
-        env:
-          DATABASE_URL: postgis://postgres:postgres@localhost/fragdenstaat_at
-    services:
-      postgres:
-        image: postgis/postgis:12-3.0
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: fragdenstaat_at
-        ports:
-          - 5432:5432
-        # needed because the postgres container does not provide a healthcheck
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
-        options: -e "discovery.type=single-node" --expose 9200 --health-cmd "curl localhost:9200/_cluster/health" --health-interval 10s --health-timeout 5s --health-retries 10
-        ports:
-          - '9200:9200'
+        run: python manage.py compilemessages -i node_modules
+      # Settings default to the compose-dev credentials
+      # (fragdenstaat_at@localhost:5432, elasticsearch on localhost:9200), so no
+      # env block is needed. `-n auto` is required: pytest.ini sets
+      # `--dist loadgroup`, which needs xdist actually running to pin the
+      # sequential payment tests to one worker.
+      - name: Run tests
+        run: |
+          pytest -n auto --cov --cov-report=
+          coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
 
   # Reports how far this repo has drifted from upstream fragdenstaat_de.
-  # Informational only (continue-on-error): a growing drift number is not
-  # a build failure, just a signal to check MERGE_PLAN.md.
+  # AT-only: DE is upstream and has no equivalent. Informational
+  # (continue-on-error) -- a growing drift number is not a build failure, just a
+  # signal to check MERGE_PLAN.md.
   de-drift:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           path: fragdenstaat_at
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           repository: okfde/fragdenstaat_de
           path: fragdenstaat_de
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.13'
       - name: Run drift check (non-blocking)
         working-directory: fragdenstaat_at
         run: python scripts/de_drift.py --de-repo ../fragdenstaat_de --check-max-modified 140

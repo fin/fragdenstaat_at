@@ -1,10 +1,12 @@
 repos:
-  # - repo: https://github.com/astral-sh/ruff-pre-commit
-  #   rev: v0.6.3
-  #   hooks:
-  #     - id: ruff
-  #       args: [--fix]
-  #     - id: ruff-format
+  # Kept at the version in pyproject's dev group; a mismatch means CI and the
+  # local venv disagree about formatting.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.3
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
 
   # - repo: https://github.com/Riverside-Healthcare/djLint
   #   rev: v1.35.2

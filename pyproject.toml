@@ -217,6 +217,17 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["fragdenstaat_at"]
 
+[tool.coverage.run]
+source = ["fragdenstaat_at"]
+omit = ["*/migrations/*", "*/wsgi.py", "*/asgi.py"]
+plugins = ["django_coverage_plugin"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = ["pragma: no cover"]
+
 [tool.ruff]
 exclude = ["migrations", "build", "node_modules"]
 

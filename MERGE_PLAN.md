@@ -1484,10 +1484,27 @@ hooks **commented out**, so prek currently runs eslint and nothing else. That is
 why local commits report only `eslint ... Skipped`. Uncomment them, or CI
 lints nothing.
 
-- [ ] Port DE's `ci.yml`, keeping the `de-drift` job, `pytest.ini` and the
-      full-locale `compilemessages`. **[H]**
-- [ ] Uncomment the ruff hooks in `.pre-commit-config.yaml`.
-- [ ] Delete the stale `yarn.lock`.
+- [x] **Ported DE's `ci.yml`**, keeping the `de-drift` job, `pytest.ini` and the
+      full-locale `compilemessages`. Now: `uv sync --locked`, pnpm + node 24,
+      `docker compose -f compose-dev.yaml up --wait`, `prek-action`, and
+      `actions/*@v6`. Python is **3.13 only** — dev and production both run it;
+      DE's 3.12/3.14 entries can be added once this is reliably green.
+- [x] **Enabled the ruff hooks** (`ruff-check`, `ruff-format`, pinned to v0.16.3
+      to match the dev group). They had been commented out, so prek ran eslint
+      and nothing else. Three settings files needed reformatting.
+- [x] **Deleted `yarn.lock`** and **`.eslintrc.js`**. The latter was a dead
+      legacy config (`module.exports = require('froide/.eslintrc')`) shadowed by
+      `eslint.config.mjs`, and it was the *only* eslint failure on the tree:
+      flat-config eslint lints it and rejects the `require()`. DE deleted it
+      long ago and has the identical `eslint.config.mjs`.
+- [x] **Added `[tool.coverage]`** to `pyproject.toml`, mirroring DE's. Without
+      it `pytest --cov` would measure `.venv` too. Reports 43% over 18204
+      statements.
+
+Verified locally rather than by pushing: `prek run --all-files` passes all three
+hooks, `pytest -n auto --cov --cov-report=` gives 269 passed / 1 skipped, and
+`coverage report --format=markdown` renders. The workflow itself has **not** run
+on GitHub yet — the branch is still unpushed (§9.11).
 
 ---
 

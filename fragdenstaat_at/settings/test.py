@@ -35,7 +35,6 @@ class Test(FragDenStaatBase):
 
     GEOIP_PATH = None
 
-
     DATABASES = {
         "default": {
             "ENGINE": "django.contrib.gis.db.backends.postgis",

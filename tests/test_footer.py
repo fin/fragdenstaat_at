@@ -132,6 +132,8 @@ class LiveFooterTest(TestCase):
     Renders through the same ``{% static_alias %}`` path as ``base.html``, against
     the real page/alias content captured from production in
     ``tests/fixtures/cms.json``.
+
+    See tests/test_at_identity.py for how that fixture is regenerated.
     """
 
     fixtures = ["cms.json"]

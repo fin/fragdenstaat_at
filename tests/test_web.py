@@ -1,3 +1,4 @@
+# tests/fixtures/cms.json: see the regeneration note in tests/test_at_identity.py
 from django.test import TestCase
 
 

@@ -245,53 +245,43 @@ def test_page_url_ids_are_all_accounted_for():
 # ---------------------------------------------------------------------------
 # Regenerating tests/fixtures/cms.json
 #
-# The fixture is shared by this module, test_footer.py and test_web.py. It is a
-# dumpdata of a database loaded from a `scripts/export_dev_db.py` extract -- NOT
-# of a full production or dev database:
+# The fixture is shared by this module, test_footer.py and test_web.py.
 #
-#     # 1. load an export_dev_db.py extract into an empty database, then:
-#     python manage.py dumpdata --natural-foreign \
-#         cms djangocms_alias djangocms_versioning djangocms_frontend \
-#         djangocms_text sites account.user \
-#         --indent=2 > tests/fixtures/cms.json
+#     python manage.py export_fdscms --output tests/fixtures/cms.json
 #
-# The extract is what keeps it small (237 objects). It carries published
-# versions only and fabricates a single synthetic user -- the fixture's lone
-# account.user is `pk=1, username="dev", email="dev@localhost"`, which
-# export_dev_db.py INSERTs by hand. Running the same dumpdata against a real dev
-# database instead produced 4180 objects and 2745 users when checked, so the
-# extract is load-bearing, not an optimisation.
+# Run that against a database loaded from a `scripts/export_dev_db.py` extract,
+# NOT a real one. The extract is what keeps the fixture small: it carries
+# published versions only and fabricates a single synthetic user, so the
+# fixture's lone account.user is pk=1 / "dev" / dev@localhost. The same dump
+# against a real dev database produced 4180 objects and 2745 users when checked.
 #
-# --natural-foreign is confirmed by the stored FKs: `site` is
-# ["fragdenstaat.at"], `content_type` is ["cms", "pagecontent"] and Version's
-# `created_by` is ["dev@localhost"]. --natural-primary was NOT used -- every
-# object keeps its integer pk, which is what lets the page pks (21..30) line up
-# with a dev database. Tables absent from the fixture (cms.usersettings,
-# cms.globalpagepermission, djangocms_versioning.statetracking...) need no `-e`
-# flags: the extract exports them empty.
+# Do NOT use plain `dumpdata`. It cannot emit a loadable CMS fixture here:
+# under --natural-foreign it orders via serializers.sort_dependencies, which
+# sorts by *natural key* dependencies rather than the FK graph. cms.Page has no
+# natural key, so it is emitted last -- after cms.PageContent, which references
+# it -- and cms/signals/pagecontent.py dereferences instance.page in a post_save
+# handler. loaddata then dies with Page.DoesNotExist before any test runs.
+# export_fdscms re-sorts the dump by the real FK graph to fix exactly this.
 #
-# `fds_cms/management/commands/export_fdscms.py` looks like the tool for this
-# and is NOT -- its app list is stale (djangocms_text_ckeditor, djangocms_picture,
-# djangocms_video) and it misses alias, versioning and frontend.
+# Verified flags, from the stored FKs: --natural-foreign IS used (site is
+# ["fragdenstaat.at"], content_type is ["cms", "pagecontent"], Version's
+# created_by is ["dev@localhost"]); --natural-primary is NOT (every object keeps
+# its integer pk, which is what lets page pks line up with a dev database, so
+# single fields can be patched across instead of regenerating).
 #
-# Provenance: the fixture arrived in the 2021 DE merge and was regenerated twice
-# on 2026-08-18 (36dd97b, cbd2203). The original command was never recorded; the
-# above is reconstructed from the fixture's contents and verified field by field
-# against them, but has not been re-run end to end for lack of a current extract.
-#
-# To flip the xfail below you do not need to regenerate at all: reverse_id is one
-# field on the ten cms.page objects, and their pks match a dev database exactly.
+# Provenance: the fixture arrived in the 2021 DE merge and has been regenerated
+# several times since; the original command was never recorded and was
+# reconstructed from the file's contents.
 # ---------------------------------------------------------------------------
 
 
 class PageUrlResolutionTest(TestCase):
-    """The CMS content gap itself: MERGE_PLAN 9.3.
+    """Every unguarded {% page_url %} resolves to a real page. MERGE_PLAN 9.3.
 
-    xfail because the fixture mirrors production, where no page carries a
-    reverse_id. strict=True so that once the reverse_ids are set (in the CMS,
-    and in tests/fixtures/cms.json) this fails as XPASS and the marker gets
-    removed, rather than passing quietly and rotting. See the note above on
-    regenerating the fixture -- the cheap path is patching reverse_id alone.
+    This was xfail(strict) while the CMS content had no reverse_ids at all; the
+    marker came off when a regenerated fixture made it XPASS. It now guards
+    against the ids being removed or renamed again -- the failure it catches is
+    silent, since an empty href still returns 200.
     """
 
     fixtures = ["cms.json"]
@@ -305,10 +295,6 @@ class PageUrlResolutionTest(TestCase):
             Context({"request": request, "page_id": reverse_id})
         ).strip()
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="MERGE_PLAN 9.3: no CMS page carries a reverse_id yet",
-    )
     def test_required_page_urls_resolve(self):
         unresolved = {
             page_id: where

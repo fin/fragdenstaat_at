@@ -1093,21 +1093,34 @@ Once it does, four things must change together — the last is easy to miss:
   **pk**, a **dict** of filter kwargs, or a `Page` object (`cms/pub_base.html`
   passes one, which is why it cannot be checked statically).
 
-  Fix in the CMS: **Page → Advanced settings → ID**, one per page. Editor work
-  rather than a deploy step, so worth doing before the content freeze.
-  `scripts/verify_render.py` will *not* catch this — an empty href still
-  returns 200. Guarded instead by `tests/test_at_identity.py`:
+  **Done.** All five are set in the CMS and captured in a regenerated
+  `tests/fixtures/cms.json` (`home`, `donate`, `help`, `beginnersguide`,
+  `help:donations`). `scripts/verify_render.py` will *not* catch a regression —
+  an empty href still returns 200. Guarded instead by
+  `tests/test_at_identity.py`:
 
   - `test_page_url_ids_are_all_accounted_for` runs green now. It scans the
     templates and fails if a new `page_url` literal appears that the file does
     not classify as guarded-or-required, or if a classified id loses its last
     reference. That is precisely how the three unguarded links got in.
-  - `PageUrlResolutionTest` covers the content gap itself and is
-    `xfail(strict=True)`. Setting the `reverse_id`s in the CMS **and refreshing
-    `tests/fixtures/cms.json`** turns it into an XPASS, which fails the suite
-    and prompts removing the marker — so it cannot rot into a passing no-op.
-    Confirmed non-vacuous: assigning the ids in a scratch test made the tag
-    resolve to real URLs. **[H]**
+  - `PageUrlResolutionTest` asserts each unguarded id resolves. It was
+    `xfail(strict=True)` while the content had no `reverse_id`s; the regenerated
+    fixture turned it into an XPASS, which failed the suite and got the marker
+    removed — the ratchet worked as intended. It now guards against the ids
+    being removed or renamed. **[H]**
+
+  **Regenerating the fixture needs `manage.py export_fdscms`, not `dumpdata`.**
+  `dumpdata` cannot emit a loadable CMS fixture on django-cms 5: under
+  `--natural-foreign` it orders via `serializers.sort_dependencies`, which sorts
+  by *natural key* dependencies rather than the FK graph. `cms.Page` has no
+  natural key, so it is written **last** — after `cms.PageContent`, which
+  references it — and `cms/signals/pagecontent.py` dereferences `instance.page`
+  in a `post_save` handler, so `loaddata` fails with `Page.DoesNotExist` before
+  any test runs. Verified: Django's own `sort_dependencies` returns
+  `cms.placeholder` first and `cms.page` last for these apps. `export_fdscms`
+  was rewritten to dump and then re-sort by the real FK graph; its previous app
+  list was stale (`djangocms_text_ckeditor`, `djangocms_picture`,
+  `djangocms_video`) and missing alias, versioning and frontend.
 - [ ] **Fill in the six missing `content_urls`.** Same class of silent failure
   as the `reverse_id`s above, found by scanning froide and froide-payment too.
   `get_content_url()` is `CONTENT_URLS.get(name, "/")` — a missing key returns

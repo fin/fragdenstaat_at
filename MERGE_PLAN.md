@@ -1551,19 +1551,22 @@ workflow itself has **not** run on GitHub yet — the branch is still unpushed
 
 ### 9.13 froide-fax is now in the dependency set
 
-Added on a **branch pin**, `fin/froide-fax@docs/live-tests`, which is
-`fin/main` plus webhook hardening (replay and malformed-envelope rejection),
-classification of permanently-undeliverable faxes so they stop being retried,
-Telnyx's OpenAPI examples as fixtures, and `README_LIVE_TESTS.md`. AT is running
-**ahead of okfde here**, so unlike the froide-payment pin (§9.9) there is no
-"repin to upstream" exit criterion yet — upstream would have to catch up first.
+Pinned to **`fin/froide-fax@main`**, which carries webhook hardening (replay
+and malformed-envelope rejection), classification of permanently-undeliverable
+faxes so they stop being retried, Telnyx's OpenAPI examples as fixtures,
+`README_LIVE_TESTS.md`, and `FAX_BACKEND` (§9.15). AT is running **ahead of
+okfde here**, so unlike the froide-payment pin (§9.9) there is no "repin to
+upstream" exit criterion yet — upstream would have to catch up first.
+
+It was briefly pinned to `docs/live-tests`; that branch and `main` were the same
+commit, and `main` is the one that moves, so the pin follows `main`.
 
 Wired into five places, all committed:
 
 | where | change |
 |---|---|
-| `pyproject.toml` | `froide-fax @ git+…@docs/live-tests` |
-| `uv.lock` | `froide-fax 0.0.1 (62871695)`, plus `pynacl`, `pytz` |
+| `pyproject.toml` | `froide-fax @ git+…@main` |
+| `uv.lock` | `froide-fax 0.0.1 (a55c9343)`, plus `pynacl`, `pytz` |
 | `settings/base.py` | `froide_fax.apps.FroideFaxConfig` uncommented |
 | `theme/urls.py` | `path("fax/", include("froide_fax.urls"))`, DE's mount point |
 | `devsetup.sh` | `froide-fax` added to `REPOS` |

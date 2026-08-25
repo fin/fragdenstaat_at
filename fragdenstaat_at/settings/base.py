@@ -738,6 +738,8 @@ class FragDenStaatBase(German, Base):
 
     # EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 
+    FAX_BACKEND = None
+
     EMAIL_BACKEND = "fragdenstaat_at.theme.email_backend.CustomCeleryEmailBackend"
     CELERY_EMAIL_BACKEND = "froide.foirequest.smtp.EmailBackend"
     CELERY_EMAIL_TASK_CONFIG = {

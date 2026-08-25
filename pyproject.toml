@@ -119,15 +119,18 @@ dependencies = [
   # Exit criterion: upstream them to okfde/froide-payment and repin to @main.
   # Tracked in MERGE_PLAN.md 9.9.
   "froide-payment @ git+https://github.com/fin/froide-payment.git@2026-08-de-sync",
-  # Branch pin, not a fork of convenience: docs/live-tests is fin/main plus
-  # webhook hardening (replay + malformed-envelope rejection), classification of
-  # permanently-undeliverable faxes so they stop being retried, Telnyx's OpenAPI
-  # examples as fixtures, and README_LIVE_TESTS.md covering the one thing no
-  # offline test can prove -- that our signature verification interoperates with
-  # Telnyx's signing, rather than nacl agreeing with nacl.
+  # Fork pin, not a fork of convenience. fin/main carries webhook hardening
+  # (replay + malformed-envelope rejection), classification of permanently
+  # undeliverable faxes so they stop being retried, Telnyx's OpenAPI examples as
+  # fixtures, README_LIVE_TESTS.md for the one thing no offline test can prove
+  # -- that our signature verification interoperates with Telnyx's signing
+  # rather than nacl agreeing with nacl -- and FAX_BACKEND, which lets dev
+  # render a fax letter and its PDF without a Telnyx account.
   #
-  # Not on okfde: AT is running ahead of upstream here.
-  "froide-fax @ git+https://github.com/fin/froide-fax.git@docs/live-tests",
+  # Not on okfde: AT is running ahead of upstream here, so unlike the
+  # froide-payment pin there is no "repin to @main upstream" exit criterion --
+  # okfde would have to catch up first. MERGE_PLAN.md 9.13.
+  "froide-fax @ git+https://github.com/fin/froide-fax.git@main",
   "sortabletable @ git+https://github.com/stefanw/djangocms-sortabletable.git@main",
   "fcdocs-annotate @ git+https://github.com/okfde/fcdocs-annotate.git@main",
   # QR codes on outgoing fax letters (docs/qr-code-on-faxes.md). segno rather

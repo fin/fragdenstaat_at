@@ -1989,7 +1989,7 @@ requires-dist = [
     { name = "elasticsearch-dsl", specifier = ">=8.0.0,<9.0.0" },
     { name = "fcdocs-annotate", git = "https://github.com/okfde/fcdocs-annotate.git?rev=main" },
     { name = "froide", git = "https://github.com/okfde/froide.git?rev=main" },
-    { name = "froide-fax", git = "https://github.com/fin/froide-fax.git?rev=docs%2Flive-tests" },
+    { name = "froide-fax", git = "https://github.com/fin/froide-fax.git?rev=main" },
     { name = "froide-payment", git = "https://github.com/fin/froide-payment.git?rev=2026-08-de-sync" },
     { name = "geoip2", specifier = ">=4.8.0" },
     { name = "gunicorn", marker = "extra == 'production'" },
@@ -2119,7 +2119,7 @@ dependencies = [
 [[package]]
 name = "froide-fax"
 version = "0.0.1"
-source = { git = "https://github.com/fin/froide-fax.git?rev=docs%2Flive-tests#62871695ece796823b8898468cd0cfe0d67a9bcd" }
+source = { git = "https://github.com/fin/froide-fax.git?rev=main#a55c9343b7c7978128ccc5158bd65cde28f9b76d" }
 dependencies = [
     { name = "django" },
     { name = "phonenumbers" },

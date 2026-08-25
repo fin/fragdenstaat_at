@@ -130,6 +130,12 @@ dependencies = [
   "froide-fax @ git+https://github.com/fin/froide-fax.git@docs/live-tests",
   "sortabletable @ git+https://github.com/stefanw/djangocms-sortabletable.git@main",
   "fcdocs-annotate @ git+https://github.com/okfde/fcdocs-annotate.git@main",
+  # QR codes on outgoing fax letters (docs/qr-code-on-faxes.md). segno rather
+  # than qrcode: pure Python, no Pillow, and emits SVG, which stays vector
+  # through WeasyPrint -- sharp edges are what survives a 204x98 dpi fax.
+  # qrcode is present only because django-mfa3 requires it; nothing declares it
+  # directly, so it would vanish the day froide changes MFA library.
+  "segno>=1.6",
   "qrcode>=7.3.1",
   "pytesseract>=0.3.13",
 ]

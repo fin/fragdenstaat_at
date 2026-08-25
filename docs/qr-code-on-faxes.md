@@ -1,6 +1,11 @@
-# TODO: a QR code of the reply address on outgoing faxes
+# A QR code of the reply address on outgoing faxes
 
-Status: **not started.** This is a design note, not a record of work done.
+Status: **built, not yet proven on a real fax.** The code is in; the one test
+that counts (§ Verifying, step 2) has not been run.
+
+Encodes `mailto:<address>`, bare — no `?subject=` or `?body=`. The scheme costs
+seven characters and opens an already addressed composer; the query parameters
+are what would balloon the payload.
 
 ## Why
 
@@ -38,6 +43,34 @@ this checkout's Django 5.2, not assumed.
 The same pattern is already used here for another froide plugin --
 `fragdenstaat_at/fds_donation/templates/froide_payment/` -- so it is house
 style, not a novelty.
+
+## What was built
+
+| file | what |
+|---|---|
+| `pyproject.toml` | `segno>=1.6` |
+| `fragdenstaat_at/theme/templatetags/fds_tags.py` | `fax_reply_qr_code(email)` — was an empty file |
+| `fragdenstaat_at/theme/templates/froide_fax/message_letter.html` | the override |
+| `tests/test_fax_qr_code.py` | 10 tests |
+
+froide-fax has a **zero-line diff**, as required.
+
+The tag is named `fax_reply_qr_code` and takes the *email*, not a generic
+`payload` as sketched below, so the `mailto:` decision lives in one documented
+place rather than at the call site.
+
+### Also fixed: the `Via` line
+
+The "known bug" at the bottom of this file is fixed here rather than in
+froide-fax, for the same zero-diff reason. `{% block extra_meta %}` now renders
+`{{ block.super }}` only when the fax is a copy of an email, and nothing when it
+replaces one — where "Fax and email" promises an email that never arrives.
+
+The discriminator is `object.kind`, not `object.original`. `send_fax_message`
+renders `fax_message.original or fax_message`, so `object` is the **email**
+message when the fax copies one and the **fax** message when it replaces one —
+`original` is `None` in both cases. Using `block.super` rather than repeating
+the markup means the copy case inherits any upstream change to the wording.
 
 ## Steps
 
@@ -135,13 +168,31 @@ address is shorter and always readable by a human as a fallback.
 Rendering a PDF locally proves only that it renders. It says nothing about the
 thing that matters.
 
-1. Generate a letter and eyeball it — see `froide-fax/README_LIVE_TESTS.md` for
-   how to drive the PDF path, and `/workspaces/fds_at/example_fax.pdf` for what
-   the letter looks like today.
-2. **Send a real fax and scan the received page with a phone.** This is the
-   only test that counts. Faxbeep (<https://faxbeep.com>) answers for free and
-   returns the received image.
+1. ~~Generate a letter and eyeball it~~ **done.** Both modes render;
+   `/workspaces/fds_at/example_fax_qr_modeA-copy.pdf` and
+   `..._modeB-replaces.pdf` are the two letters, and differ only by the `Via`
+   line. WeasyPrint keeps the SVG vector — no raster fallback in the PDF.
+2. **Send a real fax and scan the received page with a phone. STILL OWED.**
+   This is the only test that counts. Faxbeep (<https://faxbeep.com>) answers
+   for free and returns the received image.
 3. Repeat at *standard* resolution, not just fine. Assume the worst path.
+
+**Simulated** step 3, which is encouraging but is not step 2. Rendering the PDF
+at Group 3 resolutions and decoding with OpenCV's detector:
+
+| transmitted | greyscale | 1-bit |
+|---|---|---|
+| 204x98 (standard) | decodes | decodes |
+| 204x196 (fine) | decodes | decodes |
+
+Two caveats. The vertical squash must be reconstructed to square aspect first,
+as a receiving machine does — decoding the 204x98 raster *as stored* fails,
+which is a property of the simulation, not of the letter. And this models
+detail loss only: no halftoning, skew, photocopy noise or scanner optics. It
+says the size is not obviously wrong. It does not say the thing works.
+
+OpenCV was installed ad hoc for this and removed again; it is deliberately not a
+dev dependency, since simulated decoding is not what would justify the weight.
 
 ## Do not
 
@@ -159,6 +210,6 @@ thing that matters.
   template being extended
 - `froide/plan.md` — inbound replies stay email-only, which is what makes the
   reply address the thing worth optimising
-- **Known bug, unrelated to this but visible on the same letter:** the `Via`
-  line is hardcoded to "Fax and email" and is wrong for Mode B, where no email
-  is sent. Fix belongs on `feat/publicbody-fax-routing` in froide-fax.
+- ~~**Known bug**: the `Via` line is hardcoded to "Fax and email" and is wrong
+  for Mode B~~ — **fixed here**, in AT's override rather than in froide-fax, to
+  keep that repo's diff at zero. See "Also fixed: the `Via` line" above.

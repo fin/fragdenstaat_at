@@ -1,0 +1,38 @@
+{# Adds a reply-address QR code to outgoing fax letters. #}
+{#                                                                          #}
+{# Extends the template it overrides: Django passes the origin history to   #}
+{# the loader, so resolution continues to froide-fax's own copy rather than #}
+{# recursing. Same pattern as fds_donation/templates/froide_payment/.       #}
+{#                                                                          #}
+{# This keeps froide-fax at a zero-line diff -- it is MIT and headed         #}
+{# upstream to okfde, so it must not grow an AT-specific feature or flag.   #}
+{#                                                                          #}
+{# from_address_links is chosen because froide-fax does NOT override it (it #}
+{# overrides extra_meta and letter_closing). Staying off those means an     #}
+{# upstream change to the signature markup cannot collide with this.        #}
+{#                                                                          #}
+{# See docs/qr-code-on-faxes.md.                                            #}
+{% extends "froide_fax/message_letter.html" %}
+{% load fds_tags %}
+
+{% block from_address_links %}
+    {{ block.super }}
+    {# Additive, never a replacement: block.super keeps the printed address #}
+    {# and short URL, so an unscannable code degrades to today's letter.    #}
+    <div class="fax-reply-qr">{% fax_reply_qr_code object.sender_email %}</div>
+{% endblock %}
+
+{# "Via: Fax and email" is froide-fax's hardcoded text, and it is wrong when   #}
+{# the fax REPLACES the email (FaxOverride / "Mode B") -- no email is sent, so #}
+{# the line tells the authority to expect one that never arrives.              #}
+{#                                                                             #}
+{# send_fax_message renders `fax_message.original or fax_message`, so `object`  #}
+{# is the EMAIL message when the fax is a copy of one, and the FAX message      #}
+{# itself when it replaces it. `original` is None either way, so `kind` is the  #}
+{# discriminator, not `original`.                                              #}
+{#                                                                             #}
+{# block.super rather than repeating the markup: if upstream changes the        #}
+{# wording or adds rows, the copy case inherits that automatically.            #}
+{% block extra_meta %}
+    {% if object.kind == "email" %}{{ block.super }}{% endif %}
+{% endblock %}

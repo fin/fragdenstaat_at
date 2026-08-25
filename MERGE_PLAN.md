@@ -1432,6 +1432,33 @@ rather than a fix. Tested against uv 0.12.5:
 
 ---
 
+### 9.15 QR code on outgoing fax letters
+
+Built; see `docs/qr-code-on-faxes.md`. Encodes `mailto:<secret_address>` bare —
+no `?subject=`/`?body=`, which would balloon the payload. Lives entirely in
+`fragdenstaat_at.theme`; **froide-fax has a zero-line diff**, which matters
+because that repo is MIT and headed upstream to okfde.
+
+The same override also fixes froide-fax's hardcoded `Via: Fax and email`, which
+is wrong when the fax *replaces* the email (`FaxOverride`) and promises a mail
+that never arrives. Keys on `object.kind`, not `object.original`:
+`send_fax_message` renders `fax_message.original or fax_message`, so `original`
+is `None` in both modes.
+
+- [x] Renders in both modes, WeasyPrint keeps the SVG vector, and the QR decodes
+      out of the generated PDF.
+- [x] Simulated Group 3: decodes at 204x98 **and** 204x196, greyscale and 1-bit.
+      Models detail loss only — no halftoning, skew or photocopy noise.
+- [ ] **Send one real fax and scan the received page.** The only test that
+      counts, per the doc. Faxbeep answers free. Until then this is unproven on
+      the path it exists for. **[H]**
+- [ ] Decide whether it goes on Mode A faxes at all — there an email already
+      carries the reply address, so it buys much less.
+- [ ] Measure it. The doc is explicit that this is an experiment: an office that
+      refuses email may not scan QR codes either.
+
+---
+
 ### 9.14 GitHub Actions is dead scaffolding
 
 `.github/workflows/ci.yml` is untouched from the 2023 fork. The repo modernised

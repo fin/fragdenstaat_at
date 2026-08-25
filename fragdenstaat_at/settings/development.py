@@ -2,6 +2,12 @@ from .base import FragDenStaatBase, env
 
 
 class Dev(FragDenStaatBase):
+    # No Telnyx credentials in dev (the TELNYX_* settings default to ""), so a
+    # real send would fail at the API call -- after the fax FoiMessage and its
+    # fax.pdf attachment had already been created. The console backend runs
+    # that whole path and prints the fax instead of sending it, which is what
+    # you want for looking at the rendered letter. See froide-fax's README.
+    FAX_BACKEND = "froide_fax.backends.console.ConsoleFaxBackend"
     GEOIP_PATH = None
     FRONTEND_DEBUG = True
 

@@ -1586,6 +1586,18 @@ as DE. It is also covered by the editable-fork guard (§9.10,
       turning it on changes how messages reach public bodies and costs money per
       fax, which is a product decision, not merge mechanics. Until it is on, the
       app is installed and reachable but sends nothing.
+- [x] **Fax transports** — froide-fax now has `FAX_BACKEND`, mirroring
+      `EMAIL_BACKEND`, with console and dummy backends that run the whole path
+      (fax message, rendered `fax.pdf`, delivery status) without a Telnyx
+      account or a network call. AT's `settings/development.py` uses the
+      console backend, since dev has no credentials and a real send would fail
+      *after* the message and PDF had been created.
+- [x] **Fax log normalised** — the polling sweep stored Telnyx's REST object
+      verbatim (`from`, `id`, `page_count`), while `report.html` reads `from_`,
+      `sid`, `num_pages`. A fax resolved by poll rather than callback rendered a
+      report with blank sender, recipient, pages and date; nothing raised,
+      because Django resolves a missing key to `''`. Both paths now share one
+      builder.
 - [ ] **Run the live Telnyx test once** (`README_LIVE_TESTS.md` on the branch,
       ~20 min and one fax). It closes the one gap no offline test covers: every
       signature test generates its own keypair, so they prove nacl agrees with

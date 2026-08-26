@@ -34,6 +34,11 @@ interface SelectedPublicBody {
   id: number | string
 }
 
+interface StoreState {
+  scopedPublicBodies?: Record<string, SelectedPublicBody[]>
+  scopedPublicBodiesMap?: Record<string, Record<string, boolean>>
+}
+
 const notice = document.getElementById(NOTICE_ID)
 
 if (notice !== null) {
@@ -46,14 +51,33 @@ if (notice !== null) {
   const heading = notice.querySelector<HTMLElement>('[data-fax-heading]')
   const message = notice.querySelector<HTMLElement>('[data-fax-message]')
 
-  const selectedIds = (scoped: Record<string, SelectedPublicBody[]>): string[] =>
-    Object.values(scoped ?? {})
+  const selectedIds = (state: StoreState): string[] => {
+    const ids = new Set<string>()
+    // The list of selected bodies, per scope ('make-request', or
+    // 'make-request-draft-<id>'). Read every scope rather than naming one.
+    Object.values(state.scopedPublicBodies ?? {})
       .flat()
-      .map((pb) => String(pb?.id))
-      .filter((id) => id !== 'undefined')
+      .forEach((pb) => {
+        if (pb?.id !== undefined && pb?.id !== null) {
+          ids.add(String(pb.id))
+        }
+      })
+    // ...and the id map beside it, because not every mutation keeps the two in
+    // step. Numeric keys only: SET_PUBLICBODY_ID writes the literal string
+    // 'publicBodyId' as a key (store/index.js, an upstream slip), which must
+    // not be read as an id.
+    Object.values(state.scopedPublicBodiesMap ?? {}).forEach((map) => {
+      Object.entries(map ?? {}).forEach(([id, present]) => {
+        if (present === true && /^\d+$/.test(id)) {
+          ids.add(id)
+        }
+      })
+    })
+    return Array.from(ids)
+  }
 
-  const update = (scoped: Record<string, SelectedPublicBody[]>): void => {
-    const selected = selectedIds(scoped)
+  const update = (state: StoreState): void => {
+    const selected = selectedIds(state)
     const diverted = selected.filter((id) => faxIds.has(id))
 
     if (diverted.length === 0) {
@@ -77,10 +101,35 @@ if (notice !== null) {
     notice.hidden = false
   }
 
-  store.watch(
-    (state: { scopedPublicBodies: Record<string, SelectedPublicBody[]> }) =>
-      state.scopedPublicBodies,
-    update,
-    { deep: true }
-  )
+  // subscribe, not watch: this fires after every mutation whatever it touched,
+  // so it does not depend on a deep getter being tracked correctly. The
+  // selection is reached through several mutations (SET_PUBLICBODY,
+  // SET_PUBLICBODIES, SET_PUBLICBODY_ID, ADD_PUBLICBODY_ID,
+  // REMOVE_PUBLICBODY_ID) and more than one chooser component.
+  //
+  // Deliberately not run eagerly: the server already rendered the right state
+  // for a body chosen before load, and the store has not hydrated at this
+  // point, so an eager pass would hide a correct notice.
+  store.subscribe((_mutation: unknown, state: StoreState) => {
+    update(state)
+  })
+
+  // Diagnostic. The selection lives in the store and its DOM shape changes with
+  // the step, so "why is the notice hidden?" is otherwise hard to answer from a
+  // console. Reports what the notice believes:
+  //
+  //   fdsFaxNotice()
+  //   -> { selected: ['26', '31'], diverted: ['26'], hidden: false }
+  //
+  // Remove once the multi-body flow is confirmed working in the wild.
+  ;(window as unknown as Record<string, unknown>).fdsFaxNotice = () => {
+    const state = store.state as StoreState
+    const selected = selectedIds(state)
+    return {
+      selected,
+      diverted: selected.filter((id) => faxIds.has(id)),
+      knownFaxIds: Array.from(faxIds),
+      hidden: notice.hidden
+    }
+  }
 }

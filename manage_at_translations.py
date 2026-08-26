@@ -352,10 +352,15 @@ def make_entry(entry, label, msgstr):
     )
     if entry.msgid_plural:
         new.msgid_plural = entry.msgid_plural
-        if msgstr:
-            new.msgstr_plural = dict(entry.msgstr_plural)
-        else:
-            new.msgstr_plural = dict.fromkeys(entry.msgstr_plural, "")
+        # A plural entry keeps its translations in msgstr_plural and leaves
+        # msgstr empty, so `msgstr` says nothing about whether this is a stub.
+        # Testing it dropped every adopted plural translation on the floor: the
+        # caller passes entry.msgstr, which is always "" here, and the entry was
+        # adopted (has_text sees msgstr_plural) and then blanked.
+        wanted = dict(entry.msgstr_plural)
+        new.msgstr_plural = (
+            wanted if any(wanted.values()) else dict.fromkeys(wanted, "")
+        )
         new.msgstr = ""
     return new
 
@@ -494,6 +499,37 @@ def own_german_translations():
     return german
 
 
+def own_app_labels():
+    """Labels discover_sources() gives AT's own apps, e.g. fds_donation."""
+    return {label for label, _dir, _repo, is_own in discover_sources() if is_own}
+
+
+def dead_entries(target, live_msgids, own_labels):
+    """Entries for msgids AT's own code no longer uses.
+
+    A stub survives its string. `Bank code` -> `BLZ` outlived the bank-code row
+    that was dropped from the banktransfer template: the string is gone from the
+    source, but fds_donation's `de` catalog still carries it, so the scan keeps
+    finding it and the stub sits here waiting for a translation nobody will ever
+    see.
+
+    Only AT's own apps are judged, because only they were extracted. An entry
+    from froide is not dead just because AT's source does not contain it.
+    """
+    dead = []
+    for entry in target:
+        label = None
+        for line in (entry.comment or "").splitlines():
+            if line.startswith("from "):
+                label = line[len("from ") :].strip()
+                break
+        if label not in own_labels:
+            continue
+        if key(entry) not in live_msgids:
+            dead.append((label, entry))
+    return dead
+
+
 def seed_from_source(target, verbose=False):
     """Return entries AT's own code uses that de_AT should carry.
 
@@ -508,6 +544,7 @@ def seed_from_source(target, verbose=False):
     extracted = extract_own_msgids(verbose=verbose)
     german = own_german_translations()
     present = {key(e) for e in target}
+    seed_from_source.live_msgids = set(extracted)
 
     seeded = []
 
@@ -572,6 +609,13 @@ def main():
         help="skip the keyword scan; adopt only",
     )
     parser.add_argument(
+        "--prune",
+        action="store_true",
+        help="with --from-source, delete entries for strings AT's source no "
+        "longer uses. Only AT's own apps are judged, since only they are "
+        "extracted.",
+    )
+    parser.add_argument(
         "--from-source",
         action="store_true",
         help="also extract the msgids AT's own code uses now and seed the ones "
@@ -598,6 +642,7 @@ def main():
     seen = {key(e) for e in target}
 
     added, adopted, skipped_ref = [], [], []
+    repaired = []
     skipped_obsolete = []
     redundant = []
 
@@ -641,7 +686,10 @@ def main():
                 if entry.obsolete or not entry.msgid:
                     continue
                 has_text = entry.msgstr or any(entry.msgstr_plural.values())
-                if not has_text or key(entry) in seen:
+                if not has_text or key(entry) in translated:
+                    # `translated`, not `seen`: an entry already carrying text is
+                    # left alone, but one sitting here empty is a stub worth
+                    # filling -- including ones an earlier run blanked itself.
                     continue
                 if live_msgids is not None and key(entry) not in live_msgids:
                     skipped_obsolete.append((label, entry.msgid))
@@ -660,8 +708,18 @@ def main():
                 ):
                     redundant.append((label, entry.msgid))
                     continue
-                adopted.append((label, make_entry(entry, label, entry.msgstr)))
+                filled = make_entry(entry, label, entry.msgstr)
+                existing = next((e for e in target if key(e) == key(entry)), None)
+                if existing is not None:
+                    # Present but empty: fill in place rather than appending a
+                    # duplicate msgid, which msgfmt rejects outright.
+                    existing.msgstr = filled.msgstr
+                    existing.msgstr_plural = filled.msgstr_plural
+                    repaired.append((label, entry.msgid))
+                else:
+                    adopted.append((label, filled))
                 seen.add(key(entry))
+                translated.add(key(entry))
 
         if args.no_scan:
             continue
@@ -686,6 +744,10 @@ def main():
             counts[label] = counts.get(label, 0) + 1
         return "".join(f"\n  {label}: {n}" for label, n in sorted(counts.items()))
 
+    if repaired:
+        print(f"\nFilled {len(repaired)} entr(y/ies) that were present but empty:")
+        for label, mid in repaired:
+            print(f"  [{label}] {mid[:70]!r}")
     if adopted:
         print(f"Adopting {len(adopted)} existing de_AT translation(s):", end="")
         print(breakdown(adopted))
@@ -730,7 +792,21 @@ def main():
         else:
             print("\nNothing to seed from AT's own source.")
 
-    if not adopted and not added and not seeded:
+        dead = dead_entries(
+            target, getattr(seed_from_source, "live_msgids", set()), own_app_labels()
+        )
+        if dead:
+            print(f"\n{len(dead)} entr(y/ies) for strings AT's source no longer uses:")
+            for label, e in dead:
+                print(f"  [{label}] {e.msgid[:70]!r}")
+            if args.prune:
+                for _label, e in dead:
+                    target.remove(e)
+                print(f"  removed ({len(dead)})")
+            else:
+                print("  pass --prune to remove them")
+
+    if not adopted and not added and not seeded and not repaired:
         # Not a reason to stop: the German-source comments are refreshed on
         # every run, so there is still work to write out.
         print("No new entries; refreshing the recorded German source text.")

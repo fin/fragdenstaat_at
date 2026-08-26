@@ -9,7 +9,7 @@ were ported verbatim.
 These are string assertions rather than a scanner because they run against
 *rendered output*: they cover what a donor actually sees, including anything
 pulled in from CMS content or an included template, which
-`sync_froide_translations.py --dry-run` (source scan, MERGE_PLAN 9.12) cannot
+`manage_at_translations.py --dry-run` (source scan, MERGE_PLAN 9.12) cannot
 see.
 
 Note "Open Knowledge Foundation Deutschland" is deliberately not forbidden: the

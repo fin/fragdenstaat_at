@@ -313,7 +313,8 @@ No new Django apps. What is AT's alone:
 
 - `fragdenstaat_at/scripts/` — two one-shot 2019/2021 DB migration scripts.
   Historical record; keep as documentation, not runnable.
-- `sync_froide_translations.py` — seeds `locale/de_AT/` from froide's catalogue.
+- `manage_at_translations.py` — maintains `locale/de_AT/`: scan, adopt, and
+  `--from-source` seeding of AT's own untranslated strings.
   Target directory does not exist yet; reads froide from a hardcoded `../froide/`.
 - `.devcontainer/`, `compose-dev.yaml`, `devsetup.sh`, `Makefile`,
   `export_dev_db.py` — a working local environment DE does not have in this form.
@@ -546,7 +547,7 @@ two declare in common carries an identical constraint.**
 
 **Dev.** DE has `prek` (AT installs it as a system tool in the devcontainer, not
 as a dev dep) and `pywatchman` (optional). AT adds `beautifulsoup4` (froide's
-test package, installed `--no-deps`) and `polib` (`sync_froide_translations.py`).
+test package, installed `--no-deps`) and `polib` (`manage_at_translations.py`).
 
 **The real finding was in the lock, not the manifest.** AT's declared constraints
 looked fine while resolved versions had drifted years behind DE's, silently:
@@ -809,7 +810,8 @@ with `python scripts/de_drift.py` rather than trusting numbers in prose.
 Deliberately last: relocating `de_AT` before P2 means re-syncing the catalogue every
 time a label changes. froide keeps carrying it until then.
 
-✅ **The tooling is ready** — `sync_froide_translations.py` no longer hardcodes
+✅ **The tooling is ready** — `manage_at_translations.py` (formerly
+`sync_froide_translations.py`) no longer hardcodes
 froide. It discovers sources from `LOCALE_PATHS` *and* `INSTALLED_APPS`, which
 matters because packages disagree about where catalogs live: froide ships one
 directory for the whole package (a pure app walk misses it entirely), while
@@ -819,7 +821,7 @@ pollute the results with generic `IBAN` validator strings; `--all-apps` opts bac
 in. AT's own apps are always skipped: their German belongs in AT's own `de`
 catalog, not in an override of itself.
 
-Two modes:
+Three modes:
 
 - **scan** (default) — keyword-match each `de` catalog, add matches with an empty
   msgstr. An empty msgstr falls back to the app's own translation, so the entries
@@ -828,6 +830,14 @@ Two modes:
   all. `--ref froide-payment=fin/main` reads them straight out of a fork branch
   **without checking it out**, which is how a fork's translations get moved into
   AT so the fork can be retired.
+- **from-source** (`--from-source`) — extract the msgids AT's own code uses
+  *right now* and seed those with no usable German: either untranslated
+  anywhere, or carrying a German translation that names Germany. scan and adopt
+  both read existing `de` catalogs, so a string nobody has ever translated is
+  invisible to them — which is how AT-only wording added since the last catalog
+  run ends up rendering in English with nothing to show for it. Extraction goes
+  to a throwaway locale, so `locale/de` is never rewritten and stays a mirror of
+  DE's. Currently reports **54** such strings, including the fax notice.
 
 Measured today (`--dry-run --ref froide-payment=fin/main`): **585 existing
 translations to adopt** (583 froide + 2 froide-payment) and **57 untranslated
@@ -873,7 +883,7 @@ wrong data in front of real people or break the deploy.
       default/base.html` carries `fragdenstaat.de` five times plus Open Knowledge
       Foundation Deutschland; `formal/base.html` one more. Every mailing AT sends
       goes out with German footers and links. Find them with
-      `python sync_froide_translations.py --dry-run` (§9.12). Same class as the
+      `python manage_at_translations.py --dry-run` (§9.12). Same class as the
       bank details, which are now fixed.
 - [x] **Five dead `reverse_id` links (three of them unguarded) and six
       `content_urls` pointing at the homepage** — §9.3. `throttled` and `pseudonym` fire exactly when a user is
@@ -1703,14 +1713,14 @@ as DE. It is also covered by the editable-fork guard (§9.10,
 
 ### 9.12 Finding Germany-specific strings that no catalog can reach
 
-`sync_froide_translations.py` ends with a scan of AT's own templates and code for
+`manage_at_translations.py` ends with a scan of AT's own templates and code for
 hardcoded German identity. This is deliberately separate from the translation
 work: a hardcoded IBAN is not a msgid, so no `de_AT` override can ever fix it —
 the source has to change.
 
 ```bash
-python sync_froide_translations.py --dry-run     # scan runs at the end
-python sync_froide_translations.py --no-hardcoded-check   # skip it
+python manage_at_translations.py --dry-run     # scan runs at the end
+python manage_at_translations.py --no-hardcoded-check   # skip it
 ```
 
 It looks for German domains (`fragdenstaat.de`, `okfn.de`), the German legal

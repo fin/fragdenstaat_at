@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-"""Collect German-specific strings from every installed app into AT's de_AT override.
+"""Maintain AT's de_AT override catalog.
 
-Two jobs, both aimed at letting AT drop its forks of froide / froide-payment
-(see MERGE_PLAN.md D4, D5, P6):
+Three jobs. The first two aim at letting AT drop its forks of froide /
+froide-payment (see MERGE_PLAN.md D4, D5, P6); the third keeps AT's own strings
+from silently going untranslated:
 
   scan    Search each app's `de` catalog for strings carrying Germany-specific
           wording ("Open Knowledge", "FragDenStaat.de", "gelber Brief", ...) and
@@ -14,6 +15,14 @@ Two jobs, both aimed at letting AT drop its forks of froide / froide-payment
           across verbatim. This is how translations living in a fork get moved
           into fragdenstaat_at so the fork can be retired.
 
+  source  (--from-source) Extract the msgids AT's own code uses *right now* and
+          seed the ones with no usable German. scan and adopt both read existing
+          `de` catalogs, so a string that has never been translated anywhere is
+          invisible to them -- which is how AT-only wording added after the last
+          catalog run ends up rendering in English with nothing to show for it.
+          Extraction goes to a throwaway locale so `locale/de` is never
+          rewritten and stays a close mirror of DE's.
+
 Apps are discovered from Django's INSTALLED_APPS rather than a hardcoded list,
 so froide, froide-payment, filingcabinet, django-cms and anything added later
 are all covered automatically, and apps AT does *not* install are never
@@ -21,16 +30,18 @@ scanned. Everything lands in one catalog, because AT's locale directory comes
 first in LOCALE_PATHS and therefore overrides every app-level catalog.
 
 Usage:
-    python sync_froide_translations.py --dry-run
-    python sync_froide_translations.py
-    python sync_froide_translations.py --adopt
-    python sync_froide_translations.py --adopt --ref froide-payment=fin/main
-    python sync_froide_translations.py --app froide --app froide_payment
+    python manage_at_translations.py --dry-run
+    python manage_at_translations.py
+    python manage_at_translations.py --adopt
+    python manage_at_translations.py --adopt --ref froide-payment=fin/main
+    python manage_at_translations.py --app froide --app froide_payment
+    python manage_at_translations.py --from-source --dry-run
 """
 
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -63,7 +74,7 @@ TARGET_PO = os.path.join(
 TARGET_HEADER = """\
 # FragDenStaat.at override translations (de_AT).
 #
-# Generated and updated by sync_froide_translations.py. Strings here take
+# Generated and updated by manage_at_translations.py. Strings here take
 # precedence over every app's own de / de_AT catalog, because AT's locale
 # directory comes first in LOCALE_PATHS.
 #
@@ -375,6 +386,149 @@ def annotate(target, de_text):
         entry.comment = "\n".join(lines)
 
 
+# Locale written by --from-source and deleted again afterwards. Never a real
+# language: makemessages rewrites whatever locale it is pointed at, and `de` has
+# to stay a close mirror of DE's catalog.
+SCRATCH_LOCALE = "xx_XX"
+
+# Mirrors MAKEMESSAGES_OPTS in the Makefile.
+MAKEMESSAGES_IGNORE = ["public", "froide-env", "node_modules", "htmlcov", "src"]
+
+
+def own_locale_dirs():
+    """Directories that own an AT catalog: the project package and each app.
+
+    makemessages has to be run once per catalog, because it skips any
+    subdirectory holding its own `locale/`. A single run at the project package
+    therefore never sees fds_cms or fds_donation -- their strings simply do not
+    appear, with no warning.
+
+    Note these are the directories *containing* `locale/`, and the project one
+    is `fragdenstaat_at/`, not the repository root. Running from the root writes
+    into LOCALE_PATHS[0] instead of ./locale, which is easy to mistake for
+    having extracted nothing.
+    """
+    package = os.path.join(HERE, "fragdenstaat_at")
+    dirs = []
+    for dirpath, dirnames, _files in os.walk(package):
+        if "locale" in dirnames:
+            dirs.append(dirpath)
+        dirnames[:] = [
+            d for d in dirnames if d not in {"node_modules", "static", "migrations"}
+        ]
+    return dirs
+
+
+def remove_scratch_locales():
+    """Delete every scratch catalog, wherever a run may have put one.
+
+    Belt and braces: a crash between writing and cleanup would otherwise leave
+    an untracked locale behind, and a translation tool that litters the tree is
+    worse than one that does nothing.
+    """
+    package = os.path.join(HERE, "fragdenstaat_at")
+    for dirpath, dirnames, _files in os.walk(package):
+        if os.path.basename(dirpath) == SCRATCH_LOCALE:
+            shutil.rmtree(dirpath, ignore_errors=True)
+            dirnames[:] = []
+
+
+def extract_own_msgids(verbose=False):
+    """Run makemessages over AT's own source and return the entries found.
+
+    Writes into SCRATCH_LOCALE and removes it again, so no real catalog is
+    touched. Returns polib entries, keyed the same way as everything else here.
+    """
+    from django.core.management import call_command
+
+    found = {}
+    cwd = os.getcwd()
+    try:
+        for directory in own_locale_dirs():
+            po_path = os.path.join(
+                directory, "locale", SCRATCH_LOCALE, "LC_MESSAGES", "django.po"
+            )
+            os.chdir(directory)
+            call_command(
+                "makemessages",
+                locale=[SCRATCH_LOCALE],
+                ignore_patterns=MAKEMESSAGES_IGNORE,
+                verbosity=0,
+                no_wrap=True,
+            )
+            if not os.path.exists(po_path):
+                print(
+                    f"warning: no strings extracted from "
+                    f"{os.path.relpath(directory, HERE)}",
+                    file=sys.stderr,
+                )
+                continue
+            entries = [e for e in polib.pofile(po_path) if not e.obsolete]
+            for entry in entries:
+                found.setdefault(key(entry), entry)
+            if verbose:
+                print(
+                    f"  {len(entries):4d} msgid(s) in "
+                    f"{os.path.relpath(directory, HERE)}"
+                )
+    finally:
+        os.chdir(cwd)
+        remove_scratch_locales()
+    return found
+
+
+def own_german_translations():
+    """msgid -> German text, from AT's own `de` catalogs.
+
+    Only AT's own: a string that AT defines is AT's to translate, and this is
+    the catalog kept in step with DE.
+    """
+    german = {}
+    for directory in own_locale_dirs():
+        path = os.path.join(directory, "locale", "de", "LC_MESSAGES", "django.po")
+        if not os.path.exists(path):
+            continue
+        for entry in polib.pofile(path):
+            if entry.msgstr and not entry.obsolete:
+                german[key(entry)] = entry.msgstr
+    return german
+
+
+def seed_from_source(target, verbose=False):
+    """Return entries AT's own code uses that de_AT should carry.
+
+    Two reasons to seed one, and they need different follow-up:
+
+    * no German at all -- nobody has translated it, so it renders in English;
+    * German exists but names something German (OWN_PATTERN, the same test the
+      hardcoded-string scan uses), so the fallback is actively wrong for AT.
+
+    Anything already in de_AT is left alone, translated or not.
+    """
+    extracted = extract_own_msgids(verbose=verbose)
+    german = own_german_translations()
+    present = {key(e) for e in target}
+
+    seeded = []
+
+    # msgctxt is None for most entries, so sort on a None-free view of the key.
+    def sort_key(item):
+        return tuple("" if part is None else part for part in item[0])
+
+    for entry_key, entry in sorted(extracted.items(), key=sort_key):
+        if entry_key in present:
+            continue
+        translation = german.get(entry_key)
+        if translation is None:
+            reason = "untranslated"
+        elif OWN_PATTERN.search(translation):
+            reason = "German wording"
+        else:
+            continue
+        seeded.append((reason, make_entry(entry, "AT source", "")))
+    return seeded
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -416,6 +570,13 @@ def main():
         "--no-scan",
         action="store_true",
         help="skip the keyword scan; adopt only",
+    )
+    parser.add_argument(
+        "--from-source",
+        action="store_true",
+        help="also extract the msgids AT's own code uses now and seed the ones "
+        "with no usable German (untranslated, or a German translation that "
+        "names Germany). Writes to a throwaway locale, never to locale/de.",
     )
     args = parser.parse_args()
 
@@ -555,7 +716,21 @@ def main():
         for label, e in added:
             print(f"  [{label}] {e.msgid[:80]!r}".replace("\\n", " "))
 
-    if not adopted and not added:
+    seeded = []
+    if args.from_source:
+        seeded = seed_from_source(target, verbose=True)
+        if seeded:
+            by_reason = {}
+            for reason, _e in seeded:
+                by_reason[reason] = by_reason.get(reason, 0) + 1
+            detail = ", ".join(f"{k}: {v}" for k, v in sorted(by_reason.items()))
+            print(f"\nFound {len(seeded)} string(s) from AT's own source ({detail}):")
+            for reason, e in seeded:
+                print(f"  [{reason}] {e.msgid[:70]!r}".replace("\\n", " "))
+        else:
+            print("\nNothing to seed from AT's own source.")
+
+    if not adopted and not added and not seeded:
         # Not a reason to stop: the German-source comments are refreshed on
         # every run, so there is still work to write out.
         print("No new entries; refreshing the recorded German source text.")
@@ -568,6 +743,8 @@ def main():
 
     os.makedirs(os.path.dirname(TARGET_PO), exist_ok=True)
     for _label, e in adopted + added:
+        target.append(e)
+    for _reason, e in seeded:
         target.append(e)
 
     annotate(target, de_text)

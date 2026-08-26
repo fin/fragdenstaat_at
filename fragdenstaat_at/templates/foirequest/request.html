@@ -1,0 +1,8 @@
+{% extends "foirequest/request.html" %}
+{# Extends the template it overrides; resolution continues to froide's copy. #}
+{% load i18n %}
+
+{% block before_form %}
+    {{ block.super }}
+    {% include "foirequest/snippets/fax_delivery_notice.html" %}
+{% endblock %}

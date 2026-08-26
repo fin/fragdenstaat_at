@@ -1610,6 +1610,29 @@ as DE. It is also covered by the editable-fork guard (§9.10,
       upstream in the fork (a language tag is language-first; the region is the
       *second* subtag) and pinned explicitly here as well.
 
+- [x] **"This request will be sent by fax" notice on `/anfrage-stellen/`.**
+      A `FaxOverride` diverts a request away from email entirely, which the
+      request form said nothing about. Lives in AT only, overriding froide's
+      `foirequest/request.html` through the `before_form` block; froide and
+      froide-fax are untouched.
+
+      Two halves, because the page mixes server rendering with a Vue chooser.
+      Initial visibility is decided server-side, so a body chosen before load is
+      covered even if the script never runs. `frontend/javascript/makerequest.ts`
+      then follows the selection by watching froide's Vuex store — a module
+      singleton the bundler shares, so no DOM archaeology. An earlier version
+      read `input[name="publicbody"]` and was wrong: the selection is a *hidden*
+      input once committed, never `:checked`, and the swap happens in a Vue
+      re-render that fires no event. Covered by browser tests.
+
+      The wording is composed client-side, since it depends on how many bodies
+      are selected and how many of those are diverted. Variants are passed as
+      data attributes so gettext still sees them. Open: the strings have **no
+      German translation yet** (P6), and the "more about delivery" link points
+      at the generic `help` page as a placeholder — §9.3 for setting a proper
+      `reverse_id`. The multi-body wording is unverified in a browser, because
+      reaching a multi-selection needs the project flow.
+
 - [ ] **froide's own `validate_fax` has the same class of bug, and is not
       fixable from here.** `froide/publicbody/validators.py:99` passes
       `settings.LANGUAGE_CODE.upper()` straight to `phonenumbers.parse` as the

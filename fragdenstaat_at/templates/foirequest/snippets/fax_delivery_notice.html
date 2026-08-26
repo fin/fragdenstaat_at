@@ -1,0 +1,53 @@
+{% load i18n cms_tags fds_tags %}
+{% comment %}
+Warns that a request goes out by fax instead of email.
+
+Some Austrian authorities refuse electronic requests; froide_fax's FaxOverride
+marks those. Initial visibility and text are rendered server-side, so a body
+chosen before load is covered even if the script never runs.
+frontend/javascript/makerequest.ts takes over afterwards, because the chooser is
+a Vue app that re-renders no template.
+
+The wording depends on how many bodies are selected and how many of those are
+diverted, which is only known at runtime -- so the variants are passed as data
+attributes (translated here, where gettext can see them) and the script picks
+one. {count} and {total} are substituted client-side.
+{% endcomment %}
+{% fax_publicbody_ids as fax_publicbody_ids %}
+{% if fax_publicbody_ids %}
+    {% any_fax_publicbody publicbodies as show_fax_notice %}
+    <div id="fds-fax-delivery-notice"
+         class="alert alert-info"
+         role="alert"
+         data-fax-publicbody-ids="{{ fax_publicbody_ids }}"
+         data-fax-heading-single="{% trans 'This request will be sent by fax' %}"
+         data-fax-heading-multiple="{% trans 'Some of these requests will be sent by fax' %}"
+         data-fax-message-single="{% trans 'This public body does not accept requests by email, so your request is delivered by fax instead. Nothing changes in how you write it, and replies still reach you by email here.' %}"
+         data-fax-message-multiple="{% trans '{count} of the {total} public bodies you selected do not accept requests by email. Those requests are delivered by fax instead. Nothing changes in how you write them, and replies still reach you by email here.' %}"
+         {% if not show_fax_notice %}hidden{% endif %}>
+        <h2 class="h5 alert-heading" data-fax-heading>
+            {% trans 'This request will be sent by fax' %}
+        </h2>
+        <p class="mb-0" data-fax-message>
+            {% trans 'This public body does not accept requests by email, so your request is delivered by fax instead. Nothing changes in how you write it, and replies still reach you by email here.' %}
+        </p>
+        {% comment %}
+        A real anchor rather than markup inside the translated strings: {% trans %}
+        escapes its output, and the script writes the sentence with textContent,
+        so a link in the catalog would render as literal text. Getting one in
+        would mean piping a .po string through innerHTML, which is an injection
+        surface. Kept outside the swapped <p> so it cannot desync with the count.
+
+        page_url returns "" when no page carries the reverse_id, so the {% if %}
+        keeps this from rendering a dead <a href="">.
+        {% endcomment %}
+        {% page_url 'help' as fax_help_url %}
+        {% if fax_help_url %}
+            <a href="{{ fax_help_url }}" class="alert-link d-inline-block mt-2">
+                {% blocktrans trimmed %}
+                    More about how requests are delivered
+                {% endblocktrans %}
+            </a>
+        {% endif %}
+    </div>
+{% endif %}

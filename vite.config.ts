@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => ({
         lawsuits_table: r('froide_legalaction', 'table.js'),
         legal_decisions_listfilter: r('froide_legalaction', 'listFilter.js'),
         main: './frontend/javascript/main.ts',
-        makerequest: r('froide', 'makerequest.js'),
+        makerequest: './frontend/javascript/makerequest.ts',
         messageredaction: r('froide', 'messageredaction.js'),
         moderation: r('froide', 'moderation.js'),
         // paperless: './frontend/javascript/paperless.ts',

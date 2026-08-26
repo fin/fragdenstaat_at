@@ -1381,6 +1381,33 @@ carry the lock, not just the source.
   future lock refresh drops the constraint this regresses — loudly at boot
   rather than silently, but only once something imports the app.
 
+**Developer trap: changing a vite entry needs a Django restart.**
+`froide/helper/templatetags/frontendbuild.py` keeps a module-level
+`FrontendBuildLoader()` and caches the manifest on first use, for the lifetime
+of the Python process:
+
+```python
+def get_entry_point(self, name):
+    if self.entry_points is None:
+        self.entry_points = self.load_manifest()
+```
+
+So adding or repointing an entry in `vite.config.ts` — as
+`makerequest` was, from froide's `makerequest.js` to AT's `makerequest.ts` —
+has no effect on a `runserver` that was already up. It keeps emitting the old
+source path, the new module never loads, and the page behaves exactly as it did
+before with nothing in the console to suggest why. Rebuilding does not help;
+only a restart does.
+
+Editing the *contents* of an already-mapped entry needs no restart, because the
+vite dev server serves that live. That asymmetry is what makes this confusing:
+every other frontend edit appears immediately.
+
+Cost this once: the fax notice looked broken in the multi-request flow, and the
+JS, the bundle, the dev server and the manifest on disk were all correct.
+
+---
+
 **Developer trap, not a deploy step — now guarded.** `uv sync` replaces the
 editable sibling checkouts (`froide`, `froide-payment`,
 `django-filingcabinet`) with the git pins from `pyproject.toml`, because that is

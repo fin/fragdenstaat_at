@@ -113,23 +113,4 @@ if (notice !== null) {
   store.subscribe((_mutation: unknown, state: StoreState) => {
     update(state)
   })
-
-  // Diagnostic. The selection lives in the store and its DOM shape changes with
-  // the step, so "why is the notice hidden?" is otherwise hard to answer from a
-  // console. Reports what the notice believes:
-  //
-  //   fdsFaxNotice()
-  //   -> { selected: ['26', '31'], diverted: ['26'], hidden: false }
-  //
-  // Remove once the multi-body flow is confirmed working in the wild.
-  ;(window as unknown as Record<string, unknown>).fdsFaxNotice = () => {
-    const state = store.state as StoreState
-    const selected = selectedIds(state)
-    return {
-      selected,
-      diverted: selected.filter((id) => faxIds.has(id)),
-      knownFaxIds: Array.from(faxIds),
-      hidden: notice.hidden
-    }
-  }
 }

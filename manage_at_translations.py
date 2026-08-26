@@ -499,6 +499,48 @@ def own_german_translations():
     return german
 
 
+def de_catalog_entries(only=None, all_apps=False):
+    """msgid -> the owning app's `de` entry, across every discovered source.
+
+    Built independently of the scan and adopt passes, which only collect German
+    for the entries they happen to touch. Pruning has to judge entries those
+    passes never look at.
+    """
+    found = {}
+    for _label, locale_dir, _repo, _is_own in discover_sources(only, all_apps):
+        path = os.path.join(locale_dir, "de", "LC_MESSAGES", "django.po")
+        if not os.path.exists(path):
+            continue
+        for entry in polib.pofile(path):
+            if not entry.obsolete:
+                found.setdefault(key(entry), entry)
+    return found
+
+
+def redundant_entries(target, de_map):
+    """Entries whose text is exactly the app's own German.
+
+    de-at falls back to de, so these render identically whether they are here or
+    not. Keeping them turns an override catalog into a partial copy of every
+    upstream catalog, which then has to be re-synced by hand whenever upstream
+    rewords anything. The adopt pass already refuses to add them; this finds the
+    ones added before it did.
+    """
+    stale = []
+    for entry in target:
+        german = de_map.get(key(entry))
+        if german is None:
+            continue
+        if not (entry.msgstr or any(entry.msgstr_plural.values())):
+            continue  # a stub is not redundant, it is unfinished
+        if (
+            german.msgstr == entry.msgstr
+            and german.msgstr_plural == entry.msgstr_plural
+        ):
+            stale.append(entry)
+    return stale
+
+
 def own_app_labels():
     """Labels discover_sources() gives AT's own apps, e.g. fds_donation."""
     return {label for label, _dir, _repo, is_own in discover_sources() if is_own}
@@ -611,9 +653,10 @@ def main():
     parser.add_argument(
         "--prune",
         action="store_true",
-        help="with --from-source, delete entries for strings AT's source no "
-        "longer uses. Only AT's own apps are judged, since only they are "
-        "extracted.",
+        help="delete entries that no longer earn their place: those identical "
+        "to the app's own de translation, and (with --from-source) those for "
+        "strings AT's source no longer uses. Only AT's own apps are judged "
+        "dead, since only they are extracted.",
     )
     parser.add_argument(
         "--from-source",
@@ -810,6 +853,25 @@ def main():
         # Not a reason to stop: the German-source comments are refreshed on
         # every run, so there is still work to write out.
         print("No new entries; refreshing the recorded German source text.")
+
+    superseded = redundant_entries(
+        target, de_catalog_entries(set(args.app) or None, args.all_apps)
+    )
+    if superseded:
+        print(
+            f"\n{len(superseded)} entr(y/ies) already identical to the app's de "
+            "translation:"
+        )
+        for entry in superseded[:10]:
+            print(f"  {entry.msgid[:70]!r}")
+        if len(superseded) > 10:
+            print(f"  ... and {len(superseded) - 10} more")
+        if args.prune:
+            for entry in superseded:
+                target.remove(entry)
+            print(f"  removed ({len(superseded)})")
+        else:
+            print("  pass --prune to remove them; de-at falls back to de anyway")
 
     if args.dry_run:
         print("\nDry run -- not writing.")

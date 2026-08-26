@@ -1630,8 +1630,21 @@ as DE. It is also covered by the editable-fork guard (§9.10,
       data attributes so gettext still sees them. Open: the strings have **no
       German translation yet** (P6), and the "more about delivery" link points
       at the generic `help` page as a placeholder — §9.3 for setting a proper
-      `reverse_id`. The multi-body wording is unverified in a browser, because
-      reaching a multi-selection needs the project flow.
+      `reverse_id`.
+
+      The **multi-request flow is now covered too**, both by "select all" and by
+      ticking bodies one at a time, including the `{count} of {total}` wording.
+      Reaching it needs a logged-in user with `foirequest.create_batch` (or a
+      superuser), which is why it was missed at first. That flow is also the
+      clearest evidence for using the store: its checkboxes render with an
+      **empty `name` attribute**, so `input[name="publicbody"]` matches nothing
+      there and the original DOM-based implementation could never have worked in
+      it.
+
+      **`build/` is gitignored**, so a checkout that has not run
+      `pnpm run build` still serves the previous bundle — the notice then
+      behaves like the version that shipped with that build, not the one in the
+      source tree.
 
 - [ ] **froide's own `validate_fax` has the same class of bug, and is not
       fixable from here.** `froide/publicbody/validators.py:99` passes

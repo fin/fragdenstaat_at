@@ -24,6 +24,7 @@ from django.urls import reverse
 import pytest
 from playwright.async_api import expect
 
+from froide.account.factories import UserFactory
 from froide.foirequest.tests.factories import rebuild_index
 from froide.publicbody.factories import (
     FoiLawFactory,
@@ -120,3 +121,101 @@ async def test_preselected_body_needs_no_script(page, live_server, fax_publicbod
         + reverse("foirequest-make_request", kwargs={"publicbody_slug": fax_pb.slug})
     )
     await expect(page.locator(NOTICE)).to_be_visible()
+
+
+@pytest.fixture
+def batch_user(db):
+    """A user allowed to select several public bodies at once.
+
+    can_create_batch() gates the multi chooser on superuser or the
+    foirequest.create_batch permission, which is why this flow is invisible to
+    an anonymous visitor.
+    """
+    return UserFactory(username="batch", is_superuser=True)
+
+
+async def _login(page, live_server, user):
+    await page.goto(live_server.url + reverse("account-login"))
+    await page.fill("[name=username]", user.email)
+    await page.fill("[name=password]", "froide")
+    await page.locator('button.btn.btn-primary[type="submit"]').click()
+    # AT overrides header.html, so froide's #navbaraccount-link does not exist;
+    # the logout form is the marker that a session is established.
+    await expect(
+        page.locator('form[action="%s"]' % reverse("account-logout")).first
+    ).to_have_count(1)
+
+
+@pytest.mark.django_db
+@pytest.mark.elasticsearch
+@pytest.mark.xdist_group(name="sequential")
+@pytest.mark.asyncio(loop_scope="session")
+async def test_notice_in_the_multi_request_flow(
+    page, live_server, fax_publicbodies, batch_user
+):
+    """Several bodies at once, only one of them served by fax.
+
+    The multi chooser is a different component from the single one and keeps
+    its own selection, so it needs covering separately -- reported as the
+    notice not showing at all in this flow.
+    """
+    await _login(page, live_server, batch_user)
+    await page.goto(live_server.url + reverse("foirequest-make_request"))
+    await page.locator("request-page .btn-primary >> nth=0").click()
+    await expect(page.locator(SEARCH)).to_be_visible()
+
+    # Both fixtures share this word, so one search finds the pair.
+    await page.locator(SEARCH).fill("Teststadt")
+    await page.locator(".search-public_bodies-submit").click()
+    await page.get_by_role("button", name="Alle").first.click()
+
+    notice = page.locator(NOTICE)
+    await expect(notice).to_be_visible()
+    await expect(notice).to_contain_text("1 of the 2")
+
+
+@pytest.mark.django_db
+@pytest.mark.elasticsearch
+@pytest.mark.xdist_group(name="sequential")
+@pytest.mark.asyncio(loop_scope="session")
+async def test_notice_when_bodies_are_ticked_one_by_one(
+    page, live_server, fax_publicbodies, batch_user
+):
+    """Same flow, but adding each body individually rather than "select all".
+
+    The multi list renders one checkbox per result; ticking them is the path a
+    user actually takes when the search returns more than they want.
+    """
+    fax_pb, email_pb = fax_publicbodies
+    await _login(page, live_server, batch_user)
+    await page.goto(live_server.url + reverse("foirequest-make_request"))
+    await page.locator("request-page .btn-primary >> nth=0").click()
+    await expect(page.locator(SEARCH)).to_be_visible()
+
+    await page.locator(SEARCH).fill("Teststadt")
+    await page.locator(".search-public_bodies-submit").click()
+
+    notice = page.locator(NOTICE)
+
+    # Located by value, not by name: the multi list renders its checkboxes with
+    # an empty name attribute, so input[name="publicbody"] matches nothing in
+    # this flow. That is precisely why reading the DOM was the wrong source of
+    # truth -- the whole multi-request flow was invisible to it -- and why the
+    # store is not.
+    def box(pk):
+        return page.locator('input[type="checkbox"][value="%s"]' % pk)
+
+    await expect(box(fax_pb.pk)).to_have_count(1)
+
+    # The ordinary body alone: nothing to warn about.
+    await box(email_pb.pk).check()
+    await expect(notice).to_be_hidden()
+
+    # Adding the fax-only body brings the notice, counting both.
+    await box(fax_pb.pk).check()
+    await expect(notice).to_be_visible()
+    await expect(notice).to_contain_text("1 of the 2")
+
+    # Removing it again takes the notice away.
+    await box(fax_pb.pk).uncheck()
+    await expect(notice).to_be_hidden()

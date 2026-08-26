@@ -1601,6 +1601,36 @@ as DE. It is also covered by the editable-fork guard (§9.10,
       report with blank sender, recipient, pages and date; nothing raised,
       because Django resolves a missing key to `''`. Both paths now share one
       builder.
+- [x] **Fax numbers in national format** — `FAX_NUMBER_REGION = "AT"` is now set
+      in `settings/base.py`. froide_fax resolved the region from
+      `LANGUAGE_CODE` by taking the **first** subtag, so `de-at` gave **DE** and
+      every Austrian number in national format (`01 4000 81510`,
+      `0316 872-2571`) was parsed as German, found invalid and rejected — the
+      "This is not a usable fax number." seen in the FaxOverride admin. Fixed
+      upstream in the fork (a language tag is language-first; the region is the
+      *second* subtag) and pinned explicitly here as well.
+
+- [ ] **froide's own `validate_fax` has the same class of bug, and is not
+      fixable from here.** `froide/publicbody/validators.py:99` passes
+      `settings.LANGUAGE_CODE.upper()` straight to `phonenumbers.parse` as the
+      region, so an AT site passes **`"DE-AT"`**, which is not a region code at
+      all. Every national-format fax number is then unparseable — *including
+      German ones*:
+
+      ```
+      validate_fax('01 4000 81510')  -> ValidationError: Fax number cannot be parsed
+      validate_fax('0316 872-2571')  -> ValidationError: Fax number cannot be parsed
+      validate_fax('030 12345678')   -> ValidationError: Fax number cannot be parsed
+      validate_fax('+43 1 4000 81510') -> OK
+      ```
+
+      This governs `PublicBody.fax`, so any fax number typed into the public
+      body admin must be in international format or it is refused. DE never
+      sees it: `LANGUAGE_CODE = "de"` uppercases to a valid `"DE"` by
+      coincidence. Worth an upstream patch — `parse(fax, get_fax_region())` —
+      but AT is pinned to `okfde/froide@main`, so it needs either a froide PR
+      or a fork. **[H]**
+
 - [ ] **Run the live Telnyx test once** (`README_LIVE_TESTS.md` on the branch,
       ~20 min and one fax). It closes the one gap no offline test covers: every
       signature test generates its own keypair, so they prove nacl agrees with

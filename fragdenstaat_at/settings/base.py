@@ -45,6 +45,12 @@ class FragDenStaatBase(German, Base):
     )
     USER_LANGUAGES = LANGUAGES
     LANGUAGE_CODE = "de-at"
+
+    # Region for parsing fax numbers given in national format ("01 4000 81510").
+    # froide_fax falls back to LANGUAGE_CODE's region subtag, which is AT here,
+    # but state it outright: the fallback is one line of subtag parsing between
+    # an Austrian number and being rejected as unusable.
+    FAX_NUMBER_REGION = "AT"
     TESSERACT_LANGUAGE = "de"
     EASYLANG_ENABLED = False
 
@@ -775,7 +781,7 @@ class FragDenStaatBase(German, Base):
                 "dsn": True,
                 "message_handlers": {
                     "email": "froide.foirequest.message_handlers.EmailMessageHandler",
-                    # 'fax': 'froide_fax.fax.FaxMessageHandler'
+                    "fax": "froide_fax.fax.FaxMessageHandler",
                 },
                 "delivery_reporter": "froide.foirequest.delivery.PostfixDeliveryReporter",
                 "text_analyzer": "fragdenstaat_at.theme.search.get_text_analyzer",

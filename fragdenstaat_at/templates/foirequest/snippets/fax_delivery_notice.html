@@ -16,20 +16,29 @@ one. {count} and {total} are substituted client-side.
 {% fax_publicbody_ids as fax_publicbody_ids %}
 {% if fax_publicbody_ids %}
     {% any_fax_publicbody publicbodies as show_fax_notice %}
+    {% comment %}
+    Each string is bound to a variable so the data attribute (which the script
+    reads) and the server-rendered body share one source. {% trans %} output is
+    autoescaped the same way whether emitted directly or via {{ var }}.
+    {% endcomment %}
+    {% trans 'This request will be sent by fax' as fax_heading_single %}
+    {% trans 'Some of these requests will be sent by fax' as fax_heading_multiple %}
+    {% trans 'This public body does not accept requests by email, so your request is delivered by fax instead. Nothing changes in how you write it, and replies still reach you by email here.' as fax_message_single %}
+    {% trans '{count} of the {total} public bodies you selected do not accept requests by email. Those requests are delivered by fax instead. Nothing changes in how you write them, and replies still reach you by email here.' as fax_message_multiple %}
     <div id="fds-fax-delivery-notice"
          class="alert alert-info"
          role="alert"
          data-fax-publicbody-ids="{{ fax_publicbody_ids }}"
-         data-fax-heading-single="{% trans 'This request will be sent by fax' %}"
-         data-fax-heading-multiple="{% trans 'Some of these requests will be sent by fax' %}"
-         data-fax-message-single="{% trans 'This public body does not accept requests by email, so your request is delivered by fax instead. Nothing changes in how you write it, and replies still reach you by email here.' %}"
-         data-fax-message-multiple="{% trans '{count} of the {total} public bodies you selected do not accept requests by email. Those requests are delivered by fax instead. Nothing changes in how you write them, and replies still reach you by email here.' %}"
+         data-fax-heading-single="{{ fax_heading_single }}"
+         data-fax-heading-multiple="{{ fax_heading_multiple }}"
+         data-fax-message-single="{{ fax_message_single }}"
+         data-fax-message-multiple="{{ fax_message_multiple }}"
          {% if not show_fax_notice %}hidden{% endif %}>
         <h2 class="h5 alert-heading" data-fax-heading>
-            {% trans 'This request will be sent by fax' %}
+            {{ fax_heading_single }}
         </h2>
         <p class="mb-0" data-fax-message>
-            {% trans 'This public body does not accept requests by email, so your request is delivered by fax instead. Nothing changes in how you write it, and replies still reach you by email here.' %}
+            {{ fax_message_single }}
         </p>
         {% comment %}
         A real anchor rather than markup inside the translated strings: {% trans %}
@@ -41,11 +50,11 @@ one. {count} and {total} are substituted client-side.
         page_url returns "" when no page carries the reverse_id, so the {% if %}
         keeps this from rendering a dead <a href="">.
         {% endcomment %}
-        {% page_url 'help' as fax_help_url %}
-        {% if fax_help_url %}
-            <a href="{{ fax_help_url }}" class="alert-link d-inline-block mt-2">
+        {% page_url 'donate' as fax_donate_url %}
+        {% if fax_donate_url %}
+            <a href="{{ fax_donate_url }}" class="alert-link d-inline-block mt-2">
                 {% blocktrans trimmed %}
-                    More about how requests are delivered
+                    Donate to FragDenStaat
                 {% endblocktrans %}
             </a>
         {% endif %}

@@ -13,7 +13,10 @@ from froide.urls import (
 
 from fragdenstaat_at.fds_cms.sitemaps import FdsCMSSitemap
 
-from .views import FDSAnnotationView  # , glyphosat_download, meisterschaften_tippspiel
+from .views import (  # , glyphosat_download, meisterschaften_tippspiel
+    FDSAnnotationView,
+    fax_letter_debug,
+)
 
 # Import early to register with api_router
 
@@ -69,6 +72,21 @@ urlpatterns += sitemap_urlpatterns
 
 
 if settings.DEBUG:
+    # TEMPORARY: see fragdenstaat_at.theme.views.fax_letter_debug and
+    # docs/qr-code-on-faxes.md. Delete once the fax QR layout is settled.
+    urlpatterns += [
+        path(
+            "fax-letter-debug/request/<int:request_id>/",
+            fax_letter_debug,
+            name="fax-letter-debug-request",
+        ),
+        path(
+            "fax-letter-debug/<int:message_id>/",
+            fax_letter_debug,
+            name="fax-letter-debug",
+        ),
+    ]
+
     from django.contrib.sites.models import Site  # noqa
 
     try:

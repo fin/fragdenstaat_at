@@ -1,16 +1,29 @@
 """Theme template tags.
 
-Currently just the fax reply QR code; see docs/qr-code-on-faxes.md.
+The fax reply QR code (see docs/qr-code-on-faxes.md) and the helpers behind the
+"this request will be sent by fax" notice on the make-request page.
 """
 
 import io
 
 from django import template
+from django.conf import settings
 from django.utils.safestring import mark_safe
 
 import segno
 
 register = template.Library()
+
+
+def _fax_handler_registered():
+    """Whether froide will actually route an outgoing message to fax.
+
+    ``get_request_outgoing_message_kind`` only considers handlers listed in
+    ``FROIDE_CONFIG["message_handlers"]``. Without the ``fax`` entry a
+    ``FaxOverride`` changes nothing -- the request still goes out by email -- so
+    the notice must stay hidden or it tells the user something untrue.
+    """
+    return "fax" in settings.FROIDE_CONFIG.get("message_handlers", {})
 
 
 @register.simple_tag
@@ -55,6 +68,9 @@ def fax_publicbody_ids():
     done in Python rather than in the query -- the table holds one row per
     authority that refuses email, so this stays small.
     """
+    if not _fax_handler_registered():
+        return ""
+
     from froide_fax.models import FaxOverride
 
     overrides = FaxOverride.objects.filter(enabled=True).select_related("publicbody")
@@ -70,6 +86,9 @@ def any_fax_publicbody(publicbodies):
     Goes through the manager, which handles the missing reverse OneToOne and
     the enabled/dialable checks in one place.
     """
+    if not _fax_handler_registered():
+        return False
+
     from froide_fax.models import FaxOverride
 
     return any(FaxOverride.objects.is_fax_recipient(pb) for pb in publicbodies or [])

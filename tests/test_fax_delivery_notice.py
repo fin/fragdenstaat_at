@@ -77,6 +77,21 @@ def test_page_still_renders_when_no_body_is_preselected(client):
     assert HEADING not in response.content.decode("utf-8", "replace")
 
 
+def test_no_notice_when_the_fax_handler_is_not_registered(client, monkeypatch):
+    """Without the fax MessageHandler in FROIDE_CONFIG, froide routes the
+    request to email regardless of the override, so promising a fax would lie.
+    """
+    monkeypatch.setattr(
+        "fragdenstaat_at.theme.templatetags.fds_tags._fax_handler_registered",
+        lambda: False,
+    )
+    pb = PublicBodyFactory(fax=FAX_NUMBER)
+    FaxOverride.objects.create(publicbody=pb, enabled=True)
+    html = client.get(_url(pb)).content.decode("utf-8", "replace")
+    assert HEADING not in html
+    assert 'id="fds-fax-delivery-notice"' not in html
+
+
 def _notice(html):
     """The notice element's opening tag, or None."""
     import re

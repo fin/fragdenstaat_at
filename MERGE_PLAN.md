@@ -177,9 +177,10 @@ Frontex captcha, campaign providers.
 
 *Kept and needs review:* `recipient_blocklist_regex` is entirely German (de-mail,
 BND, bahn.de, jobcenter-ge.de) with nothing Austrian; `default_law` 2→1;
-`target_countries` removed; `content_urls["pseudonym"]` commented out, so the
-pseudonym help link is dead; `TEXT_ADDITIONAL_PROTOCOLS = ("bank",)` supports
-banking deep links AT deleted from its templates.
+`target_countries` removed; `TEXT_ADDITIONAL_PROTOCOLS = ("bank",)` supports
+banking deep links AT deleted from its templates. (`content_urls` is now fully
+populated — `514038b` — but the six froide-rendered keys point at AT help pages
+that must be confirmed to exist; §9.0.)
 
 *From DE:* `django-cookie-consent`, `django-datashow`, `django-flowcontrol`,
 `USER_LANGUAGES`/`de-ls`, `CELERY_TASK_ROUTES`, `query_preprocessor`,
@@ -885,10 +886,22 @@ wrong data in front of real people or break the deploy.
       goes out with German footers and links. Find them with
       `python manage_at_translations.py --dry-run` (§9.12). Same class as the
       bank details, which are now fixed.
-- [x] **Five dead `reverse_id` links (three of them unguarded) and six
-      `content_urls` pointing at the homepage** — §9.3. `throttled` and `pseudonym` fire exactly when a user is
-      already confused. Both need AT help pages to exist, so this is content work
-      with a lead time, not a settings edit.
+- [x] **Five dead `reverse_id` links (three of them unguarded)** — §9.3. Set on
+      the CMS pages, captured in `tests/fixtures/cms.json`, guarded by
+      `tests/test_at_identity.py` (`test_page_url_ids_are_all_accounted_for` +
+      `PageUrlResolutionTest`).
+- [ ] **Six froide-rendered `content_urls` — settings done, three loose ends.**
+      §9.3. `pseudonym`, `throttled`, `help_request_public`,
+      `help_request_privacy`, `help_attachments_management`,
+      `help_postupload_redaction` were all filled in by `514038b` (2026-08-23), so
+      nothing falls back to the homepage. Against a fresh `cms.json`: `pseudonym`
+      and `throttled` resolve; three (`help_*_public`, `*_attachments_management`,
+      `*_postupload_redaction`) use froide's `/hilfe/plain/…` route, which needs
+      the help apphook attached (no page in the extract has one); and
+      `help_request_privacy` points at DE's `/hilfe/datenschutz-und-privatsphare/`
+      — AT has `hilfe/privatsphaere`, so that one is a wrong value to fix. No test
+      covers any of the six (`test_footer.py` only checks
+      `terms`/`privacy`/`about`/`help`).
 
 **Security** — both done
 
@@ -1077,6 +1090,23 @@ Once it does, four things must change together — the last is easy to miss:
   and deploy per `docs/runbooks/celery-task-rename.md`; not a code edit.
 - [ ] **Confirm `remind_unreceived_banktransfers` is in the beat config.** It is
   documented "run on the 15th" but nothing in the repo schedules it.
+- [ ] **Attach the `FdsCmsPlainAPIApp` apphook to the help page** (after the DB
+  migrations above). The machinery is fully ported —
+  `fds_cms/cms_apps.py:FdsCmsPlainAPIApp`, `urls_plainapi.py`,
+  `views.cms_plain_api` — but nothing serves `/hilfe/plain/<slug>/` until the
+  apphook is attached to the `/hilfe/` page in the CMS (Advanced settings →
+  Application). Three `content_urls` keys depend on it:
+  `help_postupload_redaction`, `help_attachments_management`,
+  `help_request_public`.
+
+  ⚠️ **The current production deployment does not allow attaching apphooks**, so
+  this step is blocked there. Until it is unblocked, point those three keys at the
+  **non-`/plain/`** URLs of the same pages, which already exist and render (with
+  full chrome instead of bare):
+  `/hilfe/fragen-antworten/schwarzungen-durchfuhren/`,
+  `/hilfe/fragen-antworten/anhange-verwalten/`,
+  `/hilfe/fragen-antworten/anfrage-nicht-offentlich-stellen/`. Switch back to
+  `/plain/` once the apphook can be attached.
 - [x] **Set `reverse_id` on the CMS pages the templates link to.** **Five**
   `{% page_url %}` string literals appear in AT's templates (the earlier count
   of four missed `help`), and all five resolve to nothing today, because the
@@ -1131,29 +1161,44 @@ Once it does, four things must change together — the last is easy to miss:
   was rewritten to dump and then re-sort by the real FK graph; its previous app
   list was stale (`djangocms_text_ckeditor`, `djangocms_picture`,
   `djangocms_video`) and missing alias, versioning and frontend.
-- [ ] **Fill in the six missing `content_urls`.** Same class of silent failure
-  as the `reverse_id`s above, found by scanning froide and froide-payment too.
-  `get_content_url()` is `CONTENT_URLS.get(name, "/")` — a missing key returns
-  the **homepage**, so the link works, looks deliberate, and goes somewhere
-  wrong. AT configures four of the ten keys froide references:
+- [ ] **Confirm the six `content_urls` target pages exist.** The settings half is
+  **done** — `514038b` (2026-08-23) filled in all six keys, so `base.py` now sets
+  all ten `content_urls` froide references and `get_content_url()`
+  (`CONTENT_URLS.get(name, "/")`) no longer falls back to the homepage for any of
+  them. What is left is content: each points at an AT help page that must actually
+  exist.
 
-  | key | AT | DE has |
-  |---|---|---|
-  | `pseudonym` | **→ /** | `/hilfe/datenschutz-und-privatsphare/pseudonyme-nutzung/` |
-  | `throttled` | **→ /** | `/hilfe/erste-anfrage/wie-viele-anfragen-kann-ich-stellen/` |
-  | `help_request_public` | **→ /** | `…/anfrage-nicht-oeffentlich-stellen/` |
-  | `help_request_privacy` | **→ /** | `/hilfe/datenschutz-und-privatsphare/` |
-  | `help_attachments_management` | **→ /** | `…/anhange-verwalten/` |
-  | `help_postupload_redaction` | **→ /** | `…/schwaerzungen-durchfuehren/` |
+  | key | now points at | target page in `cms.json` | rendered from |
+  |---|---|---|---|
+  | `pseudonym` | `/hilfe/fragen-antworten/pseudonyme-nutzung/` | ✅ `hilfe/fragen-antworten/pseudonyme-nutzung` | `account/forms.py` |
+  | `throttled` | `/hilfe/fragen-antworten/anfragenanzahl/` | ✅ `hilfe/fragen-antworten/anfragenanzahl` | `foirequest/utils.py` |
+  | `help_request_public` | `/hilfe/plain/fragen-antworten/anfrage-nicht-offentlich-stellen/` | ✅ page exists; `/plain/` route | `foirequest/views/make_request.py` |
+  | `help_attachments_management` | `/hilfe/plain/fragen-antworten/anhange-verwalten/` | ✅ page exists; `/plain/` route | `foirequest/views/message.py` |
+  | `help_postupload_redaction` | `/hilfe/plain/fragen-antworten/schwarzungen-durchfuhren/` | ✅ page exists; `/plain/` route | `foirequest/views/message.py` |
+  | `help_request_privacy` | `/hilfe/datenschutz-und-privatsphare/` | ❌ **no such page** — DE's path, AT has `hilfe/privatsphaere` | `foirequest/views/make_request.py` |
 
-  All six are rendered from froide, not AT: `account/forms.py` (pseudonym),
-  `foirequest/utils.py` (throttled), `foirequest/views/make_request.py` and
-  `foirequest/views/message.py`. So they appear in the request flow and the
-  account forms — user-facing paths, not admin.
+  All six render from froide, in the request flow and account forms —
+  user-facing, not admin. `throttled` and `pseudonym` fire exactly when a user is
+  already confused, so a 404 there is worse than most. State against a fresh
+  `tests/fixtures/cms.json` (production extract):
 
-  Each needs an AT help page to point at, so it is content work plus a settings
-  line, not a settings line alone. `page_url` and `content_urls` are the only
-  two such indirections: neither froide nor froide-payment uses
+  - **Two are clean:** `pseudonym`, `throttled` — target pages exist.
+  - **Three depend on the `/hilfe/plain/…` route.** The pages exist under
+    `hilfe/fragen-antworten/`, but the value prepends `/plain/`, `fds_cms`'s
+    chrome-less help render (for iframes), served by `FdsCmsPlainAPIApp`. That
+    route only works once the apphook is attached to `/hilfe/` — the extract has
+    `application_urls: ""` on every page, and **the current production deployment
+    does not allow attaching apphooks** (see the "Attach the `FdsCmsPlainAPIApp`
+    apphook" step above). Interim: point the three keys at the non-`/plain/` URLs
+    of the same pages.
+  - **One is a bug:** `help_request_privacy` points at `/hilfe/datenschutz-und-privatsphare/`,
+    DE's slug, copied unchanged in `514038b`. AT's tree has `hilfe/privatsphaere`.
+    Fix the setting to `/hilfe/privatsphaere/` (or whatever the real AT page is).
+
+  No test covers any of the six — `test_footer.py` only checks
+  `terms`/`privacy`/`about`/`help`. Add a `PageUrlResolutionTest`-style check for
+  `content_urls`, and settle the apphook question. `page_url` and `content_urls`
+  are the only two such indirections: neither froide nor froide-payment uses
   `{% page_url %}` at all. **[H]**
 - [ ] **Decide whether the proof-of-identity widget should be law-specific.**
   Today it is not gated at all: `MakeRequestView.get_proof_form()` returns a
@@ -1620,12 +1665,35 @@ as DE. It is also covered by the editable-fork guard (§9.10,
       already reads `TELNYX_API_KEY`, `TELNYX_APP_ID`, `TELNYX_PUBLIC_KEY` and
       `TELNYX_FROM_NUMBER`, each defaulting to `""` — so the app loads and the
       URLs resolve with no credentials, and fails only when a fax is sent.
-- [ ] **Decide whether to enable the fax message handler.** `base.py` still has
-      `# 'fax': 'froide_fax.fax.FaxMessageHandler'` commented out in
-      `FROIDE_CONFIG["message_handlers"]`. DE enables it. Left off deliberately:
-      turning it on changes how messages reach public bodies and costs money per
-      fax, which is a product decision, not merge mechanics. Until it is on, the
-      app is installed and reachable but sends nothing.
+- [x] **Fax message handler enabled.** `base.py:784` sets
+      `"fax": "froide_fax.fax.FaxMessageHandler"` in
+      `FROIDE_CONFIG["message_handlers"]`, matching DE. (Turning it on changes how
+      messages reach public bodies and costs money per fax in production — but the
+      cost gate is the `TELNYX_*` env vars above, not the handler registration.)
+- [x] **froide-fax ↔ froide fork method-name drift — fixed in the working tree,
+      needs upstreaming.** The `FaxOverride` ("fax instead of email") path only
+      works if froide's `get_request_outgoing_message_kind()` (fork commit
+      `7520e6a2b`) can call the handler's hook. The fork calls
+      `handle_foirequest_outgoing_messages`; froide-fax `main` defined
+      `handle_request_outgoing_messages` — a name that was never invoked, so an
+      overridden request silently went out by **email** with no fax and no PDF.
+      froide-fax's own `test_fax_override.py` called the method directly and
+      passed, hiding it. Renamed in `../froide-fax/froide_fax/fax.py` + tests,
+      with two integration tests asserting `get_request_outgoing_message_kind()`
+      returns `MessageKind.FAX`.
+- [x] **`fax_media_url` fed `requests.get()` a relative URL — fixed in the
+      working tree, needs upstreaming.** Surfaced once the routing fix above let
+      a fax actually render: opening the console backend's printed `PDF:` link
+      500'd with `MissingSchema`. `get_absolute_domain_file_url()` only prepends
+      MEDIA_URL's *domain part*, which is empty under the dev default
+      `MEDIA_URL = "/files/"`, so the view proxied `/files/foi/6/fax.pdf?token=…`
+      through `requests.get()` with no scheme. Absolute in production only
+      because `MEDIA_URL` there carries a host. Fixed in
+      `../froide-fax/froide_fax/views.py` with `urljoin(settings.SITE_URL, url)`;
+      regression test in `test_fax_numbers.py`.
+- [ ] **Upstream both froide-fax fixes.** Commit the method rename and the
+      `fax_media_url` scheme fix to `fin/froide-fax@main` (AT's pin) and re-lock
+      `uv.lock`.
 - [x] **Fax transports** — froide-fax now has `FAX_BACKEND`, mirroring
       `EMAIL_BACKEND`, with console and dummy backends that run the whole path
       (fax message, rendered `fax.pdf`, delivery status) without a Telnyx

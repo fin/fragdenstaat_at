@@ -96,12 +96,13 @@ def any_fax_publicbody(publicbodies):
 
 @register.simple_tag
 def foirequest_delivered_by_fax(foirequest):
-    """True when messages on this request actually go out by fax.
+    """True when a reply to this request could be diverted to fax.
 
-    A usable FaxOverride on the public body makes froide route *every* outgoing
-    message on the request to fax -- get_request_outgoing_message_kind() is
-    consulted for follow-up messages too, not just the first -- so a reply sent
-    from the message form is faxed regardless of the address shown in "To".
+    A usable FaxOverride on the public body diverts a reply to fax when the
+    address chosen in the send-message form is the body's own default -- the one
+    that refuses email (froide-fax keys ``handle_foirequest_outgoing_messages``
+    on ``recipient_email``). This is the coarse gate for rendering the reply-form
+    notice; the notice's script narrows it to the selected "To" address.
     """
     if not _fax_handler_registered():
         return False

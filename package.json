@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "Freedom of Information Portal in Austria",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint frontend --ext .js,.ts,.vue",

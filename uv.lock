@@ -1988,7 +1988,7 @@ requires-dist = [
     { name = "elasticsearch", specifier = ">=8.0.0,<9.0.0" },
     { name = "elasticsearch-dsl", specifier = ">=8.0.0,<9.0.0" },
     { name = "fcdocs-annotate", git = "https://github.com/okfde/fcdocs-annotate.git?rev=main" },
-    { name = "froide", git = "https://github.com/okfde/froide.git?rev=main" },
+    { name = "froide", git = "https://github.com/fin/froide.git?rev=2026-feat-messagekind-initial-message" },
     { name = "froide-fax", git = "https://github.com/fin/froide-fax.git?rev=main" },
     { name = "froide-payment", git = "https://github.com/fin/froide-payment.git?rev=2026-08-de-sync" },
     { name = "geoip2", specifier = ">=4.8.0" },
@@ -2065,7 +2065,7 @@ dev = [
 [[package]]
 name = "froide"
 version = "6.0.0"
-source = { git = "https://github.com/okfde/froide.git?rev=main#a22fe07b9f66c4828caab0ae3fd2cf9fadd67379" }
+source = { git = "https://github.com/fin/froide.git?rev=2026-feat-messagekind-initial-message#0c611eddc7120171cd35880788db377ce7dd0ee1" }
 dependencies = [
     { name = "celery" },
     { name = "channels" },

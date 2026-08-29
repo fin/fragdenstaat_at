@@ -104,7 +104,12 @@ dependencies = [
   "webp>=0.4.0",
   "websockets>=13.0.1",
   "xlrd>=2.0.1",
-  "froide @ git+https://github.com/okfde/froide.git@main",
+  # TEMPORARY fork pin (D5). Carries the recipient-aware outgoing-message-kind
+  # hook: get_request_outgoing_message_kind(request, recipient_email=...) and the
+  # matching MessageHandler.handle_foirequest_outgoing_messages signature, which
+  # froide-fax uses to fax a reply only when it is addressed to the fax-only
+  # public body's own address. Exit: upstream to okfde/froide, repin @main.
+  "froide @ git+https://github.com/fin/froide.git@2026-feat-messagekind-initial-message",
   # TEMPORARY fork pin. okfde/main sends application_context.locale =
   # settings.LANGUAGE_CODE verbatim, so AT sends "de-at", which is not valid
   # BCP-47 (the region subtag must be uppercase) and PayPal rejects the whole

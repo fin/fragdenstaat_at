@@ -16,7 +16,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 RUN UV_TOOL_DIR=/usr/local/share/uv/tools UV_TOOL_BIN_DIR=/usr/local/bin uv tool install prek
 
-RUN apt-get install ghostscript poppler-utils
+RUN apt-get update && apt-get install -y ghostscript poppler-utils
 
 # Stripe CLI — needed by fds_donation's Stripe tests, which use `stripe listen`
 # to tunnel real test-mode webhooks to the local live_server. Not in apt, and

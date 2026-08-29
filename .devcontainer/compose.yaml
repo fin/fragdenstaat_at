@@ -4,10 +4,11 @@ services:
       context: ..
       dockerfile: fragdenstaat_at/.devcontainer/Dockerfile
     volumes:
-      - ..:/workspaces/fds_at:cached
-      - ${SSH_AUTH_SOCK}:/ssh-agent
+     - type: bind
+       source: $SSH_AUTH_SOCK
+       target: /run/host-services/ssh-auth.sock
+     - ..:/workspaces/fds_at:cached
     environment:
-      SSH_AUTH_SOCK: /ssh-agent
       DATABASE_HOST: db
       DATABASE_NAME: fragdenstaat_at
       DATABASE_USER: fragdenstaat_at
@@ -15,23 +16,7 @@ services:
       DJANGO_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
       DJANGO_SETTINGS_MODULE: fragdenstaat_at.settings.development
       DJANGO_CONFIGURATION: Dev
-    # Run tini as PID 1, ahead of the command below.
-    #
-    # Without it PID 1 is `sleep infinity`, which never calls wait(), so every
-    # orphaned child re-parented to it becomes a permanent zombie -- this
-    # container accumulated 456 of them over a few days of Playwright runs.
-    # They cost no memory and there is no cgroup PID limit here, so that part is
-    # cosmetic.
-    #
-    # The real gain is signal forwarding: `sleep` ignores SIGTERM, so
-    # `docker stop` falls through to SIGKILL and everything inside dies
-    # abruptly. That skips cleanup -- a hard-killed pytest run never reaches
-    # delete_webhook_on_paypal(), leaving orphaned webhook registrations on
-    # PayPal's side. tini forwards the signal so processes can exit cleanly.
-    #
-    # Takes effect on the next devcontainer rebuild; worth pairing with the
-    # Elasticsearch 8.19.3 bump in deps/elasticsearch/Dockerfile, which is also
-    # waiting for one.
+      SSH_AUTH_SOCK: /run/host-services/ssh-auth.sock
     init: true
     command: sleep infinity
     depends_on:

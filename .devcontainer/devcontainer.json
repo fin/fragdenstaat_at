@@ -14,12 +14,11 @@
     "5432": {"label": "PostgreSQL"},
     "9200": {"label": "Elasticsearch"}
   },
-  "containerEnv": {"SHELL": "/bin/bash", "ENV": "/home/vscode/.bashrc", "PNPM_HOME": "/home/vscode/.local/share/pnpm"},
+  "containerEnv": {"SHELL": "/bin/bash",    "ENV": "/home/vscode/.bashrc", "PNPM_HOME": "/home/vscode/.local/share/pnpm"},
   "remoteEnv": {
     "SHELL": "/bin/bash",
     "ENV": "/home/vscode/.bashrc",
     "PNPM_HOME": "/home/vscode/.local/share/pnpm",
-
     "UV_CACHE_DIR": "/home/vscode/.local/share/uv",
     "PATH": "${containerEnv:PATH}:/home/vscode/.local/share/pnpm"
   },

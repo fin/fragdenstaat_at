@@ -7,7 +7,10 @@
 local_settings.py
 build/
 public/
-static/
+# Anchored to the repo root: this is the top-level collectstatic target, next
+# to public/. Without the leading slash it also swallowed fragdenstaat_at/static/,
+# the theme's committed source assets (fonts, vendored font-awesome, logos).
+/static/
 .idea/
 fds-env/
 favicon-result.json

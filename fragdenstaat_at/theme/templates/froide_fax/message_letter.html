@@ -17,9 +17,11 @@
 
 {% block from_address_links %}
     {{ block.super }}
+    <style>
+        dl#meta { clear: both; }
+    </style>
     {# Additive, never a replacement: block.super keeps the printed address #}
     {# and short URL, so an unscannable code degrades to today's letter.    #}
-    <div class="fax-reply-qr">{% fax_reply_qr_code object.sender_email %}</div>
 {% endblock %}
 
 {# "Via: Fax and email" is froide-fax's hardcoded text, and it is wrong when   #}
@@ -35,4 +37,11 @@
 {# wording or adds rows, the copy case inherits that automatically.            #}
 {% block extra_meta %}
     {% if object.kind == "email" %}{{ block.super }}{% endif %}
+{% endblock %}
+
+{% block letter %}{{ block.super }}{% if object.kind == "fax" and object.request.messages.0 == object %}{% include "foirequest/emails/request_footer.txt" %}
+        Eine Beantwortung per E-Mail an oben angegebene Adresse wird explizit beantragt. Zur Erleichterung der Übertragung ist diese Email auch als QR-Code enthalten:
+        <div class="fax-reply-qr" style="text-align: center;">{% fax_reply_qr_code object.sender_email %}</div>
+
+    {% endif %}
 {% endblock %}

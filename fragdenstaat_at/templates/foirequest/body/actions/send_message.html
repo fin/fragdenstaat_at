@@ -1,14 +1,13 @@
 {% extends "foirequest/body/actions/send_message.html" %}
 {% load i18n fds_tags %}
 {% comment %}
-Notice that a reply on a fax-only request will go out by fax rather than email.
+Notice that a reply on a fax-only request may go out by fax rather than email.
 
 A usable FaxOverride diverts a reply to fax only when the address picked in "To"
 is the public body's own default -- the one that refuses email (froide-fax's
 handle_foirequest_outgoing_messages, keyed on recipient_email). Another address
 in the list -- a mediator, or one the authority itself replied from -- is
-emailed normally. So the notice tracks the selected radio: shown for the
-fax-only address, hidden otherwise.
+emailed normally. Static wording rather than a script tracking the radio.
 
 Extends the template it overrides: Django passes the origin history to the
 loader, so resolution continues to froide's copy rather than recursing -- same
@@ -20,41 +19,19 @@ block.super is a no-op kept only against a future upstream addition.
     {{ block.super }}
     {% foirequest_delivered_by_fax object as reply_by_fax %}
     {% if reply_by_fax and object.public_body.email %}
-        <div class="alert alert-info"
-             role="alert"
-             data-fax-reply-notice
-             data-fax-address="{{ object.public_body.email }}"
-             hidden>
+        <div class="alert alert-info" role="alert">
             <h2 class="h5 alert-heading">
-                {% trans 'This message will be sent by fax' %}
+                {% trans 'Replies to the default address are sent by fax' %}
             </h2>
             <p class="mb-0">
-                {% blocktrans trimmed %}
-                    This public body does not accept messages by email at this
-                    address, so a reply sent to it is delivered by fax instead.
-                    Pick a different address above to send by email. Replies from
-                    the public body still reach you by email here.
+                {% blocktrans trimmed with address=object.public_body.email %}
+                    This public body does not accept messages by email at its
+                    default address ({{ address }}); a reply sent there is
+                    delivered by fax instead. Any other address selected above is
+                    emailed normally. Replies from the public body still reach you
+                    by email here.
                 {% endblocktrans %}
             </p>
         </div>
-        <script>
-        (function () {
-          var notice = document.querySelector('[data-fax-reply-notice]')
-          if (!notice) return
-          var faxAddress = (notice.dataset.faxAddress || '').trim().toLowerCase()
-          var form = notice.closest('form')
-          if (!faxAddress || !form) return
-          function sync () {
-            var checked = form.querySelector('input[name="to"]:checked')
-            var isFax = !!checked &&
-              checked.value.trim().toLowerCase() === faxAddress
-            notice.hidden = !isFax
-          }
-          form.addEventListener('change', function (e) {
-            if (e.target && e.target.name === 'to') sync()
-          })
-          sync()
-        })()
-        </script>
     {% endif %}
 {% endblock %}

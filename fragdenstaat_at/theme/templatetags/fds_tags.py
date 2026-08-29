@@ -101,8 +101,8 @@ def foirequest_delivered_by_fax(foirequest):
     A usable FaxOverride on the public body diverts a reply to fax when the
     address chosen in the send-message form is the body's own default -- the one
     that refuses email (froide-fax keys ``handle_foirequest_outgoing_messages``
-    on ``recipient_email``). This is the coarse gate for rendering the reply-form
-    notice; the notice's script narrows it to the selected "To" address.
+    on ``recipient_email``). Gates the reply-form notice, which explains that
+    split.
     """
     if not _fax_handler_registered():
         return False

@@ -2065,7 +2065,7 @@ dev = [
 [[package]]
 name = "froide"
 version = "6.0.0"
-source = { git = "https://github.com/fin/froide.git?rev=2026-feat-messagekind-initial-message#0c611eddc7120171cd35880788db377ce7dd0ee1" }
+source = { git = "https://github.com/fin/froide.git?rev=2026-feat-messagekind-initial-message#bc8c85171331ede5905682a16ade544042b3dfad" }
 dependencies = [
     { name = "celery" },
     { name = "channels" },

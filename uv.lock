@@ -2119,7 +2119,7 @@ dependencies = [
 [[package]]
 name = "froide-fax"
 version = "0.0.1"
-source = { git = "https://github.com/fin/froide-fax.git?rev=main#13fff93248f559442c3c12bca5e736a866ee1694" }
+source = { git = "https://github.com/fin/froide-fax.git?rev=main#8b5806be3988a7bd10e63c1318b3396104d9cc48" }
 dependencies = [
     { name = "django" },
     { name = "phonenumbers" },

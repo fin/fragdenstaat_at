@@ -910,9 +910,9 @@ class FragDenStaatBase(German, Base):
                     "privacy": "/info/datenschutz/",
                     "about": "/info/ueber/",
                     "help": "/hilfe/",
-                    "pseudonym": "/hilfe/fragen-antworten/pseudonyme-nutzung/",
+                    "pseudonym": "/hilfe/datenschutz-und-privatsphare/pseudonyme-nutzung/",
                     "throttled": "/hilfe/fragen-antworten/anfragenanzahl/",
-                    "help_postupload_redaction": "/hilfe/plain/fragen-antworten/schwarzungen-durchfuhren/",
+                    "help_postupload_redaction": "/hilfe/plain/datenschutz-und-privatsphare/schwarzungen-durchfuhren/",
                     "help_attachments_management": "/hilfe/plain/fragen-antworten/anhange-verwalten/",
                     "help_request_public": "/hilfe/plain/fragen-antworten/anfrage-nicht-offentlich-stellen/",
                     "help_request_privacy": "/hilfe/datenschutz-und-privatsphare/",  # not /plain/, regular link

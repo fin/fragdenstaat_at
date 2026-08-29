@@ -39,9 +39,11 @@
     {% if object.kind == "email" %}{{ block.super }}{% endif %}
 {% endblock %}
 
-{% block letter %}{{ block.super }}{% if object.kind == "fax" and object.request.messages.0 == object %}{% include "foirequest/emails/request_footer.txt" %}
-        Eine Beantwortung per E-Mail an oben angegebene Adresse wird explizit beantragt. Zur Erleichterung der Übertragung ist diese Email auch als QR-Code enthalten:
+{% block letter %}{{ block.super }}{% if object.kind == "fax" %}{% if object.request.messages.0 == object %}{% include "foirequest/emails/request_footer.txt" %}{% else %}--{% endif %}
+        Antworten an diese Nummer können nicht empfangen werden, eine Beantwortung per E-Mail an oben angegebene Adresse wird explizit beantragt. Zur Erleichterung der Übertragung ist diese Email auch als QR-Code enthalten:
         <div class="fax-reply-qr" style="text-align: center;">{% fax_reply_qr_code object.sender_email %}</div>
-
+        {% elif object.kind == "fax" %}
+        ----
+        Antworten an diese Nummer können nicht empfangen werden.
     {% endif %}
 {% endblock %}

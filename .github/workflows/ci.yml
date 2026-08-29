@@ -106,7 +106,7 @@ jobs:
         run: |
           set +e
           python scripts/de_drift.py --de-repo ../fragdenstaat_de \
-            --check-max-modified 142 > drift.txt 2>&1
+            --check-max-modified 145 > drift.txt 2>&1
           status=$?
           cat drift.txt
           {

@@ -2,15 +2,15 @@
 <svg
    id="Layer_1"
    data-name="Layer 1"
-   viewBox="0 0 48 48"
+   viewBox="0 0 225 48"
    version="1.1"
-   sodipodi:docname="logo.svg"
-   width="48"
+   sodipodi:docname="header_logo.svg"
+   width="225"
    height="48"
    inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
    inkscape:export-filename="logo.png"
-   inkscape:export-xdpi="400"
-   inkscape:export-ydpi="400"
+   inkscape:export-xdpi="120"
+   inkscape:export-ydpi="120"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -28,9 +28,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.5811112"
-     inkscape:cx="83.169356"
-     inkscape:cy="26.563597"
+     inkscape:zoom="3.1578738"
+     inkscape:cx="77.108843"
+     inkscape:cy="50.033664"
      inkscape:window-width="1710"
      inkscape:window-height="1045"
      inkscape:window-x="0"
@@ -97,12 +97,12 @@
      id="g15"
      transform="translate(0,5.5)">
     <polygon
-       points="12,17 5,17 24,28 43,17 36,17 24,24 "
+       points="43,17 36,17 24,24 12,17 5,17 24,28 "
        style="fill:#666666"
        id="polygon2"
        transform="translate(0,-0.36240416)" />
     <polygon
-       points="46,14 24,0 2,14 9,15 24,5 39,15 "
+       points="9,15 24,5 39,15 46,14 24,0 2,14 "
        style="fill:#808080"
        id="polygon3"
        transform="matrix(0.99904434,0,0,0.9306192,0.02293627,-0.32439016)" />
@@ -185,6 +185,17 @@
        style="fill:#666666;stroke-width:0.957417"
        id="rect15"
        x="2.0004649" />
+    <text
+       xml:space="preserve"
+       style="font-weight:300;font-size:24px;font-family:'Source Sans 3';-inkscape-font-specification:'Source Sans 3 Light';text-align:center;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#666666;stroke:none;stroke-width:10"
+       x="134.55618"
+       y="34.379704"
+       id="text15"><tspan
+         sodipodi:role="line"
+         id="tspan15"
+         x="134.55618"
+         y="34.379704"
+         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:24px;font-family:'Source Sans 3';-inkscape-font-specification:'Source Sans 3 Medium';fill:#000000">FragDenStaat.at</tspan></text>
   </g>
   <metadata
      id="metadata1">

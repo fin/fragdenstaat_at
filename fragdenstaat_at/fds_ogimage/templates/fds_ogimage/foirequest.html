@@ -1,6 +1,6 @@
 {% extends "fds_ogimage/base.html" %}
 
-{% load humanize %}
+{% load humanize static %}
 
 {% block title %}{{ object.title }}{% endblock %}
 
@@ -68,7 +68,7 @@
         </div>
         <div class="col-auto ms-auto">
           <div class="mt-n4">
-            <img height="80" src="https://static.frag-den-staat.de/static/img/header_logo.580ed694906e.svg" alt="FragDenStaat.de"/>
+            <img height="80" src="{% static 'img/logo/header_logo.svg' %}" alt="FragDenStaat.at"/>
           </div>
         </div>
       </div>

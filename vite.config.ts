@@ -50,23 +50,18 @@ export default defineConfig(({ mode }) => ({
       input: {
         // audio_player: './frontend/javascript/audio-player.ts',
         // bookpub: './frontend/javascript/bookpub.js',
-        campaign_list: r('froide_campaign', 'list.js'),
-        campaign_map: r('froide_campaign', 'map.js'),
-        campaign_questionaire: r('froide_campaign', 'questionaire.js'),
         // consentbanner: './frontend/javascript/consentbanner.ts',
+        // froide_campaign / froide_exam / froide_food / froide_legalaction are
+        // not installed (D6); their entries were removed here too or `pnpm run
+        // build` fails to resolve node_modules/<pkg>/frontend/javascript/*.
         document: r('froide', 'document.js'),
         docupload: r('froide', 'docupload.js'),
-        exam_curriculum: r('froide_exam', 'curriculum.js'),
         fds_cms: './frontend/javascript/fds_cms.js',
         fileuploader: r('froide', 'fileuploader.js'),
         filingcabinet: r('@okfde/filingcabinet', 'filingcabinet.js'),
         fcdownloader: r('@okfde/filingcabinet', 'fcdownloader.js'),
-        food: r('froide_food', 'food.js'),
-        foodreport: r('froide_food', 'report.js'),
         // gegenrechtsschutz: './frontend/javascript/gegenrechtsschutz.ts',
         geomatch: r('froide', 'geomatch.js'),
-        lawsuits_table: r('froide_legalaction', 'table.js'),
-        legal_decisions_listfilter: r('froide_legalaction', 'listFilter.js'),
         main: './frontend/javascript/main.ts',
         makerequest: './frontend/javascript/makerequest.ts',
         messageredaction: r('froide', 'messageredaction.js'),

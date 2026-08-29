@@ -92,3 +92,22 @@ def any_fax_publicbody(publicbodies):
     from froide_fax.models import FaxOverride
 
     return any(FaxOverride.objects.is_fax_recipient(pb) for pb in publicbodies or [])
+
+
+@register.simple_tag
+def foirequest_delivered_by_fax(foirequest):
+    """True when messages on this request actually go out by fax.
+
+    A usable FaxOverride on the public body makes froide route *every* outgoing
+    message on the request to fax -- get_request_outgoing_message_kind() is
+    consulted for follow-up messages too, not just the first -- so a reply sent
+    from the message form is faxed regardless of the address shown in "To".
+    """
+    if not _fax_handler_registered():
+        return False
+    if foirequest is None or foirequest.public_body_id is None:
+        return False
+
+    from froide_fax.models import FaxOverride
+
+    return FaxOverride.objects.is_fax_recipient(foirequest.public_body)

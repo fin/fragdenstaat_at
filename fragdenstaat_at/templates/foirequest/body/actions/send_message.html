@@ -1,0 +1,34 @@
+{% extends "foirequest/body/actions/send_message.html" %}
+{% load i18n fds_tags %}
+{% comment %}
+Notice that a reply on a fax-only request goes out by fax, not email.
+
+froide-fax's FaxOverride makes froide route *every* outgoing message on the
+request to fax, follow-ups included, so the "To" address chosen in this form is
+never actually mailed. froide's own send-message form says nothing about that.
+
+Extends the template it overrides: Django passes the origin history to the
+loader, so resolution continues to froide's copy rather than recursing -- same
+pattern as foirequest/request.html and fds_donation/templates/froide_payment/.
+send_message_form_pre is froide's designated hook and is empty upstream, so
+block.super is a no-op kept only against a future upstream addition.
+{% endcomment %}
+{% block send_message_form_pre %}
+    {{ block.super }}
+    {% foirequest_delivered_by_fax object as reply_by_fax %}
+    {% if reply_by_fax %}
+        <div class="alert alert-info" role="alert">
+            <h2 class="h5 alert-heading">
+                {% trans 'This message will be sent by fax' %}
+            </h2>
+            <p class="mb-0">
+                {% blocktrans trimmed %}
+                    This public body does not accept messages by email, so your
+                    reply is delivered by fax instead -- whichever address is
+                    selected above. Replies from the public body still reach you
+                    by email here.
+                {% endblocktrans %}
+            </p>
+        </div>
+    {% endif %}
+{% endblock %}

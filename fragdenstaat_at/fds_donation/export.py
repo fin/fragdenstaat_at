@@ -261,7 +261,7 @@ def get_zwb_data(donor: Donor, donation_data):
 
     donor_name = donor.get_company_name_or_name()
 
-    donor_account = "Deine Spendenübersicht findest Du auch eingeloggt auf fragdenstaat.de. Melde Dich einfach bei uns, falls Du noch nicht registriert bist."
+    donor_account = "Deine Spendenübersicht findest Du auch eingeloggt auf fragdenstaat.at. Melde Dich einfach bei uns, falls Du noch nicht registriert bist."
     if donor.user_id:
         donor_account = "Deine Spendenübersicht kannst Du in Deinem Nutzerkonto unter „Meine Spenden“ einsehen."
 

@@ -364,12 +364,6 @@ msgstr ""
 "behoerden/\n"
 
 #. from froide
-#. de: Informationsfreiheitsanfragen
-#: froide/foirequest/templates/foirequest/list.html
-msgid "FoI Requests"
-msgstr "Informationsfreiheitsanfragen"
-
-#. from froide
 #. de: „%(name)s“ schwärzen
 #: froide/foirequest/templates/foirequest/redact.html
 #, python-format
@@ -394,7 +388,6 @@ msgid_plural "%(counter)s identical requests"
 msgstr[0] ""
 msgstr[1] ""
 
-
 #. from froide
 #. de: Ihre Anfrage kann noch nicht vermittelt werden.
 #: froide/foirequest/views/message.py
@@ -411,18 +404,6 @@ msgid ""
 msgstr ""
 "Ein Fehler ist aufgetreten bei der Authentifizierung Ihrer Dateien. Bitte "
 "kontaktieren Sie FragDenStaat.at direkt."
-
-#. from froide
-#. de: Anfrage folgen
-#: froide/foirequestfollower/configuration.py
-msgid "Follow request"
-msgstr "Anfrage folgen"
-
-#. from froide
-#. de: Anfrage folgen?
-#: froide/foirequestfollower/configuration.py
-msgid "Follow request?"
-msgstr "Anfrage folgen?"
 
 #. from froide
 #. de: Nicht mehr folgen
@@ -526,18 +507,6 @@ msgid ""
 msgstr ""
 "Wir kämpfen für Transparenz! Kämpfen Sie mit und unterstützen Sie uns:\n"
 "https://fragdenstaat.at/spenden/\n"
-
-#. from froide
-#. de: Jede:r Bürger:in hat nach den Informations&shy;gesetzen das Recht,
-#. Zugang zu Informationen der öffentlichen Hand zu erhalten.
-#: froide/templates/index.html
-msgid ""
-"Every citizen has the right under the Freedom of Information Laws to ask for"
-" and receive access to information from Public Bodies concerning public "
-"affairs."
-msgstr ""
-"Jede:r Bürger:in hat nach den Informations&shy;gesetzen das Recht, Zugang zu "
-"Informationen der öffentlichen Hand zu erhalten."
 
 #. from froide
 #. de: Diese Seite veröffentlicht Informations&shy;freiheits&shy;anfragen und
@@ -662,7 +631,6 @@ msgstr ""
 msgid "The letter is registered mail"
 msgstr "Es handelt sich um einen RSa/RSb-Brief"
 
-
 #. from froide_payment
 #. SEPA direct debit mandate. Upstream's current German with the creditor
 #. changed to AT's legal entity -- the same substitution fin/froide-payment
@@ -706,7 +674,6 @@ msgstr ""
 "Kreditinstitut anfordern. Sie erklären sich einverstanden, "
 "Benachrichtigungen über künftige Belastungen bis spätestens 2 Tage vor dem "
 "Buchungsdatum zu erhalten."
-
 
 #. from froide
 #. de: Sie müssen in der Regel nicht Ihre Identität nachweisen! Dies ist nur
@@ -962,9 +929,10 @@ msgid ""
 "delivered by fax instead. Nothing changes in how you write it, and replies "
 "still reach you by email here."
 msgstr ""
-"Diese Behörde nimmt bürger:innenfeindlicherweise keine Anfragen per Email an, "
-"die Anfrage wird per Fax übermittelt. Eine Antwort per E-Mail an FragDenStaat.at wird "
-"beantragt. Solche Features zu entwickeln ist mühsam und jedes Fax kostet uns Geld."
+"Diese Behörde nimmt bürger:innenfeindlicherweise keine Anfragen per Email "
+"an, die Anfrage wird per Fax übermittelt. Eine Antwort per E-Mail an "
+"FragDenStaat.at wird beantragt. Solche Features zu entwickeln ist mühsam und"
+" jedes Fax kostet uns Geld."
 
 #. from AT source
 #: templates/foirequest/body/actions/send_message.html:27
@@ -975,9 +943,10 @@ msgid ""
 "instead. If you select any other email, the message will be emailed "
 "normally. Replies from the public body still reach you by email here."
 msgstr ""
-"Diese Behörde nimmt bürger:innenfeindlicherweise keine Anfragen per Email an, "
-"Nachrichten an die Standard-Emailadresse (%(address)s) werden stattdessen per Fax übermittelt. "
-"Eine Antwort per E-Mail an eine FragDenStaat.at-Adresse wird beantragt."
+"Diese Behörde nimmt bürger:innenfeindlicherweise keine Anfragen per Email "
+"an, Nachrichten an die Standard-Emailadresse (%(address)s) werden "
+"stattdessen per Fax übermittelt. Eine Antwort per E-Mail an eine "
+"FragDenStaat.at-Adresse wird beantragt."
 
 #. from AT source
 #: templates/foirequest/snippets/fax_delivery_notice.html:25
@@ -993,13 +962,6 @@ msgstr "Segmente aus dem Archiv zurückholen"
 #: admin.py:1115
 msgid "You can only select one banktransfer donation at a time."
 msgstr "Du kannst nur eine Überweisung auf einmal auswählen."
-
-#. from AT source
-#: templates/fds_donation/donor_detail.html:77
-msgid "Your recurring donation"
-msgid_plural "Your recurring donations"
-msgstr[0] "Deine Dauerspende"
-msgstr[1] "Deine Dauerspenden"
 
 #. from AT source
 #. de: jeden Monat
@@ -1025,14 +987,6 @@ msgstr[0] "{amount} EUR jeden Monat per {method} seit {start}."
 msgstr[1] "{amount} EUR alle {interval} Monate per {method} seit {start}."
 
 #. from AT source
-#: utils.py:476
-#, python-brace-format
-msgid "{amount} every month"
-msgid_plural "{amount} every {interval} months"
-msgstr[0] "{amount} jeden Monat"
-msgstr[1] "{amount} alle {interval} Monate"
-
-#. from AT source
 #: templates/foirequest/snippets/fax_delivery_notice.html:28
 #, python-brace-format
 msgid ""
@@ -1040,10 +994,380 @@ msgid ""
 "email. Those requests are delivered by fax instead. Nothing changes in how "
 "you write them, and replies still reach you by email here."
 msgstr ""
-"{count} der ausgewählten {total} Stellen nehmen Anfragen nicht per Email an. "
-"Anfragen an diese werden per Fax versandt. Am Anfrageprozess ändert das nichts."
+"{count} der ausgewählten {total} Stellen nehmen Anfragen nicht per Email an."
+" Anfragen an diese werden per Fax versandt. Am Anfrageprozess ändert das "
+"nichts."
 
 #. from AT source
 #: models.py:1355
 msgid "{} days ago"
 msgstr "vor {} Tagen"
+
+#. from froide
+#. de: Kann Sie als Nutzer:in auf FragDenStaat.de identifizieren
+#: froide/settings.py
+msgid "Access to user status"
+msgstr ""
+
+#. from froide
+#. de: Monat(e)
+#: froide/publicbody/models/foilaw.py
+msgid "Month(s) (DE)"
+msgstr ""
+
+#. from froide_payment
+#. de: {success}/{total} Dauerspenden gekündigt.
+#: admin.py
+#, python-brace-format
+msgid "{success}/{total} subscriptions canceled."
+msgstr ""
+
+#. from froide_payment
+#. de: Dauerspende kündigen
+#: admin.py templates/froide_payment/subscription/default.html
+msgid "Cancel subscription"
+msgstr ""
+
+#. from froide_payment
+#. de: Dauerspende
+#: admin.py
+msgid "subscription"
+msgstr ""
+
+#. from froide_payment
+#. de: Dauerspende-Bestellung
+#: admin.py
+msgid "subscription order"
+msgstr ""
+
+#. from froide_payment
+#. de: Konnte nicht alle Spenden finden, Vorgang abgebrochen!
+#: admin.py
+msgid "Could not find all payments, aborting!"
+msgstr ""
+
+#. from froide_payment
+#. de: Ihre IBAN
+#: forms.py
+msgid "Your IBAN"
+msgstr ""
+
+#. from froide_payment
+#. de: Die IBAN fängt mit zwei Buchstaben und zwei Ziffern an. Nur SEPA-
+#. Länder.
+#: forms.py
+msgid ""
+"The IBAN starts with two letters and then two numbers. SEPA countries only."
+msgstr ""
+
+#. from froide_payment
+#. de: Die angegeben IBAN scheint ungültig.
+#: forms.py
+msgid "The provided IBAN seems invalid."
+msgstr ""
+
+#. from froide_payment
+#. de: Spendenbetrag:
+#: forms.py
+msgid "Donation amount:"
+msgstr ""
+
+#. from froide_payment
+#. de: Spendenrhythmus
+#: forms.py
+msgid "Frequency"
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende per Lastschrift hier kündigen.
+#: provider/lastschrift.py
+msgid "You can cancel your direct debit subscription here."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende per Lastschrift hier ändern.
+#: provider/lastschrift.py
+msgid "You can modify your direct debit subscription here."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende direkt bei Paypal kündigen.
+#: provider/paypal.py
+msgid "You can cancel your subscription within your Paypal dashboard."
+msgstr ""
+
+#. from froide_payment
+#. de: Deine Paypal-Dauerspende wurde schon gekündigt.
+#: provider/paypal.py
+msgid "Your Paypal subscription has already been canceled."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende per Paypal hier kündigen.
+#: provider/paypal.py
+msgid "You can cancel your Paypal subscription."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende nur bei Paypal anpassen.
+#: provider/paypal.py
+msgid "You cannot modify your Paypal subscription here."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende ändern, sobald die erste Zahlung
+#. eingegangen ist.
+#: provider/paypal.py provider/stripe.py
+msgid "You can modify your subscription when it receives the first payment."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende per Paypal anpassen.
+#: provider/paypal.py
+msgid "You can modify your Paypal subscription."
+msgstr ""
+
+#. from froide_payment
+#. de: Diese Dauerspende wurde schon gekündigt.
+#: provider/stripe.py
+msgid "This subscription is already canceled."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende per Kreditkarte hier kündigen.
+#: provider/stripe.py
+msgid "You can cancel your credit card subscription."
+msgstr ""
+
+#. from froide_payment
+#. de: Diese Dauerspende wurde gekündigt.
+#: provider/stripe.py
+msgid "This subscription has been canceled."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende ändern oder bei Bedarf durch Änderung des
+#. nächsten Abbuchungstermins pausieren.
+#: provider/stripe.py
+msgid ""
+"You can modify your subscription or pause it by adjusting the next payment "
+"date."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende per SEPA-Lastschrift hier kündigen.
+#: provider/stripe.py
+msgid "You can cancel your SEPA direct debit subscription here."
+msgstr ""
+
+#. from froide_payment
+#. de: SEPA-Lastschrift mit der IBAN {label}
+#: provider/stripe.py
+#, python-brace-format
+msgid "SEPA direct debit with IBAN {label}"
+msgstr ""
+
+#. from froide_payment
+#. de: Die IBAN für Deine SEPA-Lastschriftauftrag wurde aktualisiert.
+#: provider/stripe.py
+msgid "Your SEPA direct debit IBAN was updated successfully."
+msgstr ""
+
+#. from froide_payment
+#. de: Spende
+#: templates/froide_payment/order/default.html
+msgid "Donation"
+msgstr ""
+
+#. from froide_payment
+#. de: Dies ist eine Spende
+#: templates/froide_payment/order/default.html
+msgid "This is a donation"
+msgstr ""
+
+#. from froide_payment
+#. de: Dauerspende
+#: templates/froide_payment/order/default.html
+msgid "Subscription"
+msgstr ""
+
+#. from froide_payment
+#. de: Dauerspenden-Seite
+#: templates/froide_payment/order/default.html
+msgid "Subscription page"
+msgstr ""
+
+#. from froide_payment
+#. de: Deine IBAN erfordert Deine Adresse als zusätzliche Überprüfung.
+#: templates/froide_payment/payment/_sepa_form.html
+#: templates/froide_payment/payment/sepa.html
+msgid "Your IBAN requires your address details for verification."
+msgstr ""
+
+#. from froide_payment
+#. de: IBAN ändern
+#: templates/froide_payment/payment/_sepa_form.html
+msgid "Change IBAN"
+msgstr ""
+
+#. from froide_payment
+#. de: Jetzt spenden
+#: templates/froide_payment/payment/base.html
+msgid "Donate now"
+msgstr ""
+
+#. from froide_payment
+#. de: Schließe Deine Dauerspende ab:
+#: templates/froide_payment/payment/base.html
+msgid "Finish your recurring donation:"
+msgstr ""
+
+#. from froide_payment
+#. de: Schließe Deine Spende ab:
+#: templates/froide_payment/payment/base.html
+msgid "Finish your donation:"
+msgstr ""
+
+#. from froide_payment
+#. de: Du spendest <strong>%(amount)s&nbsp;€</strong>
+#. <mark>%(interval)s</mark>: %(description)s.
+#: templates/froide_payment/payment/base.html
+#, python-format
+msgid ""
+"\n"
+"              You are donating <strong>%(amount)s&nbsp;€</strong> <mark>%(interval)s</mark>: %(description)s.\n"
+"            "
+msgstr ""
+
+#. from froide_payment
+#. de: Du spendest <strong>%(amount)s&nbsp;€</strong>:
+#. <mark>%(description)s</mark>.
+#: templates/froide_payment/payment/base.html
+#, python-format
+msgid ""
+"You are donating <strong>%(amount)s&nbsp;€</strong>: "
+"<mark>%(description)s</mark>."
+msgstr ""
+
+#. from froide_payment
+#. de: Du kannst Deine Dauerspende jederzeit online oder durch Kontaktaufnahme
+#. kündigen.
+#: templates/froide_payment/payment/base.html
+msgid "You can cancel your donation anytime online or by contacting us."
+msgstr ""
+
+#. from froide_payment
+#. de: Spende abschließen
+#: templates/froide_payment/payment/creditcard.html
+msgid "Finalize donation"
+msgstr ""
+
+#. from froide_payment
+#. de: Bist Du sicher, dass Du Deine Dauerspende kündigen willst?
+#: templates/froide_payment/subscription/_cancel_form.html
+msgid "Are you sure you want to cancel your subscription?"
+msgstr ""
+
+#. from froide_payment
+#. de: Deine Dauerspende
+#: templates/froide_payment/subscription/default.html
+msgid "Your subscription"
+msgstr ""
+
+#. from froide_payment
+#. de: Dauerspende ändern
+#: templates/froide_payment/subscription/default.html
+msgid "Modify subscription"
+msgstr ""
+
+#. from froide_payment
+#. de: Zahlungen dieser Dauerspende
+#: templates/froide_payment/subscription/default.html
+msgid "Payments on this subscription"
+msgstr ""
+
+#. from froide_payment
+#. de: Dauerspende jetzt kündigen
+#: templates/froide_payment/subscription/default.html
+msgid "Cancel subscription now"
+msgstr ""
+
+#. from froide_payment
+#. de: Diese Dauerspende wurde am %(date)s gekündigt.
+#: templates/froide_payment/subscription/default.html
+#, python-format
+msgid ""
+"\n"
+"        This subscription has been canceled on %(date)s.\n"
+"        "
+msgstr ""
+
+#. from froide_payment
+#. de: Diese Dauerspende kann geändert werden, sobald die erste Zahlung
+#. eingegangen ist.
+#: templates/froide_payment/subscription/default.html
+msgid "This subscription can be modified after the first payment arrives."
+msgstr ""
+
+#. from froide_payment
+#. de: Spende an {}
+#: templatetags/froide_payment.py
+#, python-brace-format
+msgid "Donation to {}"
+msgstr ""
+
+#. from froide_payment
+#. de: Deine Dauerspende wurde gekündigt.
+#: views.py
+msgid "Your subscription has been canceled."
+msgstr ""
+
+#. from froide_payment
+#. de: Es ist ein Fehler bei unserem Zahlungsanbieter aufgetreten. Wir kümmern
+#. uns darum, dass Deine Dauerspende ordentlich gekündigt wurde.
+#: views.py
+msgid ""
+"An error occurred with our payment provider. We will investigate and make "
+"sure your subscription is properly canceled."
+msgstr ""
+
+#. from froide_payment
+#. de: Deine Dauerspende wurde geändert.
+#: views.py
+msgid "Your subscription has been modified."
+msgstr ""
+
+#. from froide_payment
+#. de: Leider ist beim Ändern Deiner Dauerspende bei unserem Zahlungsanbieter
+#. ein Fehler aufgetreten.
+#: views.py
+msgid ""
+"There was an error modifying your subscription with our payment provider."
+msgstr ""
+
+#. from froide_payment
+#. de: Deine Dauerspende wurde geändert.
+#: views.py
+msgid "The subscription was modified."
+msgstr ""
+
+#. from froide_payment
+#. de: Deine Dauerspende wurde nicht geändert.
+#: views.py
+msgid "The subscription was not modified."
+msgstr ""
+
+#. from AT source
+#: templates/fds_donation/donor_detail.html:77
+msgid "Your recurring donation"
+msgid_plural "Your recurring donations"
+msgstr[0] ""
+msgstr[1] ""
+
+#. from AT source
+#: utils.py:476
+#, python-brace-format
+msgid "{amount} every month"
+msgid_plural "{amount} every {interval} months"
+msgstr[0] ""
+msgstr[1] ""

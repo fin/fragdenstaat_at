@@ -38,6 +38,21 @@ FAX_NAME = "Faxamt Teststadt"
 EMAIL_NAME = "Mailamt Teststadt"
 
 
+@pytest.fixture(autouse=True)
+def _source_language(settings):
+    """Render these pages untranslated.
+
+    The notice's wording assertions ("1 of the 2") check the English source
+    strings; once the de_AT catalogue translates them the German renders
+    instead. `en` is a stub catalogue in this repo (every msgstr empty), so
+    forcing it falls straight through to the msgid -- server-side and, via the
+    JS i18n catalogue, in the chooser too. The `settings` fixture fires
+    setting_changed, which clears the translation caches.
+    """
+    settings.LANGUAGE_CODE = "en"
+    settings.LANGUAGES = [("en", "English")]
+
+
 @pytest.fixture
 def fax_publicbodies(db):
     """One body diverted to fax, one ordinary, both searchable."""
@@ -167,7 +182,8 @@ async def test_notice_in_the_multi_request_flow(
     # Both fixtures share this word, so one search finds the pair.
     await page.locator(SEARCH).fill("Teststadt")
     await page.locator(".search-public_bodies-submit").click()
-    await page.get_by_role("button", name="Alle").first.click()
+    # "Select all" -- English, because _source_language forces the source locale.
+    await page.get_by_role("button", name="All").first.click()
 
     notice = page.locator(NOTICE)
     await expect(notice).to_be_visible()

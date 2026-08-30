@@ -744,16 +744,27 @@ class FragDenStaatBase(German, Base):
 
     # EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 
-    FAX_BACKEND = None
+    # FAX_BACKEND = None
 
     EMAIL_BACKEND = "fragdenstaat_at.theme.email_backend.CustomCeleryEmailBackend"
     CELERY_EMAIL_BACKEND = "froide.foirequest.smtp.EmailBackend"
-    CELERY_EMAIL_TASK_CONFIG = {
-        "max_retries": None,
-        "ignore_result": False,
-        "acks_late": True,
-        "store_errors_even_if_ignored": True,
-    }
+
+    @property
+    def CELERY_EMAIL_TASK_CONFIG(self):
+        # Merge onto froide's ({"queue": "emailsend"}); a plain dict assignment
+        # here -- as DE also does -- dropped the queue key and sent per-message
+        # mail to the default queue. DE base.py CELERY_TASK_ROUTES() merges the
+        # same way.
+        config = dict(super().CELERY_EMAIL_TASK_CONFIG)
+        config.update(
+            {
+                "max_retries": None,
+                "ignore_result": False,
+                "acks_late": True,
+                "store_errors_even_if_ignored": True,
+            }
+        )
+        return config
 
     if "DJANGO_CELERY_BROKER_URL" in os.environ:
         CELERY_BROKER_URL = env("DJANGO_CELERY_BROKER_URL")

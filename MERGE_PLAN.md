@@ -1107,6 +1107,22 @@ Once it does, four things must change together — the last is easy to miss:
   `/hilfe/fragen-antworten/anhange-verwalten/`,
   `/hilfe/fragen-antworten/anfrage-nicht-offentlich-stellen/`. Switch back to
   `/plain/` once the apphook can be attached.
+- [ ] **Check "hide contact" on the two production donation forms.** D3's
+  intent is no newsletter opt-in on any donation form. The form drops the
+  `contact` field only when `hide_contact` is set. Two surfaces:
+
+  - **`/spenden/`** (`DonationView` → `DonationFormFactory`, no CMS plugin):
+    `DonationSettingsForm.hide_contact` defaults `initial=True`, so the opt-in
+    should already be gone. Confirm on the live page -- a campaign
+    `?pk_campaign=`/`?pk_keyword=` preset could override it.
+  - **`/`** (homepage `DonationFormCMSPlugin`): driven by the plugin row's own
+    `hide_contact`, and the **model field defaults `False`**, so whatever was
+    saved on that plugin in the production CMS wins. After the migrations, edit
+    the plugin and tick "hide contact" (or data-update `DonationFormCMSPlugin`).
+    Do the same for any other page carrying a donation-form plugin.
+
+  Or land the unconditional fix in `DonationFormCMSPlugin.get_form_settings()`
+  before deploy and the CMS step goes away.
 - [x] **Set `reverse_id` on the CMS pages the templates link to.** **Five**
   `{% page_url %}` string literals appear in AT's templates (the earlier count
   of four missed `help`), and all five resolve to nothing today, because the

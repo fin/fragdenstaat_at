@@ -17,6 +17,7 @@ import re
 
 from django.template.loader import render_to_string
 from django.test import TestCase
+from django.utils import translation
 
 import pytest
 import segno
@@ -85,16 +86,21 @@ class FaxLetterTest(TestCase):
         )
 
     def _render(self, kind):
-        return render_to_string(
-            "froide_fax/message_letter.html",
-            {"object": self._message(kind), "SITE_NAME": "FragDenStaat"},
-        )
+        # Assert the English source strings; the de_AT catalogue translates the
+        # "Via" row ("Fax und E-Mail"), which the regex below would miss.
+        with translation.override("en"):
+            return render_to_string(
+                "froide_fax/message_letter.html",
+                {"object": self._message(kind), "SITE_NAME": "FragDenStaat"},
+            )
 
     def test_qr_is_added_without_removing_the_printed_address(self):
-        html = self._render(MessageKind.EMAIL)
+        # The QR now lives in the letter body and only for a real fax message
+        # (kind == "fax"); the printed reply address stays in from_address_links.
+        html = self._render(MessageKind.FAX)
         assert "fax-reply-qr" in html
         assert "<svg" in html
-        # block.super's contents must survive: the address and the short URL.
+        # from_address_links must survive: the address and the short URL.
         assert EMAIL in html, "printed reply address was replaced by the QR"
         assert html.count(EMAIL) >= 2, "expected both the mailto link and text"
 

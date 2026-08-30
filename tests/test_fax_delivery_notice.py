@@ -23,6 +23,18 @@ FAX_NUMBER = "+4315811234"
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def _source_language(settings):
+    """Assert the English source strings, not the de_AT catalogue.
+
+    `en` is a stub catalogue here (every msgstr empty), so forcing it falls
+    straight through to the msgid. The `settings` fixture fires setting_changed,
+    which clears the translation caches.
+    """
+    settings.LANGUAGE_CODE = "en"
+    settings.LANGUAGES = [("en", "English")]
+
+
 def _url(publicbody):
     return reverse(
         "foirequest-make_request", kwargs={"publicbody_slug": publicbody.slug}

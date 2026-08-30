@@ -6,13 +6,26 @@ if the check itself quietly stopped firing, nothing else would notice.
 
 from pathlib import Path
 
+import pytest
+
 from fragdenstaat_at.theme import checks
 
+# The check only fires when the sibling checkouts are on disk (a dev container).
+# CI installs everything from the git pins and has no siblings, so
+# check_editable_forks() short-circuits to [] and the two tests that assert on
+# its behaviour cannot run there.
+_has_siblings = (checks._workspace_root() / "froide").is_dir()
+needs_siblings = pytest.mark.skipif(
+    not _has_siblings, reason="needs the sibling checkouts a dev container has"
+)
 
+
+@needs_siblings
 def test_no_error_when_everything_is_editable():
     assert checks.check_editable_forks(None) == []
 
 
+@needs_siblings
 def test_error_when_a_fork_is_installed_from_git(monkeypatch):
     root = checks._workspace_root()
     real = checks._module_path

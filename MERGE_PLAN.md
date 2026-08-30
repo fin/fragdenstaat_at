@@ -918,8 +918,9 @@ wrong data in front of real people or break the deploy.
       first.
 - [ ] **Celery task rename** — drain, then deploy, per
       `docs/runbooks/celery-task-rename.md`.
-- [ ] **`migrate froide_fax`** — four migrations (`0001_initial` ..
-      `0004_faxoverride`), all new tables, nothing pre-existing is touched.
+- [ ] **`migrate froide_fax`** — five migrations (`0001_initial` ..
+      `0005_faxoverride_email_copy`), all new tables plus one `AddField`
+      (`FaxOverride.email_copy`); nothing pre-existing is touched.
       Introduced by enabling the app, see §9.13.
 - [ ] **`uv sync --locked`**, shipping `uv.lock` and `pyproject.toml` with the
       code (§9.10). A plain `uv sync` may re-resolve and hand production an
@@ -1649,12 +1650,15 @@ workflow itself has **not** run on GitHub yet — the branch is still unpushed
 
 ### 9.13 froide-fax is now in the dependency set
 
-Pinned to **`fin/froide-fax@main`**, which carries webhook hardening (replay
-and malformed-envelope rejection), classification of permanently-undeliverable
-faxes so they stop being retried, Telnyx's OpenAPI examples as fixtures,
-`README_LIVE_TESTS.md`, and `FAX_BACKEND` (§9.15). AT is running **ahead of
-okfde here**, so unlike the froide-payment pin (§9.9) there is no "repin to
-upstream" exit criterion yet — upstream would have to catch up first.
+Pinned to **`fin/froide-fax@main`** (`7b74f80c`), which carries webhook
+hardening (replay and malformed-envelope rejection), classification of
+permanently-undeliverable faxes so they stop being retried, per-recipient
+fax/email routing on replies (`handle_foirequest_outgoing_messages` keyed on
+`recipient_email`), an optional email carbon copy of faxed messages
+(`FaxOverride.email_copy`, migration `0005`), Telnyx's OpenAPI examples as
+fixtures, `README_LIVE_TESTS.md`, and `FAX_BACKEND` (§9.15). AT is running
+**ahead of okfde here**, so unlike the froide-payment pin (§9.9) there is no
+"repin to upstream" exit criterion yet — upstream would have to catch up first.
 
 It was briefly pinned to `docs/live-tests`; that branch and `main` were the same
 commit, and `main` is the one that moves, so the pin follows `main`.
@@ -1664,7 +1668,7 @@ Wired into five places, all committed:
 | where | change |
 |---|---|
 | `pyproject.toml` | `froide-fax @ git+…@main` |
-| `uv.lock` | `froide-fax 0.0.1 (a55c9343)`, plus `pynacl`, `pytz` |
+| `uv.lock` | `froide-fax 0.0.1 (7b74f80c)`, plus `pynacl`, `pytz` |
 | `settings/base.py` | `froide_fax.apps.FroideFaxConfig` uncommented |
 | `theme/urls.py` | `path("fax/", include("froide_fax.urls"))`, DE's mount point |
 | `devsetup.sh` | `froide-fax` added to `REPOS` |

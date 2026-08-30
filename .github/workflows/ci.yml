@@ -25,7 +25,7 @@ jobs:
         # Dev and production both run 3.13. DE additionally tests 3.12 and
         # 3.14; widen this once the workflow is reliably green, not before --
         # `requires-python` is >=3.12, so the lock supports it.
-        python-version: ['3.13']
+        python-version: ['3.12', '3.13']
     steps:
       - uses: actions/checkout@v6
       # compose-dev.yaml is the same stack developers run: postgis 16-3.4 and

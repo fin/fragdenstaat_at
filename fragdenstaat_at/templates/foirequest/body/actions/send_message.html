@@ -25,9 +25,9 @@ block.super is a no-op kept only against a future upstream addition.
             </h2>
             <p class="mb-0">
                 {% blocktrans trimmed with address=object.public_body.email %}
-                    This public body does not accept messages by email at its
-                    default address ({{ address }}); a reply sent there is
-                    delivered by fax instead. Any other address selected above is
+                    This public body does not accept requests by email.
+                    If you select its default address ({{ address }}) a reply sent there is
+                    delivered by fax instead. If you select any other email, the message will be
                     emailed normally. Replies from the public body still reach you
                     by email here.
                 {% endblocktrans %}

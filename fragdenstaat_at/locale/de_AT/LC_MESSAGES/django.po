@@ -1,6 +1,6 @@
 # # FragDenStaat.at override translations (de_AT).
 # #
-# # Generated and updated by sync_froide_translations.py. Strings here take
+# # Generated and updated by manage_at_translations.py. Strings here take
 # # precedence over every app's own de / de_AT catalog, because AT's locale
 # # directory comes first in LOCALE_PATHS.
 # #
@@ -55,46 +55,10 @@ msgstr ""
 "target=\"_blank\">Datenschutzbedingungen</a> von FragDenStaat.at zu."
 
 #. from froide
-#. de: Bitte bestätigen Sie Ihre E-Mail-Adresse bevor Sie sich anmelden.
-#: froide/account/forms.py
-msgid "Please activate your mail address before logging in."
-msgstr "Bitte bestätigen Sie Ihre E-Mail-Adresse bevor Sie sich anmelden."
-
-#. from froide
-#. de: Der:die eingeloggte Nutzer:in passt nicht zu dem geklickten Link!
-#: froide/account/forms.py
-msgid "Logged in user does not match this link!"
-msgstr "Der:die eingeloggte Nutzer:in passt nicht zu dem geklickten Link!"
-
-#. from froide
 #. de: Informationsfreiheitsgesetz
 #: froide/account/forms.py
 msgid "Freedom of Information Act"
 msgstr "Informationsgesetz"
-
-#. from froide
-#. de: Bestätigungs-Satz
-#: froide/account/forms.py
-msgid "Confirmation Phrase"
-msgstr "Bestätigungs-Satz"
-
-#. from froide
-#. de: << Anfragesteller:in >>
-#: froide/account/models.py
-msgid "<< Name Not Public >>"
-msgstr "<< Anfragesteller:in >>"
-
-#. from froide
-#. de: << Antragsteller:in >>
-#: froide/account/services.py
-msgid "<< Name removed >>"
-msgstr "<< Antragsteller:in >>"
-
-#. from froide
-#. de: Sende E-Mail an Nutzer:innen
-#: froide/account/templates/account/admin_send_mail.html
-msgid "Send mail to users"
-msgstr "Sende E-Mail an Nutzer:innen"
 
 #. from froide
 #: froide/account/templates/account/admin_send_mail.html
@@ -103,25 +67,6 @@ msgid "Send mail to one user"
 msgid_plural "Send mail to %(count)s users"
 msgstr[0] ""
 msgstr[1] ""
-
-#. from froide
-#. de: Weiter
-#: froide/account/templates/account/go.html
-#: froide/letter/templates/letter/default.html
-msgid "Continue"
-msgstr "Weiter"
-
-#. from froide
-#. de: Noch kein Konto? Klicken Sie hier, um ein Konto zu erstellen!
-#: froide/account/templates/account/login.html
-msgid "Don't have an account? Click here to sign up!"
-msgstr "Noch kein Konto? Klicken Sie hier, um ein Konto zu erstellen!"
-
-#. from froide
-#. de: Anmelden
-#: froide/account/templates/account/login.html
-msgid "Log In"
-msgstr "Anmelden"
 
 #. from froide
 #. de: Ihre IFG-Anfragen werden nicht gelöscht. Nur die persönlichen
@@ -135,52 +80,16 @@ msgstr ""
 "Ihres Account werden entfernt."
 
 #. from froide
-#. de: Ihre Konto-Einstellungen
-#: froide/account/templates/account/show.html
-msgid "Your account settings"
-msgstr "Ihre Konto-Einstellungen"
-
-#. from froide
 #. de: Konto erstellen
 #: froide/account/templates/account/signup.html
 msgid "Sign Up"
 msgstr "Anmelden"
 
 #. from froide
-#. de: Anfragen des:der Nutzer:in
-#: froide/account/templates/admin/account/user/change_form.html
-msgid "This users requests"
-msgstr "Anfragen des:der Nutzer:in"
-
-#. from froide
 #. de: Markiere ausgewählte Informationsfreiheitsanfragen als gesehen
 #: froide/foirequest/admin.py
 msgid "Mark selected requests as checked"
 msgstr "arkiere ausgewählte Informationsfreiheitsanfragen als gesehen"
-
-#. from froide
-#. de: Markiere ausgewählte Anfragen als nicht-IFG
-#: froide/foirequest/admin.py
-msgid "Mark selected requests as not FoI"
-msgstr "Markiere ausgewählte Anfragen als nicht-IFG"
-
-#. from froide
-#. de: %d Anfrage(n) erfolgreich als nicht-IFG markiert.
-#: froide/foirequest/admin.py
-#, python-format
-msgid "%d request(s) successfully marked as not FoI."
-msgstr "%d Anfrage(n) erfolgreich als nicht-IFG markiert."
-
-#. from froide
-#. de: Siehe IFG-Nachricht
-#: froide/foirequest/admin.py
-msgid "See FoiMessage"
-msgstr "Siehe IFG-Nachricht"
-
-#. from froide
-#. de: Informationsfreiheitsanfrage
-msgid "FOI Request"
-msgstr "Informationsfreiheitsanfrage"
 
 #. from froide
 #. de: Informationsfreiheitsanfragen %(by)s auf %(sitename)s
@@ -219,44 +128,6 @@ msgid ""
 msgstr ""
 "Dieser Feed enthält die neuesten Anfragen, die mit Hilfe von %(sitename)s "
 "gestellt wurden."
-
-#. from froide
-#. de: Zustand
-#: froide/foirequest/filters.py
-#: froide/foirequest/templates/foirequest/foiproject_detail.html
-#: froide/foirequest/views/account_requests.py
-msgid "status"
-msgstr "Zustand"
-
-#. from froide
-#. de: Unbekannte:r IFG-Mail-Empfänger:in
-#: froide/foirequest/foi_mail.py froide/foirequest/tests/test_mail.py
-msgid "Unknown FoI-Mail Recipient"
-msgstr "Unbekannte:r IFG-Mail-Empfänger:in"
-
-#. from froide
-#. de: Absender:in
-#: froide/foirequest/forms/message.py
-msgid "Sender Name"
-msgstr "Absender:in"
-
-#. from froide
-#. de: Sie dürfen einige der erhaltenen Dokumente nicht veröffentlichen..
-#: froide/foirequest/forms/message.py
-msgid "You are not allowed to publish some received documents"
-msgstr "Sie dürfen einige der erhaltenen Dokumente nicht veröffentlichen.."
-
-#. from froide
-#. de: Beschreiben Sie Ihre Anfrage möglichst kurz und präzise hier ...
-#: froide/foirequest/forms/request.py
-msgid "Specify your request here..."
-msgstr "Beschreiben Sie Ihre Anfrage möglichst kurz und präzise hier ..."
-
-#. from froide
-#. de: Bitte geben Sie ein Ergebnis dieser Anfrage an
-#: froide/foirequest/forms/request.py
-msgid "Please give a resolution to this request"
-msgstr "Bitte geben Sie ein Ergebnis dieser Anfrage an"
 
 #. from froide
 #. de: Nutzer:in kann genehmigen
@@ -493,36 +364,10 @@ msgstr ""
 "behoerden/\n"
 
 #. from froide
-#. de: Neues zu Ihrer Anfrage „%(title)s“
-#: froide/foirequest/templates/foirequest/emails/request_update.txt
-#, python-format
-msgid "Updates to your request \"%(title)s\""
-msgstr "Neues zu Ihrer Anfrage \"%(title)s\""
-
-#. from froide
-#. de: Anfrage
-#: froide/foirequest/templates/foirequest/header/breadcrumb.html
-msgid "request"
-msgstr "anfrage"
-
-#. from froide
-#. de: Sie können die:den gesetzliche:n Vermittler:in einschalten
-#: froide/foirequest/templates/foirequest/header/header.html
-msgid "Consider sending a letter to a mediator"
-msgstr "Sie können den gesetzlichen Vermittler einschalten"
-
-#. from froide
-#. de: Herunterladen
-#: froide/foirequest/templates/foirequest/header/info-box.html
-#: froide/foirequest/views/request.py
-msgid "Download"
-msgstr "Download"
-
-#. from froide
 #. de: Informationsfreiheitsanfragen
 #: froide/foirequest/templates/foirequest/list.html
 msgid "FoI Requests"
-msgstr "Anfragen"
+msgstr "Informationsfreiheitsanfragen"
 
 #. from froide
 #. de: „%(name)s“ schwärzen
@@ -530,12 +375,6 @@ msgstr "Anfragen"
 #, python-format
 msgid "Redact \"%(name)s\""
 msgstr "\"%(name)s\" schwärzen"
-
-#. from froide
-#. de: Anfrage stellen
-#: froide/foirequest/templates/foirequest/request.html
-msgid "Make a request"
-msgstr "Make a request"
 
 #. from froide
 #. de: Stellen Sie eine identische Anfrage in Ihrem Namen, um Zugang zu den
@@ -555,17 +394,6 @@ msgid_plural "%(counter)s identical requests"
 msgstr[0] ""
 msgstr[1] ""
 
-#. from froide
-#. de: Nachricht
-#: froide/foirequest/templatetags/foirequest_tags.py froide/problem/views.py
-msgid "Message"
-msgstr "Message"
-
-#. from froide
-#. de: Vorherige Seite
-#: froide/foirequest/views/attachment.py
-msgid "Previous Page"
-msgstr "vorherige Seite"
 
 #. from froide
 #. de: Ihre Anfrage kann noch nicht vermittelt werden.
@@ -588,13 +416,13 @@ msgstr ""
 #. de: Anfrage folgen
 #: froide/foirequestfollower/configuration.py
 msgid "Follow request"
-msgstr "Sie interessiert das!"
+msgstr "Anfrage folgen"
 
 #. from froide
 #. de: Anfrage folgen?
 #: froide/foirequestfollower/configuration.py
 msgid "Follow request?"
-msgstr "Interessiert Sie das?"
+msgstr "Anfrage folgen?"
 
 #. from froide
 #. de: Nicht mehr folgen
@@ -612,7 +440,7 @@ msgstr "Informationsfreiheits-Portal"
 #. de: IFG-Seiten
 #: froide/foisite/models.py
 msgid "FOI Sites"
-msgstr "Informationsfreheits-Portal"
+msgstr "Informationsfreiheits-Portal"
 
 #. from froide
 #. de: Es sieht so aus, als kämen Sie aus %(country_name)s. Wussten Sie, dass
@@ -643,24 +471,6 @@ msgid "You recently received replies to some of your requests."
 msgstr ""
 "Sie haben vor kurzem Antworten auf einige Ihrer Anfragen bei FragDenStaat.at"
 " erhalten."
-
-#. from froide
-#. de: Nichts
-#: froide/helper/admin_utils.py
-msgid "None"
-msgstr "Nichts"
-
-#. from froide
-#. de: Behörden-Typ
-#: froide/publicbody/forms.py
-msgid "Classification"
-msgstr "Behörden-Typ"
-
-#. from froide
-#. de: Monat(e)
-#: froide/publicbody/models.py
-msgid "Month(s) (DE)"
-msgstr "Monat(e)"
 
 #. from froide
 #. de: Informationsfreiheitsgesetze
@@ -694,12 +504,6 @@ msgid "Ministry of Labour"
 msgstr "Bundesministerium für Inneres"
 
 #. from froide
-#. de: Kann Sie als Nutzer:in auf FragDenStaat.de identifizieren
-#: froide/settings.py
-msgid "Access to user status"
-msgstr "Kann Sie als Nutzer:in auf FragDenStaat.at identifizieren"
-
-#. from froide
 #. de: Wir kämpfen für Transparenz! <a
 #. href="https://fragdenstaat.de/hilfe/spenden/">Kämpfen Sie mit und
 #. unterstützen Sie uns.</a>
@@ -708,8 +512,9 @@ msgid ""
 "Support Froide by <a href=\"https://okfn.de/spenden/\">donating to Open "
 "Knowledge Foundation Germany</a>"
 msgstr ""
-"Wir kämpfen für Transparenz! <a href=\"https://fragdenstaat.at/spenden/\">Kämpfen "
-"Sie mit und unterstützen Sie uns.</a>"
+"Wir kämpfen für Transparenz! <a "
+"href=\"https://fragdenstaat.at/spenden/\">Kämpfen Sie mit und unterstützen "
+"Sie uns.</a>"
 
 #. from froide
 #. de: Wir kämpfen für Transparenz! Kämpfen Sie mit und unterstützen Sie uns:
@@ -731,7 +536,7 @@ msgid ""
 " and receive access to information from Public Bodies concerning public "
 "affairs."
 msgstr ""
-"Jeder Bürger hat nach den Informations&shy;gesetzen das Recht, Zugang zu "
+"Jede:r Bürger:in hat nach den Informations&shy;gesetzen das Recht, Zugang zu "
 "Informationen der öffentlichen Hand zu erhalten."
 
 #. from froide
@@ -857,50 +662,6 @@ msgstr ""
 msgid "The letter is registered mail"
 msgstr "Es handelt sich um einen RSa/RSb-Brief"
 
-#. from froide_payment
-#. de: {success}/{total} Dauerspenden gekündigt.
-#: admin.py
-#, python-brace-format
-msgid "{success}/{total} subscriptions canceled."
-msgstr ""
-
-#. from froide_payment
-#. de: Dauerspende kündigen
-#: admin.py templates/froide_payment/subscription/default.html
-msgid "Cancel subscription"
-msgstr ""
-
-#. from froide_payment
-#. de: Dauerspende
-#: admin.py
-msgid "subscription"
-msgstr ""
-
-#. from froide_payment
-#. de: Dauerspende-Bestellung
-#: admin.py
-msgid "subscription order"
-msgstr ""
-
-#. from froide_payment
-#. de: Konnte nicht alle Spenden finden, Vorgang abgebrochen!
-#: admin.py
-msgid "Could not find all payments, aborting!"
-msgstr ""
-
-#. from froide_payment
-#. de: Ihre IBAN
-#: forms.py
-msgid "Your IBAN"
-msgstr ""
-
-#. from froide_payment
-#. de: Die IBAN fängt mit zwei Buchstaben und zwei Ziffern an. Nur SEPA-
-#. Länder.
-#: forms.py
-msgid ""
-"The IBAN starts with two letters and then two numbers. SEPA countries only."
-msgstr ""
 
 #. from froide_payment
 #. SEPA direct debit mandate. Upstream's current German with the creditor
@@ -946,308 +707,6 @@ msgstr ""
 "Benachrichtigungen über künftige Belastungen bis spätestens 2 Tage vor dem "
 "Buchungsdatum zu erhalten."
 
-#. from froide_payment
-#. de: Die angegeben IBAN scheint ungültig.
-#: forms.py
-msgid "The provided IBAN seems invalid."
-msgstr ""
-
-#. from froide_payment
-#. de: Spendenbetrag:
-#: forms.py
-msgid "Donation amount:"
-msgstr ""
-
-#. from froide_payment
-#. de: Spendenrhythmus
-#: forms.py
-msgid "Frequency"
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende per Lastschrift hier kündigen.
-#: provider/lastschrift.py
-msgid "You can cancel your direct debit subscription here."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende per Lastschrift hier ändern.
-#: provider/lastschrift.py
-msgid "You can modify your direct debit subscription here."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende direkt bei Paypal kündigen.
-#: provider/paypal.py
-msgid "You can cancel your subscription within your Paypal dashboard."
-msgstr ""
-
-#. from froide_payment
-#. de: Deine Paypal-Dauerspende wurde schon gekündigt.
-#: provider/paypal.py
-msgid "Your Paypal subscription has already been canceled."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende per Paypal hier kündigen.
-#: provider/paypal.py
-msgid "You can cancel your Paypal subscription."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende nur bei Paypal anpassen.
-#: provider/paypal.py
-msgid "You cannot modify your Paypal subscription here."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende ändern, sobald die erste Zahlung
-#. eingegangen ist.
-#: provider/paypal.py provider/stripe.py
-msgid "You can modify your subscription when it receives the first payment."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende per Paypal anpassen.
-#: provider/paypal.py
-msgid "You can modify your Paypal subscription."
-msgstr ""
-
-#. from froide_payment
-#. de: Diese Dauerspende wurde schon gekündigt.
-#: provider/stripe.py
-msgid "This subscription is already canceled."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende per Kreditkarte hier kündigen.
-#: provider/stripe.py
-msgid "You can cancel your credit card subscription."
-msgstr ""
-
-#. from froide_payment
-#. de: Diese Dauerspende wurde gekündigt.
-#: provider/stripe.py
-msgid "This subscription has been canceled."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende ändern oder bei Bedarf durch Änderung des
-#. nächsten Abbuchungstermins pausieren.
-#: provider/stripe.py
-msgid ""
-"You can modify your subscription or pause it by adjusting the next payment "
-"date."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende per SEPA-Lastschrift hier kündigen.
-#: provider/stripe.py
-msgid "You can cancel your SEPA direct debit subscription here."
-msgstr ""
-
-#. from froide_payment
-#. de: SEPA-Lastschrift mit der IBAN {label}
-#: provider/stripe.py
-#, python-brace-format
-msgid "SEPA direct debit with IBAN {label}"
-msgstr ""
-
-#. from froide_payment
-#. de: Die IBAN für Deine SEPA-Lastschriftauftrag wurde aktualisiert.
-#: provider/stripe.py
-msgid "Your SEPA direct debit IBAN was updated successfully."
-msgstr ""
-
-#. from froide_payment
-#. de: Spende
-#: templates/froide_payment/order/default.html
-msgid "Donation"
-msgstr ""
-
-#. from froide_payment
-#. de: Dies ist eine Spende
-#: templates/froide_payment/order/default.html
-msgid "This is a donation"
-msgstr ""
-
-#. from froide_payment
-#. de: Dauerspende
-#: templates/froide_payment/order/default.html
-msgid "Subscription"
-msgstr ""
-
-#. from froide_payment
-#. de: Dauerspenden-Seite
-#: templates/froide_payment/order/default.html
-msgid "Subscription page"
-msgstr ""
-
-#. from froide_payment
-#. de: Deine IBAN erfordert Deine Adresse als zusätzliche Überprüfung.
-#: templates/froide_payment/payment/_sepa_form.html
-#: templates/froide_payment/payment/sepa.html
-msgid "Your IBAN requires your address details for verification."
-msgstr ""
-
-#. from froide_payment
-#. de: IBAN ändern
-#: templates/froide_payment/payment/_sepa_form.html
-msgid "Change IBAN"
-msgstr ""
-
-#. from froide_payment
-#. de: Jetzt spenden
-#: templates/froide_payment/payment/base.html
-msgid "Donate now"
-msgstr ""
-
-#. from froide_payment
-#. de: Schließe Deine Dauerspende ab:
-#: templates/froide_payment/payment/base.html
-msgid "Finish your recurring donation:"
-msgstr ""
-
-#. from froide_payment
-#. de: Schließe Deine Spende ab:
-#: templates/froide_payment/payment/base.html
-msgid "Finish your donation:"
-msgstr ""
-
-#. from froide_payment
-#. de: Du spendest <strong>%(amount)s&nbsp;€</strong>
-#. <mark>%(interval)s</mark>: %(description)s.
-#: templates/froide_payment/payment/base.html
-#, python-format
-msgid ""
-"\n"
-"              You are donating <strong>%(amount)s&nbsp;€</strong> <mark>%(interval)s</mark>: %(description)s.\n"
-"            "
-msgstr ""
-
-#. from froide_payment
-#. de: Du spendest <strong>%(amount)s&nbsp;€</strong>:
-#. <mark>%(description)s</mark>.
-#: templates/froide_payment/payment/base.html
-#, python-format
-msgid ""
-"You are donating <strong>%(amount)s&nbsp;€</strong>: "
-"<mark>%(description)s</mark>."
-msgstr ""
-
-#. from froide_payment
-#. de: Du kannst Deine Dauerspende jederzeit online oder durch Kontaktaufnahme
-#. kündigen.
-#: templates/froide_payment/payment/base.html
-msgid "You can cancel your donation anytime online or by contacting us."
-msgstr ""
-
-#. from froide_payment
-#. de: Spende abschließen
-#: templates/froide_payment/payment/creditcard.html
-msgid "Finalize donation"
-msgstr ""
-
-#. from froide_payment
-#. de: Bist Du sicher, dass Du Deine Dauerspende kündigen willst?
-#: templates/froide_payment/subscription/_cancel_form.html
-msgid "Are you sure you want to cancel your subscription?"
-msgstr ""
-
-#. from froide_payment
-#. de: Deine Dauerspende
-#: templates/froide_payment/subscription/default.html
-msgid "Your subscription"
-msgstr ""
-
-#. from froide_payment
-#. de: Dauerspende ändern
-#: templates/froide_payment/subscription/default.html
-msgid "Modify subscription"
-msgstr ""
-
-#. from froide_payment
-#. de: Zahlungen dieser Dauerspende
-#: templates/froide_payment/subscription/default.html
-msgid "Payments on this subscription"
-msgstr ""
-
-#. from froide_payment
-#. de: Dauerspende jetzt kündigen
-#: templates/froide_payment/subscription/default.html
-msgid "Cancel subscription now"
-msgstr ""
-
-#. from froide_payment
-#. de: Diese Dauerspende wurde am %(date)s gekündigt.
-#: templates/froide_payment/subscription/default.html
-#, python-format
-msgid ""
-"\n"
-"        This subscription has been canceled on %(date)s.\n"
-"        "
-msgstr ""
-
-#. from froide_payment
-#. de: Diese Dauerspende kann geändert werden, sobald die erste Zahlung
-#. eingegangen ist.
-#: templates/froide_payment/subscription/default.html
-msgid "This subscription can be modified after the first payment arrives."
-msgstr ""
-
-#. from froide_payment
-#. de: Spende an {}
-#: templatetags/froide_payment.py
-#, python-brace-format
-msgid "Donation to {}"
-msgstr ""
-
-#. from froide_payment
-#. de: Deine Dauerspende wurde gekündigt.
-#: views.py
-msgid "Your subscription has been canceled."
-msgstr ""
-
-#. from froide_payment
-#. de: Es ist ein Fehler bei unserem Zahlungsanbieter aufgetreten. Wir kümmern
-#. uns darum, dass Deine Dauerspende ordentlich gekündigt wurde.
-#: views.py
-msgid ""
-"An error occurred with our payment provider. We will investigate and make "
-"sure your subscription is properly canceled."
-msgstr ""
-
-#. from froide_payment
-#. de: Deine Dauerspende wurde geändert.
-#: views.py
-msgid "Your subscription has been modified."
-msgstr ""
-
-#. from froide_payment
-#. de: Leider ist beim Ändern Deiner Dauerspende bei unserem Zahlungsanbieter
-#. ein Fehler aufgetreten.
-#: views.py
-msgid ""
-"There was an error modifying your subscription with our payment provider."
-msgstr ""
-
-#. from froide_payment
-#. de: Deine Dauerspende wurde geändert.
-#: views.py
-msgid "The subscription was modified."
-msgstr ""
-
-#. from froide_payment
-#. de: Deine Dauerspende wurde nicht geändert.
-#: views.py
-msgid "The subscription was not modified."
-msgstr ""
-
-#. from fds_donation
-#. de: BLZ
-#: templates/fds_donation/includes/banktransfer_instructions.html
-msgid "Bank code"
-msgstr ""
 
 #. from froide
 #. de: Sie müssen in der Regel nicht Ihre Identität nachweisen! Dies ist nur
@@ -1259,7 +718,332 @@ msgid ""
 "rare cases, for example when requesting information about yourself or to "
 "prove you are a journalist."
 msgstr ""
-"Bei Anfragen an Behörden ist ein Nachweis der Identität in der Regel nicht nötig. "
-"Nur bei Anfragen an private Informationspflichtige ist gesetzlich vorgeschrieben, dass "
-"die Identität „glaubhaft gemacht“ werden muss. Hier empfehlen wir eine weitere Email mit "
-"ID-Austria-Signatur oder Ausweiskopie."
+"Bei Anfragen an Behörden ist ein Nachweis der Identität in der Regel nicht "
+"nötig. Nur bei Anfragen an private Informationspflichtige ist gesetzlich "
+"vorgeschrieben, dass die Identität „glaubhaft gemacht“ werden muss. Hier "
+"empfehlen wir eine weitere Email mit ID-Austria-Signatur oder Ausweiskopie."
+
+#. from AT source
+#: templates/foirequest/cms_plugins/_map.html:25
+#, python-format
+msgid "%(counter)s request without geo data"
+msgid_plural "%(counter)s requests without geo data"
+msgstr[0] ""
+msgstr[1] ""
+
+#. from AT source
+#: fds_mailing/forms.py:86
+msgid "Add segment for remaining subscribers"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/admin.py:395
+msgid "Archive segments"
+msgstr ""
+
+#. from AT source
+#: settings/base.py:43 settings/base.py:254
+msgid "Austrian"
+msgstr ""
+
+#. from AT source
+#: admin.py:1131
+msgid "Banktransfer marked as refunded."
+msgstr ""
+
+#. from AT source
+#: actions.py:26
+msgid "Change tag on donor"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/actions.py:50
+msgid "Change tag on subscriber"
+msgstr ""
+
+#. from AT source
+#: fds_mailing/actions.py:124
+msgid "Check if a subscriber has received a mailing"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/actions.py:93
+msgid "Check if an object has a specific tag"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/actions.py:68
+msgid "Check if an object is in a specific segment"
+msgstr ""
+
+#. from AT source
+#: actions.py:44
+msgid "Checks if object has recently donated"
+msgstr ""
+
+#. from AT source
+#: templates/account/emails/confirmation_mail.html:9
+#, python-format
+msgid ""
+"Cheers,<br/>\n"
+"%(site_name)s"
+msgstr ""
+
+#. from AT source
+#: cms_plugins.py:907
+msgid "Column "
+msgstr ""
+
+#. from AT source
+#: templates/foirequest/snippets/fax_delivery_notice.html:58
+msgid "Donate to FragDenStaat"
+msgstr "FragDenStaat.at Unterstützen"
+
+#. from AT source
+#: admin.py:1343
+msgid "Export as Post Internetmarke CSV"
+msgstr ""
+
+#. from AT source
+#: models.py:1361
+msgid "Has donated since {}"
+msgstr ""
+
+#. from AT source
+#: models.py:1359
+msgid "Has not donated since {}"
+msgstr ""
+
+#. from AT source
+#: fds_mailing/models.py:946
+#, python-brace-format
+msgid "Has not received mailing: {mailing}"
+msgstr ""
+
+#. from AT source
+#: fds_mailing/models.py:948
+#, python-brace-format
+msgid "Has received mailing: {mailing}"
+msgstr ""
+
+#. from AT source
+#: admin_utils.py:239
+msgid "Has starting and active recurrences"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/models.py:742
+msgid "If doesn't have tag"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/models.py:747
+msgid "If doesn't have tag '{}'"
+msgstr ""
+
+#. from AT source
+#: fds_mailing/actions.py:123
+msgid "If has received mailing"
+msgstr ""
+
+#. from AT source
+#: actions.py:43
+msgid "If has recently donated"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/actions.py:92
+msgid "If has tag"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/models.py:749
+msgid "If has tag '{}'"
+msgstr ""
+
+#. from AT source
+#: models.py:1351
+msgid "If hasn't recently donated"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/models.py:730
+msgid "If in segment '{}'"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/actions.py:67
+msgid "If is in segment"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/models.py:723
+msgid "If not in segment"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/models.py:728
+msgid "If not in segment '{}'"
+msgstr ""
+
+#. from AT source
+#: fds_mailing/models.py:937
+msgid "Mailing to check."
+msgstr ""
+
+#. from AT source
+#: admin.py:1109
+msgid "Mark banktransfer donation as refunded"
+msgstr ""
+
+#. from AT source
+#: fds_newsletter/models.py:722 fds_newsletter/models.py:741
+msgid "Negate condition"
+msgstr ""
+
+#. from AT source
+#: fds_mailing/models.py:926
+msgid "Only send this email once to this contact."
+msgstr ""
+
+#. from AT source
+#: cms_plugins.py:414
+msgid "Regular Donors Progress Bar"
+msgstr ""
+
+#. from AT source
+#: templates/foirequest/body/actions/send_message.html:24
+msgid "Replies to the default address are sent by fax"
+msgstr "Nachrichten an die Standardadresse werden per Fax übermittelt"
+
+#. from AT source
+#: fds_newsletter/models.py:718
+msgid "Segment"
+msgstr ""
+
+#. from AT source
+#: fds_mailing/validators.py:9
+msgid "Sender email needs to come from allowed domains."
+msgstr ""
+
+#. from AT source
+#: admin.py:1301
+msgid "Set processing date"
+msgstr ""
+
+#. from AT source
+#: admin.py:1308
+#, python-brace-format
+msgid "Set {count} order to processing."
+msgstr ""
+
+#. from AT source
+#: templates/account/admin_send_mail.html:18
+#, python-format
+msgid "Setup mailing to one user"
+msgid_plural "Setup mailing to %(count)s users"
+msgstr[0] ""
+msgstr[1] ""
+
+#. from AT source
+#: templates/foirequest/snippets/fax_delivery_notice.html:26
+msgid "Some of these requests will be sent by fax"
+msgstr "Manche Anfragen werden per Fax übermittelt"
+
+#. from AT source
+#: fds_newsletter/admin.py:180
+msgid "Start workflow for subscribers..."
+msgstr ""
+
+#. from AT source
+#: templates/foirequest/snippets/fax_delivery_notice.html:27
+msgid ""
+"This public body does not accept requests by email, so your request is "
+"delivered by fax instead. Nothing changes in how you write it, and replies "
+"still reach you by email here."
+msgstr ""
+"Diese Behörde nimmt bürger:innenfeindlicherweise keine Anfragen per Email an, "
+"die Anfrage wird per Fax übermittelt. Eine Antwort per E-Mail an FragDenStaat.at wird "
+"beantragt. Solche Features zu entwickeln ist mühsam und jedes Fax kostet uns Geld."
+
+#. from AT source
+#: templates/foirequest/body/actions/send_message.html:27
+#, python-format
+msgid ""
+"This public body does not accept requests by email. If you select its "
+"default address (%(address)s) a reply sent there is delivered by fax "
+"instead. If you select any other email, the message will be emailed "
+"normally. Replies from the public body still reach you by email here."
+msgstr ""
+"Diese Behörde nimmt bürger:innenfeindlicherweise keine Anfragen per Email an, "
+"Nachrichten an die Standard-Emailadresse (%(address)s) werden stattdessen per Fax übermittelt. "
+"Eine Antwort per E-Mail an eine FragDenStaat.at-Adresse wird beantragt."
+
+#. from AT source
+#: templates/foirequest/snippets/fax_delivery_notice.html:25
+msgid "This request will be sent by fax"
+msgstr "Bürger:innenfeindliche Behörde: Anfrage per Fax"
+
+#. from AT source
+#: fds_newsletter/admin.py:399
+msgid "Unarchive segments"
+msgstr "Segmente aus dem Archiv zurückholen"
+
+#. from AT source
+#: admin.py:1115
+msgid "You can only select one banktransfer donation at a time."
+msgstr "Du kannst nur eine Überweisung auf einmal auswählen."
+
+#. from AT source
+#: templates/fds_donation/donor_detail.html:77
+msgid "Your recurring donation"
+msgid_plural "Your recurring donations"
+msgstr[0] "Deine Dauerspende"
+msgstr[1] "Deine Dauerspenden"
+
+#. from AT source
+#. de: jeden Monat
+#: utils.py:488
+#, python-brace-format
+msgid "every month"
+msgid_plural "every {interval} months"
+msgstr[0] "jeder Monat"
+msgstr[1] "alle {interval} Monate"
+
+#. from AT source
+#: admin.py:1243
+msgid "is processing"
+msgstr "wird verarbeitet"
+
+#. from AT source
+#: models.py:502
+#, python-brace-format
+msgid "{amount} EUR every month via {method} since {start}."
+msgid_plural ""
+"{amount} EUR every {interval} months via {method} since {start}."
+msgstr[0] "{amount} EUR jeden Monat per {method} seit {start}."
+msgstr[1] "{amount} EUR alle {interval} Monate per {method} seit {start}."
+
+#. from AT source
+#: utils.py:476
+#, python-brace-format
+msgid "{amount} every month"
+msgid_plural "{amount} every {interval} months"
+msgstr[0] "{amount} jeden Monat"
+msgstr[1] "{amount} alle {interval} Monate"
+
+#. from AT source
+#: templates/foirequest/snippets/fax_delivery_notice.html:28
+#, python-brace-format
+msgid ""
+"{count} of the {total} public bodies you selected do not accept requests by "
+"email. Those requests are delivered by fax instead. Nothing changes in how "
+"you write them, and replies still reach you by email here."
+msgstr ""
+"{count} der ausgewählten {total} Stellen nehmen Anfragen nicht per Email an. "
+"Anfragen an diese werden per Fax versandt. Am Anfrageprozess ändert das nichts."
+
+#. from AT source
+#: models.py:1355
+msgid "{} days ago"
+msgstr "vor {} Tagen"

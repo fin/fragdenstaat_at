@@ -42,7 +42,7 @@
     "dompurify": "^3.2.5",
     "font-awesome": "^4.7.0",
     "froide": "github:fin/froide#2026-feat-messagekind-initial-message",
-    "froide_payment": "github:okfde/froide-payment",
+    "froide_payment": "github:fin/froide-payment#2026-08-de-sync",
     "pdfjs-dist": "^2.16.105",
     "vega": "^6.1.2",
     "vega-embed": "7.0.2",

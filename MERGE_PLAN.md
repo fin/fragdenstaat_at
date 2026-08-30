@@ -1481,17 +1481,26 @@ JS, the bundle, the dev server and the manifest on disk were all correct.
 ---
 
 **Developer trap, not a deploy step — now guarded.** `uv sync` replaces the
-editable sibling checkouts (`froide`, `froide-payment`,
+editable sibling checkouts (`froide`, `froide-payment`, `froide-fax`,
 `django-filingcabinet`) with the git pins from `pyproject.toml`, because that is
-what the manifest declares. That is correct for production, which has no
-siblings and deploys with `uv sync --locked`. In the devcontainer it means you
-silently start testing upstream `main` instead of your own checkout.
+what the manifest declares. The frontend has the exact same trap: a bare
+`pnpm install` replaces the `pnpm link --global` sibling links (`froide`,
+`froide_payment`, `@okfde/filingcabinet`) with the `github:` pins from
+`package.json`, after which `pnpm run build` compiles the pinned revision. Both
+are correct for production, which has no siblings and builds from the lockfiles.
+In the devcontainer they mean you silently start testing / building the pinned
+revision instead of your own checkout.
 
-Re-apply the editable installs with:
+Re-apply both link sets with:
 
 ```
-./scripts/sync-editables.sh            # idempotent; --check reports only, exit 1 if stale
+./scripts/sync-editables.sh            # Python + frontend; idempotent; --check reports only, exit 1 if stale
 ```
+
+Keeping `package.json`'s fork ref *in step with* `pyproject.toml`'s is a
+separate, committed-config concern (dev is immune, only CI/prod build from the
+pins): `scripts/check_fork_pins.py`, wired into `.pre-commit-config.yaml` so it
+runs in the lint job. `tests/test_fork_pins.py` covers the parser.
 
 `fragdenstaat_at.theme.checks` (`fragdenstaat_at.E001`) now makes this loud:
 `manage.py check` — and therefore `runserver`, `migrate` and the test suite —

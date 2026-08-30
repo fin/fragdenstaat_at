@@ -39,8 +39,8 @@ importers:
         specifier: github:fin/froide#2026-feat-messagekind-initial-message
         version: https://codeload.github.com/fin/froide/tar.gz/2b0d5a817d3e51804cde2b6051bcda58289673f9(fuse.js@7.1.0)(typescript@5.9.2)
       froide_payment:
-        specifier: github:okfde/froide-payment
-        version: https://codeload.github.com/okfde/froide-payment/tar.gz/87bef54b08da0b0c33b3da97266901616831587c
+        specifier: github:fin/froide-payment#2026-08-de-sync
+        version: https://codeload.github.com/fin/froide-payment/tar.gz/9cc3ef3bb93a9166bf9ca96fd7ab5cebab2075df
       pdfjs-dist:
         specifier: ^2.16.105
         version: 2.16.105
@@ -1605,8 +1605,8 @@ packages:
     resolution: {tarball: https://codeload.github.com/fin/froide/tar.gz/2b0d5a817d3e51804cde2b6051bcda58289673f9}
     version: 6.0.0
 
-  froide_payment@https://codeload.github.com/okfde/froide-payment/tar.gz/87bef54b08da0b0c33b3da97266901616831587c:
-    resolution: {tarball: https://codeload.github.com/okfde/froide-payment/tar.gz/87bef54b08da0b0c33b3da97266901616831587c}
+  froide_payment@https://codeload.github.com/fin/froide-payment/tar.gz/9cc3ef3bb93a9166bf9ca96fd7ab5cebab2075df:
+    resolution: {tarball: https://codeload.github.com/fin/froide-payment/tar.gz/9cc3ef3bb93a9166bf9ca96fd7ab5cebab2075df}
     version: 1.0.0
 
   fs.realpath@1.0.0:
@@ -4259,7 +4259,7 @@ snapshots:
       - universal-cookie
       - worker-loader
 
-  froide_payment@https://codeload.github.com/okfde/froide-payment/tar.gz/87bef54b08da0b0c33b3da97266901616831587c:
+  froide_payment@https://codeload.github.com/fin/froide-payment/tar.gz/9cc3ef3bb93a9166bf9ca96fd7ab5cebab2075df:
     dependencies:
       '@stripe/stripe-js': 7.9.0
 

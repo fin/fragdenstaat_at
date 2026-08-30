@@ -23,6 +23,17 @@ repos:
         entry: pnpm lint
         args: [--no-warn-ignored]
 
+      # froide / froide-payment are pinned in both pyproject.toml and
+      # package.json; nothing else keeps the two refs in step. Dev is immune
+      # (devsetup.sh links both to the sibling checkout), so this only matters
+      # in CI -- hence a hook rather than a runtime check.
+      - id: check-fork-pins
+        name: check fork pins (frontend == backend)
+        language: system
+        entry: python3 scripts/check_fork_pins.py
+        pass_filenames: false
+        always_run: true
+
   # - repo: local
   #   hooks:
   #     - id: ensure-consistent-dependencies

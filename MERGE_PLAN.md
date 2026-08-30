@@ -1793,6 +1793,28 @@ as DE. It is also covered by the editable-fork guard (§9.10,
       signature test generates its own keypair, so they prove nacl agrees with
       nacl, not that we interoperate with Telnyx's signing.
 
+**Optional, later: a transport-neutral delivery hook in froide.**
+`froide_fax.status.apply_fax_status` reimplements the tail of
+`froide.foirequest.signals.save_delivery_status` — `DeliveryStatus`
+update-or-create, requester confirmation, deduped `BOUNCE_PUBLICBODY`
+ProblemReport — because that receiver is welded to the email transport at every
+step: it fires only on `email_left_queue` (postfix log parsing), guards on a
+`<foimsg.…>` Message-ID, does its own `email_message_id` lookup, takes a
+pre-mapped status and a `"".join(log)` string, reports on the first failure with
+no retry, and `send_foimessage_sent_confirmation` early-returns for a non-email
+message (hence the copy in `froide_fax/delivery.py`).
+
+Split it: extract `record_delivery_outcome(message, status, log="",
+failure_reason=None)` in froide (does the update-or-create + confirmation +
+report), leave `save_delivery_status` as a thin `email_left_queue` adapter that
+looks the message up and calls it, and make the confirmation transport-neutral
+(drop the `is_email` guard, keep the `original is not None` one). Then
+`apply_fax_status` keeps only the Telnyx status mapping and the retry /
+permanent-failure decision and calls `record_delivery_outcome` directly — no
+signal — which lets `froide_fax/status.py`'s duplicated tail and
+`froide_fax/delivery.py` go away. Spans both forks (froide + froide-fax); AT
+owns both, so it is a real but bounded refactor. **[H]**
+
 ---
 
 ### 9.12 Finding Germany-specific strings that no catalog can reach

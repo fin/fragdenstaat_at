@@ -26,7 +26,7 @@ one. {count} and {total} are substituted client-side.
     {% trans 'This public body does not accept requests by email, so your request is delivered by fax instead. Nothing changes in how you write it, and replies still reach you by email here.' as fax_message_single %}
     {% trans '{count} of the {total} public bodies you selected do not accept requests by email. Those requests are delivered by fax instead. Nothing changes in how you write them, and replies still reach you by email here.' as fax_message_multiple %}
     <div id="fds-fax-delivery-notice"
-         class="alert alert-info"
+         class="alert alert-info container"
          role="alert"
          data-fax-publicbody-ids="{{ fax_publicbody_ids }}"
          data-fax-heading-single="{{ fax_heading_single }}"
@@ -52,7 +52,7 @@ one. {count} and {total} are substituted client-side.
         {% endcomment %}
         {% page_url 'donate' as fax_donate_url %}
         {% if fax_donate_url %}
-            <a href="{{ fax_donate_url }}" class="alert-link d-inline-block mt-2">
+            <a href="{{ fax_donate_url }}" class="alert-link d-inline-block mt-2" target="_blank">
                 {% blocktrans trimmed %}
                     Donate to FragDenStaat
                 {% endblocktrans %}

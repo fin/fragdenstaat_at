@@ -39,9 +39,13 @@ class FragDenStaat(FragDenStaatBase):
     # falling back to plain StaticFilesStorage. STORAGES below states that
     # explicitly rather than relying on the fallback.
     #
-    # previously NOT ManifestStaticFilesStorage: AT dropped hashing deliberately (a missing
-    # sourcemap makes the manifest backend raise on collectstatic). Verified
-    # against the live site -- every template-rendered asset is unhashed.
+    # NOT ManifestStaticFilesStorage: AT dropped hashing deliberately. The
+    # manifest backend's post_process rewrites sourceMappingURL comments and
+    # raises when the target is missing -- django_json_widget ships
+    # dist/jsoneditor.min.js with a `sourceMappingURL=jsoneditor.map` comment
+    # but no jsoneditor.map, so collectstatic dies. base.py already uses the
+    # plain backend; this keeps production in step. (Briefly flipped to the
+    # manifest backend in 514038b; that broke the deploy -- see 434af7f.)
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -51,7 +55,7 @@ class FragDenStaat(FragDenStaatBase):
             "OPTIONS": {"allow_overwrite": True},
         },
         "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
         },
     }
     STATIC_URL = env("STATIC_URL", "https://static.frag.denstaat.at/static/")

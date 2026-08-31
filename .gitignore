@@ -24,6 +24,11 @@ data/
 htmlcov/
 .coverage
 
+# Local interpreter selection only. The devcontainer image is Python 3.13,
+# devsetup.sh exports UV_PYTHON=3.13, and CI sets the version via the matrix,
+# so a tracked pin adds nothing; leave it free for pyenv/local overrides.
+.python-version
+
 patch_*
 fragdenstaat_de_at_*
 

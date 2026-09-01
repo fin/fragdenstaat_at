@@ -86,4 +86,7 @@ def inject_status_change(request, **kwargs):
         return redirect("/spenden/erfolgreiche-anfrage/?" + params)
 
 
-registry.register("post_status_set", inject_status_change)
+# Disabled for now: redirected the requester to /spenden/erfolgreiche-anfrage/
+# after they marked their own request (partially) successful. Re-enable by
+# uncommenting; the handler above is left in place.
+# registry.register("post_status_set", inject_status_change)

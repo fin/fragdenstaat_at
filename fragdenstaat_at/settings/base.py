@@ -106,6 +106,11 @@ class FragDenStaatBase(German, Base):
                 "djangocms_frontend.contrib.collapse",
                 "djangocms_frontend.contrib.content",
                 "djangocms_frontend.contrib.grid",
+                # Provides the `icon_tags` templatetag library that the link and
+                # navigation components load; without it any djangocms_frontend
+                # plugin that renders an icon raises TemplateSyntaxError. Icon is
+                # a proxy model, so enabling it adds no table.
+                "djangocms_frontend.contrib.icon",
                 # We use djangocms_picture instead
                 # "djangocms_frontend.contrib.image",
                 "djangocms_frontend.contrib.jumbotron",

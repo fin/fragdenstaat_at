@@ -1777,6 +1777,27 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0b/60/7714c7f1339e063ad2e0964870797610c23191c180fc2713be100cc82d1a/feedgen-0.9.0.tar.gz", hash = "sha256:8e811bdbbed6570034950db23a4388453628a70e689a6e8303ccec430f5a804a", size = 217925, upload-time = "2020-01-28T17:12:58.861Z" }
 
 [[package]]
+name = "feedparser"
+version = "6.0.14"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "feedparser-sgmllib" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/37/8a/a53da4a77352045d277978a2df322d5379369f9deb1707178899ff7e1121/feedparser-6.0.14.tar.gz", hash = "sha256:088679b0c4b543ee211a820dd544698c76a402122eae7473c04a43425f283d06", size = 286108, upload-time = "2026-07-30T14:07:40.491Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7f/61/f04912e63702e73fb2a378f9c0a1ad9eb17a334a11a6b3fe1daa593903c2/feedparser-6.0.14-py3-none-any.whl", hash = "sha256:e35e3f760151b0c3b22cac9684155cae186a233e16c49bcbc6c49e91e3131137", size = 80668, upload-time = "2026-07-30T14:07:39.175Z" },
+]
+
+[[package]]
+name = "feedparser-sgmllib"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/df/38596299216e5c22d60ed7f97902bb2bc72cfb95f732400f4fa976fd2e62/feedparser_sgmllib-2.1.0.tar.gz", hash = "sha256:61facf2918c4389b5b00714f76c5e03431ffcd94cd1f51d657edd6cd7c396579", size = 26845, upload-time = "2026-08-02T21:27:53.891Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/a0/79a31f898092e145bd66e2b338fb0656979acb2bbbcae8220940fbfcd820/feedparser_sgmllib-2.1.0-py3-none-any.whl", hash = "sha256:2cab2d43b95a954f920f18aebce7a4dbbb3f539780b127e2aa114f579821e01d", size = 11652, upload-time = "2026-08-02T21:27:52.894Z" },
+]
+
+[[package]]
 name = "fido2"
 version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1858,6 +1879,7 @@ dependencies = [
     { name = "elasticsearch" },
     { name = "elasticsearch-dsl" },
     { name = "fcdocs-annotate" },
+    { name = "feedparser" },
     { name = "froide" },
     { name = "froide-fax" },
     { name = "froide-payment" },
@@ -1988,6 +2010,7 @@ requires-dist = [
     { name = "elasticsearch", specifier = ">=8.0.0,<9.0.0" },
     { name = "elasticsearch-dsl", specifier = ">=8.0.0,<9.0.0" },
     { name = "fcdocs-annotate", git = "https://github.com/okfde/fcdocs-annotate.git?rev=main" },
+    { name = "feedparser", specifier = ">=6.0.11" },
     { name = "froide", git = "https://github.com/fin/froide.git?rev=2026-feat-messagekind-initial-message" },
     { name = "froide-fax", git = "https://github.com/fin/froide-fax.git?rev=main" },
     { name = "froide-payment", git = "https://github.com/fin/froide-payment.git?rev=2026-08-de-sync" },

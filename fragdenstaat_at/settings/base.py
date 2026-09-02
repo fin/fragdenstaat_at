@@ -86,6 +86,7 @@ class FragDenStaatBase(German, Base):
                 "cookie_consent",
                 "fragdenstaat_at.fds_newsletter.apps.NewsletterConfig",
                 "fragdenstaat_at.fds_cms.apps.FdsCmsConfig",
+                "fragdenstaat_at.fds_cms_at.apps.FdsCmsAtConfig",
                 "fragdenstaat_at.fds_donation.apps.FdsDonationConfig",
                 "fragdenstaat_at.fds_mailing.apps.FdsMailingConfig",
                 # "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",

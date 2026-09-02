@@ -922,6 +922,11 @@ wrong data in front of real people or break the deploy.
       `0005_faxoverride_email_copy`), all new tables plus one `AddField`
       (`FaxOverride.email_copy`); nothing pre-existing is touched.
       Introduced by enabling the app, see §9.13.
+- [ ] **`migrate fds_cms_at`** — one migration (`0001_initial`), two new tables
+      (`RSSFeedCache`, `RSSFeedCMSPlugin`). AT-only app for the RSS-feed CMS
+      plugin; `feedparser` is a new dependency (in `uv.lock`). Beat gains
+      `refresh-rss-feeds` (every 30 min, `fragdenstaat_at.fds_cms_at.*`, default
+      queue).
 - [ ] **`uv sync --locked`**, shipping `uv.lock` and `pyproject.toml` with the
       code (§9.10). A plain `uv sync` may re-resolve and hand production an
       untested set.

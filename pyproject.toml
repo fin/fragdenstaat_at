@@ -74,6 +74,7 @@ dependencies = [
   "drf-spectacular>=0.28.0",
   "elasticsearch-dsl>=8.0.0,<9.0.0",
   "elasticsearch<9.0.0,>=8.0.0",
+  "feedparser>=6.0.11",
   "geoip2>=4.8.0",
   "html-text>=0.7.0",
   "icalendar>=6.3.1",

@@ -1,0 +1,26 @@
+{% load i18n %}
+{% if entries %}
+    <section class="rss-feed">
+        {% if feed_title %}
+            <h3 class="rss-feed__title h5">{{ feed_title }}</h3>
+        {% endif %}
+        <ul class="rss-feed__list list-unstyled mb-0">
+            {% for entry in entries %}
+                <li class="rss-feed__entry mb-3">
+                    <a class="rss-feed__link fw-semibold" href="{{ entry.link }}" rel="noopener nofollow">{{ entry.title }}</a>
+                    {% if entry.published_dt %}
+                        <time class="rss-feed__date d-block text-body-secondary small" datetime="{{ entry.published_dt|date:'c' }}">{{ entry.published_dt|date:'DATE_FORMAT' }}</time>
+                    {% endif %}
+                    {% if instance.show_summary and entry.summary %}
+                        <p class="rss-feed__summary mb-0">{{ entry.summary }}</p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+{% elif request.toolbar.edit_mode_active %}
+    <div class="alert alert-warning">
+        {% blocktranslate with url=instance.url %}RSS feed <code>{{ url }}</code> has no cached entries yet.{% endblocktranslate %}
+        {% if feed.error %}<br><small>{% translate "Last fetch error" %}: {{ feed.error }}</small>{% endif %}
+    </div>
+{% endif %}

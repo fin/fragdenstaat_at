@@ -186,10 +186,12 @@ class FragDenStaat(FragDenStaatBase):
     def CELERY_BEAT_SCHEDULE(self):
         from celery.schedules import crontab
 
-        TEMP = super(FragDenStaat, self).CELERY_BEAT_SCHEDULE
-        TEMP["check_mail_log"] = {
-            "task": "froide.helper.tasks.check_mail_log",
-            "schedule": crontab(),
+        TEMP = dict(super(FragDenStaat, self).CELERY_BEAT_SCHEDULE)
+        # check_mail_log used to be re-added here; froide's base schedule now
+        # carries an identical entry, so only the AT-only tasks remain.
+        TEMP["refresh-rss-feeds"] = {
+            "task": "fragdenstaat_at.fds_cms_at.refresh_rss_feeds",
+            "schedule": crontab(minute="*/30"),
         }
         return TEMP
 

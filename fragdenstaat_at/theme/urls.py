@@ -109,6 +109,7 @@ urlpatterns += i18n_patterns(
     *froide_urlpatterns,
     *jurisdiction_urls,
     *admin_urls,
+    path("cookies/", include("cookie_consent.urls")),
     path("", include("cms.urls")),
     prefix_default_language=False,
 )

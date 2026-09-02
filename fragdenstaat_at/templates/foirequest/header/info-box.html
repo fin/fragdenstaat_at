@@ -1,5 +1,17 @@
 {% extends "foirequest/header/info-box.html" %}
+{% load i18n foirequest_tags %}
 
 {% block foirequest_explain_deadline %}
 <a class="d-print-none" href="/hilfe/fuer-behoerden/wie-errechnen-sie-die-frist-die-auf-den-anfrage-seiten-angezeigt-wird/" title="Wie wird das berechnet?"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a>
+{% if object.due_date and object|can_write_foirequest:request %}
+    {# froide's own control (the pencil next to the date) extends by a number #}
+    {# of days, capped at 15; this adds a flat four-week jump in one click. #}
+    <form class="disable-submit d-print-none mt-1" method="post"
+          action="{% url 'fds-extend-deadline-4weeks' slug=object.slug %}">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-outline-secondary" type="submit">
+            {% trans "Extend deadline by four weeks" %}
+        </button>
+    </form>
+{% endif %}
 {% endblock %}

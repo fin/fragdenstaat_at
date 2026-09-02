@@ -1483,3 +1483,11 @@ msgstr "sichtbar"
 #| msgid "Subscribers imported."
 msgid "{} subscriber imports have been queued."
 msgstr "{} Abonnement-Imports werden gestartet."
+
+#: fragdenstaat_at/theme/views.py
+msgid "Deadline has been extended by four weeks."
+msgstr "Frist wurde um vier Wochen verlängert."
+
+#: fragdenstaat_at/templates/foirequest/header/info-box.html
+msgid "Extend deadline by four weeks"
+msgstr "Frist um vier Wochen verlängern"

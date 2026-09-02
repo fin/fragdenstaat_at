@@ -15,6 +15,7 @@ from fragdenstaat_at.fds_cms.sitemaps import FdsCMSSitemap
 
 from .views import (  # , glyphosat_download, meisterschaften_tippspiel
     FDSAnnotationView,
+    extend_deadline_four_weeks,
     fax_letter_debug,
 )
 
@@ -52,6 +53,11 @@ urlpatterns = [
     path("payments/", include("froide_payment.payments_urls")),
     path("payment/", include("froide_payment.urls")),
     path("fcdocs_annotate/", FDSAnnotationView.as_view(), name="annotate-view"),
+    path(
+        "r/<slug:slug>/frist-um-4-wochen-verlaengern/",
+        extend_deadline_four_weeks,
+        name="fds-extend-deadline-4weeks",
+    ),
     # ),
     # ),
     # ),

@@ -22,9 +22,11 @@ footer img.img-fluid {
   }
 } 
 
-.homepage-steps {
+// The div.* / &__number / &__text markup below is the old snippet layout.
+// New content is authored as <ol class="homepage-steps"><li>...</li></ol> in a
+// CMS text plugin -- see the `ol.homepage-steps` block at the end.
+div.homepage-steps {
   position: relative;
-
   &__wrap {
     display: flex;
     flex-direction: column;
@@ -62,15 +64,12 @@ footer img.img-fluid {
   align-items: center;
   margin-bottom: $spacer * 1.5;
 
-  text-decoration: none !important;
-
   &:last-child {
     margin-bottom: 0;
-    // background-color: white; // hide dashed line
+    background-color: var(--#{$prefix}body-bg); // hide dashed line
   }
 
   &__text {
-    color: black;
     max-width: 255px;
     font-size: $font-size-sm;
     line-height: $line-height-smaller;
@@ -88,7 +87,7 @@ footer img.img-fluid {
     border-radius: 50%;
     font-size: $font-size-base * 1.125;
     margin-right: $spacer;
-    background-color: white;
+    background-color: var(--#{$prefix}body-bg);
     box-shadow: $box-shadow-gray-sm;
   }
 
@@ -136,9 +135,9 @@ footer img.img-fluid {
 }
 
 @mixin number-highlight() {
-  background-color: $blue-600;
-  border-color: $blue-600;
-  color: $white;
+  background-color: var(--#{$prefix}primary-bg-subtle);
+  border-color: var(--#{$prefix}primary-bg-subtle);
+  color: var(--#{$prefix}body-color);
   box-shadow: $box-shadow-gray-sm;
 }
 
@@ -157,6 +156,61 @@ footer img.img-fluid {
 @keyframes step-3 {
   75% {
     @include number-highlight;
+  }
+}
+
+// The authorable variant: a plain <ol class="homepage-steps"> in a text plugin.
+// li::before is the numbered circle; the dashed rail runs down the left.
+ol.homepage-steps {
+  display: flex;
+  flex-direction: column;
+  gap: $spacer;
+  list-style: none;
+  padding: 0;
+  padding-bottom: $spacer;
+  margin: 0;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 2px;
+    left: 1.5rem;
+    height: 100%;
+    border-left: 1px dashed $gray-500;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 4em;
+    min-height: 3em;
+
+    &::before {
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      content: '1';
+      top: 0;
+      left: 0;
+      width: 3em;
+      height: 3em;
+      border-radius: 50%;
+      border: 1px solid $blue-20;
+      background-color: var(--#{$prefix}body-bg);
+      box-shadow: 2px 2px 0 $gray-100;
+    }
+
+    &:nth-child(2)::before {
+      content: '2';
+    }
+
+    &:nth-child(3)::before {
+      content: '3';
+    }
   }
 }
 

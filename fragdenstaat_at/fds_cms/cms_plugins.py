@@ -964,10 +964,3 @@ class HomepageHeroPlugin(CMSPluginBase):
             }
         )
         return context
-
-
-@plugin_pool.register_plugin
-class HomepageHowPlugin(CMSPluginBase):
-    module = _("Homepage")
-    name = _("Homepage How")
-    render_template = "snippets/homepage_how.html"

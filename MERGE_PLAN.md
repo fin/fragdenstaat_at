@@ -671,6 +671,12 @@ parallelism now the suite is larger. **[R]**
    - **`fds_cms`**: DE's modules and templates adopted, schema forward-ported as
      AT `0008`. The 9 AT-only plugin classes re-applied. `datashow` and
      `cookie_consent` registered. Verified by rendering all 10 real CMS pages.
+     `HomepageHowPlugin` + `snippets/homepage_how.html` since removed (8 AT-only
+     plugins now); the hard-coded 3-step homepage block is authored as
+     `<ol class="homepage-steps">` in a Text plugin, styled by
+     `frontend/styles/homepage.scss` (ported from DE). Deploy: if any page still
+     has a placed `HomepageHow` plugin, `manage.py cms delete-orphaned-plugins`
+     after the code lands (django-cms renders an unregistered plugin as nothing).
    - **`theme`**: DE's `search.py`, `apps.py`, `cms_utils.py`, `models.py`,
      `utils.py`, `middleware.py`, `translation.py` adopted. Kept as AT's:
      `admin.py` (minimal subset — DE's drags back `django-amenities`),

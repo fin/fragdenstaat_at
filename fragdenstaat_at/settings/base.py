@@ -58,7 +58,14 @@ class FragDenStaatBase(German, Base):
     def INSTALLED_APPS(self):
         installed = super(FragDenStaatBase, self).INSTALLED_APPS
         installed.default = (
-            ["fragdenstaat_at.theme"]
+            # django-cms 5.1 dropped its hard dependency on an admin-style
+            # package; without one, djangocms-attributes-field's key/value
+            # widget (root_attributes / container_attributes on the Design
+            # Container plugin) renders its "add pair" control as a 0x0
+            # element. djangocms_simple_admin_style (the django-cms[admin-style]
+            # extra) gives it a size again. It must precede django.contrib.admin
+            # (pulled in via froide's INSTALLED_APPS) so its base_site.html wins.
+            ["fragdenstaat_at.theme", "djangocms_simple_admin_style"]
             + installed.default
             + [
                 "django.contrib.postgres",
@@ -67,6 +74,13 @@ class FragDenStaatBase(German, Base):
                 "djangocms_alias",
                 "menus",
                 "sekizai",
+                # Export/import plugin trees as JSON (toolbar: Page > Export /
+                # Import), for moving CMS content between environments. Stateless
+                # -- no models, no migrations. Note it serialises plugin FKs as
+                # raw pks, so a subtree referencing filer images, pages, public
+                # bodies or datashow datasets needs those references re-checked
+                # after an import into a different database.
+                "djangocms_transfer",
                 # easy thumbnails comes from froide
                 "easy_thumbnails.optimize",
                 "filer",

@@ -677,6 +677,16 @@ parallelism now the suite is larger. **[R]**
      `frontend/styles/homepage.scss` (ported from DE). Deploy: if any page still
      has a placed `HomepageHow` plugin, `manage.py cms delete-orphaned-plugins`
      after the code lands (django-cms renders an unregistered plugin as nothing).
+   - **`djangocms_transfer`** enabled, matching DE (`settings/base.py`). The
+     package was already in `pyproject.toml`, only the app was missing. Adds
+     *Export* / *Import* to the toolbar's Page menu (whole page, one placeholder
+     or one plugin subtree, as JSON) for moving content between environments.
+     Stateless — no models, no migrations. Two things to know when importing
+     across databases: plugin FKs are serialised as **raw pks** (filer images,
+     page link targets, public bodies, datashow datasets all need re-checking on
+     the target), and the importer recreates the tree from the exported
+     `position`/`parent_id`, so run `manage.py fix_plugin_positions` afterwards.
+     Remaining DE app AT still lacks: `djangocms_audio`.
    - **`theme`**: DE's `search.py`, `apps.py`, `cms_utils.py`, `models.py`,
      `utils.py`, `middleware.py`, `translation.py` adopted. Kept as AT's:
      `admin.py` (minimal subset — DE's drags back `django-amenities`),

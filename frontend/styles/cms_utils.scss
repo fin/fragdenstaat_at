@@ -75,6 +75,17 @@
 }
 
 /*
+  Force a transparent background. froide's .text-bg-body sets its background
+  with !important, so the standalone class needs !important too; the compound
+  selector additionally wins on specificity, so it holds regardless of import
+  order or another later !important background rule.
+*/
+.force-bg-transparent,
+.text-bg-body.force-bg-transparent {
+  background-color: transparent !important;
+}
+
+/*
   Backdrop with 50% height
 */
 

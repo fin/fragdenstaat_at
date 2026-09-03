@@ -86,6 +86,18 @@
 }
 
 /*
+  bg-opacity utility. froide's $utilities map replaces Bootstrap's default
+  bg-opacity values with only 90, but djangocms-frontend's "Background opacity"
+  control on Card/Jumbotron/... emits .bg-opacity-{10,25,50,75,100}. Re-add the
+  standard steps (froide's .bg-opacity-90 still comes from its own build).
+*/
+@each $level, $value in (10: 0.1, 25: 0.25, 50: 0.5, 75: 0.75, 100: 1) {
+  .bg-opacity-#{$level} {
+    --#{$prefix}bg-opacity: #{$value};
+  }
+}
+
+/*
   Backdrop with 50% height
 */
 

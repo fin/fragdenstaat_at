@@ -51,6 +51,30 @@
 }
 
 /*
+  Subtle theme backgrounds
+
+  Bootstrap emits --bs-<c>-bg-subtle (a colour) but never its -rgb triplet, and
+  froide's $bootstrap-extras .text-bg-*-subtle rules do `RGBA(var(--bs-<c>-bg-subtle-rgb), ...)`
+  -- an undefined var, so those backgrounds silently drop out. Emit the -rgb
+  defaults, and bind a .text-bg-*-subtle for every theme colour (Bootstrap and
+  froide only ship light/dark). fds_cms's Design Container offers all of these
+  as background choices via theme/colors.py.
+*/
+
+:root {
+  @each $name, $value in $theme-colors-bg-subtle {
+    --#{$prefix}#{$name}-bg-subtle-rgb: #{to-rgb($value)};
+  }
+}
+
+@each $name in (primary, secondary, success, info, warning, danger, light, dark) {
+  .text-bg-#{$name}-subtle {
+    color: var(--#{$prefix}#{$name}-text-emphasis);
+    background-color: var(--#{$prefix}#{$name}-bg-subtle) !important;
+  }
+}
+
+/*
   Backdrop with 50% height
 */
 

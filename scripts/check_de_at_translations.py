@@ -16,15 +16,19 @@ render *after that catalogue is deleted* --
   * shadowed  fragdenstaat_at already overrides it; the package entry is dead
   * duplicate it only repeats the package's own ``de``
   * mirrored  fragdenstaat_at reproduces exactly the same string
-  * BLOCKER   nothing else yields this string; deleting the catalogue would
-              change rendered output
+  * stale     nothing else yields it, BUT the package no longer uses the msgid
+              (gone from / obsolete in its own ``de`` .po), so nothing renders
+              it either -- harmless to drop
+  * BLOCKER   nothing else yields it and the package still uses it; deleting
+              the catalogue would change rendered output
 
-Exit status is 0 only with no blockers -- i.e. the ``de_AT`` catalogue is safe
-to delete. (The package's ``de`` catalogue is the primary German translation
-and is not assessed for deletion.)
+Exit status is 0 only with no blockers. ``--grep`` additionally scans the
+package source for each msgid literal (best-effort: blocktrans splits and
+format strings can hide a real use).
 
     scripts/check_de_at_translations.py froide
-    scripts/check_de_at_translations.py --show mirrored,duplicate froide
+    scripts/check_de_at_translations.py --grep --show all froide
+    scripts/check_de_at_translations.py --emit-po froide   # blockers as a .po
 
 Accepts an import name (``froide``, ``djangocms_frontend.contrib.card``) or a
 path. Needs polib (a project dependency).
@@ -43,7 +47,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = REPO_ROOT / "fragdenstaat_at"
 
 Key = tuple[str, str]  # (msgid, msgctxt)
-CATEGORIES = ("shadowed", "duplicate", "mirrored", "blocker")
+CATEGORIES = ("shadowed", "duplicate", "mirrored", "stale", "blocker")
+SOURCE_SUFFIXES = (".py", ".html", ".txt", ".jinja", ".jinja2", ".j2")
 
 
 def _key(entry) -> Key:
@@ -64,14 +69,41 @@ def _is_translated(entry) -> bool:
     return bool(entry.msgstr.strip())
 
 
-def _load(lc_messages_dir: Path) -> dict[Key, object]:
-    """Translated entries of the django catalogue in a LC_MESSAGES dir."""
+def _catalogue_path(lc_messages_dir: Path) -> Path | None:
     for name in ("django.po", "django.mo"):
         path = lc_messages_dir / name
         if path.exists():
-            reader = polib.pofile if path.suffix == ".po" else polib.mofile
-            return {_key(e): _value(e) for e in reader(str(path)) if _is_translated(e)}
-    return {}
+            return path
+    return None
+
+
+def _read(path: Path):
+    return polib.pofile(str(path)) if path.suffix == ".po" else polib.mofile(str(path))
+
+
+def _load(lc_messages_dir: Path) -> dict[Key, object]:
+    """Translated entries of the django catalogue in a LC_MESSAGES dir."""
+    path = _catalogue_path(lc_messages_dir)
+    if path is None:
+        return {}
+    return {_key(e): _value(e) for e in _read(path) if _is_translated(e)}
+
+
+def _index(lc_messages_dir: Path) -> tuple[set[Key], set[Key]]:
+    """(live keys, obsolete keys) of the de catalogue -- what the package still
+    extracts vs. what it dropped. A .mo carries no obsolete info."""
+    path = _catalogue_path(lc_messages_dir)
+    if path is None:
+        return set(), set()
+    live, gone = set(), set()
+    if path.suffix == ".mo":
+        return {_key(e) for e in _read(path)}, gone
+    po = polib.pofile(str(path))
+    for e in po:
+        live.add(_key(e))
+    for e in po.obsolete_entries():
+        gone.add(_key(e))
+    return live, gone
 
 
 def _merge(target: dict, lc_messages_dir: Path) -> None:
@@ -110,6 +142,28 @@ def de_at_locale_dirs(pkg_dir: Path):
         yield (de if de.is_dir() else None), de_at
 
 
+def load_source_blob(pkg_dir: Path) -> str:
+    """Every source file concatenated once, for literal msgid lookups."""
+    parts = []
+    for path in pkg_dir.rglob("*"):
+        if path.suffix in SOURCE_SUFFIXES and "/locale/" not in str(path):
+            try:
+                parts.append(path.read_text("utf-8", errors="ignore"))
+            except OSError:
+                pass
+    return "\n".join(parts)
+
+
+def source_has(msgid: str, blob: str) -> bool:
+    if not msgid.strip():
+        return False
+    if "\n" not in msgid:
+        return msgid in blob
+    # blocktrans splits across lines; the longest line is the best probe.
+    probe = max((ln.strip() for ln in msgid.splitlines()), key=len, default="")
+    return len(probe) > 3 and probe in blob
+
+
 def classify(key: Key, value, *, pkg_de: dict, proj_de_at: dict, proj_de: dict):
     """Category + the string de-at would show once the de_AT catalogue is gone."""
     if key in proj_de_at:
@@ -124,20 +178,38 @@ def classify(key: Key, value, *, pkg_de: dict, proj_de_at: dict, proj_de: dict):
     return "blocker", key[0]  # nothing left: renders the msgid
 
 
-def analyse(pkg_dir: Path):
+def usage_note(key: Key, live: set[Key], gone: set[Key]) -> tuple[str, str]:
+    """(category-override, human note) once a row is otherwise a blocker."""
+    if key in gone:
+        return "stale", "obsolete (#~) in the package's de .po"
+    if key not in live:
+        return "stale", "not in the package's de .po"
+    return "blocker", "still extracted in the package's de .po"
+
+
+def analyse(pkg_dir: Path, grep_blob: str | None):
     proj_de_at = load_project_catalogues("de_AT")
     proj_de = load_project_catalogues("de")
 
-    rows: list[tuple[str, Key, object, object]] = []
+    rows = []
     n_catalogues = 0
     for de_dir, de_at_dir in de_at_locale_dirs(pkg_dir):
         n_catalogues += 1
         pkg_de = _load(de_dir) if de_dir else {}
+        live, gone = _index(de_dir) if de_dir else (set(), set())
         for key, value in _load(de_at_dir).items():
             category, after = classify(
                 key, value, pkg_de=pkg_de, proj_de_at=proj_de_at, proj_de=proj_de
             )
-            rows.append((category, key, value, after))
+            note = ""
+            if category == "blocker":
+                category, note = usage_note(key, live, gone)
+                if grep_blob is not None:
+                    hit = source_has(key[0], grep_blob)
+                    note += "; msgid %s in source" % ("found" if hit else "NOT found")
+                    if not hit and category == "blocker":
+                        category = "stale"
+            rows.append((category, key, value, after, note))
     return rows, n_catalogues
 
 
@@ -145,6 +217,24 @@ def _fmt(value) -> str:
     text = " / ".join(value) if isinstance(value, tuple) else str(value)
     text = text.replace("\n", "\\n")
     return text if len(text) <= 70 else text[:67] + "..."
+
+
+def _emit_po(rows, package):
+    po = polib.POFile(wrapwidth=78)
+    po.metadata = {"Content-Type": "text/plain; charset=UTF-8"}
+    for _c, (msgid, ctxt), value, _after, _note in sorted(
+        r for r in rows if r[0] == "blocker"
+    ):
+        entry = polib.POEntry(
+            msgid=msgid, msgctxt=ctxt or None, comment="from " + package
+        )
+        if isinstance(value, tuple):
+            entry.msgid_plural = msgid
+            entry.msgstr_plural = dict(enumerate(value))
+        else:
+            entry.msgstr = value
+        po.append(entry)
+    print(str(po))
 
 
 def main() -> int:
@@ -159,10 +249,16 @@ def main() -> int:
         f"({', '.join(CATEGORIES)}, or 'all'; default: blocker)",
     )
     parser.add_argument(
+        "--grep",
+        action="store_true",
+        help="also scan the package source for each msgid literal; a blocker "
+        "whose msgid is nowhere in the source is downgraded to stale",
+    )
+    parser.add_argument(
         "--emit-po",
         action="store_true",
         help="instead of a report, print the blocker entries as a .po fragment "
-        "ready to paste into fragdenstaat_at/locale/de_AT (makes the delete safe)",
+        "ready to paste into fragdenstaat_at/locale/de_AT",
     )
     args = parser.parse_args()
 
@@ -171,28 +267,15 @@ def main() -> int:
         show = set(CATEGORIES)
 
     pkg_dir = package_dir(args.package)
-    rows, n_catalogues = analyse(pkg_dir)
+    blob = load_source_blob(pkg_dir) if args.grep else None
+    rows, n_catalogues = analyse(pkg_dir, blob)
 
     if n_catalogues == 0:
         print(f"{args.package}: no de_AT catalogue found - nothing to delete")
         return 0
 
     if args.emit_po:
-        po = polib.POFile(wrapwidth=78)
-        po.metadata = {"Content-Type": "text/plain; charset=UTF-8"}
-        for _c, (msgid, ctxt), value, _after in sorted(
-            r for r in rows if r[0] == "blocker"
-        ):
-            entry = polib.POEntry(
-                msgid=msgid, msgctxt=ctxt or None, comment="from " + args.package
-            )
-            if isinstance(value, tuple):
-                entry.msgid_plural = msgid
-                entry.msgstr_plural = dict(enumerate(value))
-            else:
-                entry.msgstr = value
-            po.append(entry)
-        print(str(po))
+        _emit_po(rows, args.package)
         return 0
 
     counts = dict.fromkeys(CATEGORIES, 0)
@@ -213,12 +296,14 @@ def main() -> int:
         if not listed:
             continue
         print(f"\n{category} ({len(listed)}):")
-        for _category, key, value, after in listed:
+        for _category, key, value, after, note in listed:
             msgid, ctxt = key
             print(f"  {msgid[:78]!r}" + (f"  [ctx: {ctxt}]" if ctxt else ""))
             print(f"      de_AT : {_fmt(value)}")
             if category != "mirrored":
                 print(f"      after : {_fmt(after)}")
+            if note:
+                print(f"      used  : {note}")
 
     if counts["blocker"]:
         print(
@@ -228,9 +313,13 @@ def main() -> int:
             "check whether 'after' is in fact the better string."
         )
         return 1
+
+    tail = (
+        " (some entries are stale but nothing renders them)" if counts["stale"] else ""
+    )
     print(
         f"\nsafe - {args.package}'s de_AT catalogue adds nothing over "
-        "fragdenstaat_at's catalogues and the package's own de."
+        f"fragdenstaat_at's catalogues and the package's own de{tail}."
     )
     return 0
 

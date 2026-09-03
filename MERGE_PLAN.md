@@ -933,6 +933,15 @@ wrong data in front of real people or break the deploy.
       plugin; `feedparser` is a new dependency (in `uv.lock`). Beat gains
       `refresh-rss-feeds` (every 30 min, `fragdenstaat_at.fds_cms_at.*`, default
       queue).
+- [ ] **`manage.py fix_plugin_positions`** — the imported CMS content carries
+      plugins whose `position` does not match the plugin tree (a child ordered
+      at or before its parent), which makes django-cms refuse *new* plugins in
+      that placeholder with "Plugin position must be greater than N". django-cms
+      has no fix for this: `cms fix-tree` only repairs the Page tree, and
+      `Placeholder._recalculate_plugin_positions()` renumbers *in current
+      position order*, so a mis-ordered child stays mis-ordered. Run `--dry-run`
+      first. On the dev extract this was 3 placeholders / 61 plugins, 7
+      violations -> 0.
 - [ ] **`uv sync --locked`**, shipping `uv.lock` and `pyproject.toml` with the
       code (§9.10). A plain `uv sync` may re-resolve and hand production an
       untested set.

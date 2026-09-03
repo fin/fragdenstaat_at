@@ -126,6 +126,45 @@ def test_refresh_all_fans_out_over_distinct_urls(monkeypatch):
     assert sorted(called) == sorted([FEED_URL, other])
 
 
+def test_priming_the_cache_fetches_the_feed_synchronously(monkeypatch):
+    monkeypatch.setattr(tasks.requests, "get", _fake_get(FakeResponse(content=RSS)))
+
+    RSSFeedPlugin.prime_feed_cache(FEED_URL)
+
+    cache = RSSFeedCache.objects.get(url=FEED_URL)
+    assert [e["title"] for e in cache.entries] == ["Newest post", "Older post"]
+
+
+def test_priming_the_cache_skips_an_already_fetched_feed(monkeypatch):
+    RSSFeedCache.objects.create(
+        url=FEED_URL,
+        data={"feed_title": "Example Blog", "entries": [{"title": "kept"}]},
+        fetched_at=tasks.timezone.now(),
+    )
+
+    def boom(url, headers=None, timeout=None):
+        raise AssertionError("should not fetch when the cache is already populated")
+
+    monkeypatch.setattr(tasks.requests, "get", boom)
+
+    RSSFeedPlugin.prime_feed_cache(FEED_URL)
+
+    assert [e["title"] for e in RSSFeedCache.objects.get(url=FEED_URL).entries] == [
+        "kept"
+    ]
+
+
+def test_priming_the_cache_swallows_fetch_errors(monkeypatch):
+    def boom(url, headers=None, timeout=None):
+        raise tasks.requests.RequestException("connection refused")
+
+    monkeypatch.setattr(tasks.requests, "get", boom)
+
+    RSSFeedPlugin.prime_feed_cache(FEED_URL)  # must not raise
+
+    assert "connection refused" in RSSFeedCache.objects.get(url=FEED_URL).error
+
+
 def _render(instance):
     context = RSSFeedPlugin().render({"instance": instance}, instance, None)
     return render_to_string("fds_cms_at/rss_feed.html", context)
@@ -177,6 +216,23 @@ def test_plugin_count_and_summary_toggle():
 
     assert "A" in html and "B" in html
     assert "sa" not in html and "sb" not in html
+
+
+def test_plugin_hides_the_heading_when_show_title_is_off():
+    RSSFeedCache.objects.create(
+        url=FEED_URL,
+        data={"feed_title": "Example Blog", "entries": [{"title": "x", "link": "/x"}]},
+    )
+
+    with_heading = _render(RSSFeedCMSPlugin(url=FEED_URL, count=1, show_title=True))
+    assert "Example Blog" in with_heading
+
+    without_heading = _render(
+        RSSFeedCMSPlugin(url=FEED_URL, count=1, title="My heading", show_title=False)
+    )
+    assert "My heading" not in without_heading
+    assert "Example Blog" not in without_heading
+    assert "x" in without_heading  # entries still render
 
 
 def test_plugin_title_override_and_empty_cache():

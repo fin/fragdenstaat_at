@@ -39,6 +39,7 @@ class RSSFeedCache(models.Model):
 
 class RSSFeedCMSPlugin(CMSPlugin):
     url = models.URLField(_("feed URL"))
+    show_title = models.BooleanField(_("show heading"), default=True)
     title = models.CharField(
         _("heading"),
         max_length=255,

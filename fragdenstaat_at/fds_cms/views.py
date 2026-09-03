@@ -50,7 +50,7 @@ def cms_plain_api(request, slug):
 
     if slug == "":
         # Redirect on empty slug
-        return redirect(base_path)
+        return redirect(base_path or "/")
 
     slug_path = "{}/{}".format(base_path[1:], slug)
     site = get_current_site()

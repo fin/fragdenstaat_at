@@ -869,6 +869,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/3b/04/989d308a2b51b3b2b51a8f3f5da789bc56f76d35428713dc29d690bb7d41/django_cms-5.1.1-py3-none-any.whl", hash = "sha256:1a4b0ad854f586837735d677760f2c6af72eabc42a172d1f6273759b2e300d11", size = 3516544, upload-time = "2026-08-06T08:34:09.789Z" },
 ]
 
+[package.optional-dependencies]
+admin-style = [
+    { name = "djangocms-simple-admin-style" },
+]
+
 [[package]]
 name = "django-configurations"
 version = "2.5.1"
@@ -1423,6 +1428,18 @@ wheels = [
 ]
 
 [[package]]
+name = "djangocms-simple-admin-style"
+version = "2.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django-cms" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d6/34/094753cff641457ec9140b86d6f230a8d4d45ebf6c913e3904d83165da1d/djangocms_simple_admin_style-2.1.1.tar.gz", hash = "sha256:941fe1593d1d9af72aaa5d117557089cb60c5588ca292d619a61437e0087ac44", size = 17984, upload-time = "2026-09-01T06:34:08.561Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/76/36352d377226e7d63afc98c065be81e8419a08841f7b62995613aa755748/djangocms_simple_admin_style-2.1.1-py3-none-any.whl", hash = "sha256:d848d461e285d2e11b905c93248f8cc0a10b9043bba3abf760262234f260e6d7", size = 27894, upload-time = "2026-09-01T06:34:07.375Z" },
+]
+
+[[package]]
 name = "djangocms-text"
 version = "0.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1839,7 +1856,7 @@ dependencies = [
     { name = "django-admin-sortable2" },
     { name = "django-celery-beat" },
     { name = "django-celery-email" },
-    { name = "django-cms" },
+    { name = "django-cms", extra = ["admin-style"] },
     { name = "django-configurations" },
     { name = "django-contractor" },
     { name = "django-contrib-comments" },
@@ -1970,7 +1987,7 @@ requires-dist = [
     { name = "django-admin-sortable2", specifier = ">=2.2.8" },
     { name = "django-celery-beat", specifier = ">=2.8.1" },
     { name = "django-celery-email", specifier = ">=3.0.0" },
-    { name = "django-cms", specifier = ">=5.0.5,<6" },
+    { name = "django-cms", extras = ["admin-style"], specifier = ">=5.0.5,<6" },
     { name = "django-configurations", specifier = ">=2.5.1" },
     { name = "django-contractor", specifier = ">=0.0.8" },
     { name = "django-contrib-comments", specifier = ">=2.2.0" },

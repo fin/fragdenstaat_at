@@ -1,0 +1,7 @@
+{% comment %}
+Overrides djangocms_frontend's add_css.html, which links the icon library's
+stylesheet into the page. The only library we offer is Font Awesome 4 (see
+DJANGOCMS_FRONTEND_ICON_LIBRARIES), which base.scss already compiles into
+main.css, so the front end needs no extra stylesheet -- the vendored copy is
+for the admin icon picker alone. Emit nothing.
+{% endcomment %}

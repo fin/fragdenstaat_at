@@ -991,6 +991,32 @@ class FragDenStaatBase(German, Base):
         ("fontawesome4", "fa", "Font Awesome 4", "4.7.0"),
     ]
 
+    # djangocms_frontend's icon libraries default to stylesheets served from
+    # cdnjs / jsdelivr / Google Fonts: the `icon_tags` add_css_for_icon tag
+    # links one into every page that renders an icon, and the admin icon
+    # picker loads the same URL to preview icons. Offer only the Font Awesome
+    # 4 the site already bundles in main.css, from the copy vendored for the
+    # djangocms_icon admin (templates/admin/djangocms_icon/includes/
+    # assets.html), so there is a single local FA4 stylesheet.
+    # An entry is (icon name list, stylesheet). A name containing a "/" is
+    # used as the URL as-is -- hence the lazy static(), resolved once the
+    # staticfiles storage is up; a name without one is looked up under
+    # djangocms_frontend/icon/vendor/assets/icons-libraries/, which is why the
+    # generated name list (scripts/build_icon_picker_assets.py) sits there in
+    # our static/ dir. The stylesheet is only ever fetched in the admin, see
+    # templates/djangocms_frontend/icon/add_css.html.
+    @property
+    def DJANGOCMS_FRONTEND_ICON_LIBRARIES(self):
+        from django.templatetags.static import static
+        from django.utils.functional import lazy
+
+        return {
+            "font-awesome4": (
+                "font-awesome4.min.json",
+                lazy(static, str)("font-awesome/font-awesome.min.css"),
+            ),
+        }
+
     LEAFLET_CONFIG = {
         "TILES": [
             (

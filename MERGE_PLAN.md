@@ -139,11 +139,13 @@ IBAN in donor export, refund handling, a real test suite. Migrations 44 → 79.
 
 ### `fds_ogimage`
 
-Byte-identical to DE and **deliberately kept** — an AT ogimage service is to be set
-up later. Currently inert: absent from `INSTALLED_APPS` and `theme/urls.py`, with
-`FDS_OGIMAGE_URL` empty (now read from the environment rather than hardcoded).
-Social shares fall back to `SITE_LOGO`, which is set, so the interim behaviour is
-sane rather than broken. Enabling it is a four-step checklist in §9.2.
+Ported from DE, minus the `froide_govplan` (Koalitionstracker) views, routes and
+templates, which AT does not install; the OG templates also use a local
+`{% static 'img/logo/header_logo.svg' %}` instead of DE's hardcoded
+`static.frag-den-staat.de` URL. Now fully wired, but gated on `FDS_OGIMAGE_URL`,
+which is read from the environment and empty by default: the `_og/` routes are
+always live, while the `og:image` tags appear only once the setting points at a
+rendering service. Until then social shares fall back to `SITE_LOGO`. See §9.2.
 
 ### `theme`
 
@@ -1097,21 +1099,32 @@ The intentional divergences, for the record: `LANGUAGE_CODE`/`LANGUAGES`/
 `ELASTICSEARCH_INDEX_PREFIX`, and `TEXT_ADDITIONAL_ATTRIBUTES` (AT allows
 `iframe src`, which DE's set omits — see §9.5).
 
-### 9.2 Nice to have: enabling `fds_ogimage`
+### 9.2 `fds_ogimage` — wired up, gated on `FDS_OGIMAGE_URL`
 
-The app is kept on purpose; the external rendering service does not exist yet.
-Once it does, four things must change together — the last is easy to miss:
+✅ **Done.** The app is installed, its routes are registered, and both template
+overrides are back. `FDS_OGIMAGE_URL` is now the single switch:
 
-1. [ ] Set `FDS_OGIMAGE_URL` (env), in DE's shape:
-   `https://<host>/api/{hash}?path={path}`.
-2. [ ] Add `fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig` to `INSTALLED_APPS`.
-3. [ ] Uncomment the `fds_ogimage.urls` include in `theme/urls.py` — the service
-   fetches the pages it screenshots from these routes.
-4. [ ] **Restore the two template overrides that were deleted.**
-   `templates/account/profile.html` and `templates/foirequest/show.html` used to
-   call `{% ogimage_url %}`, but with the tag commented out they emitted an empty
-   `og:image` on every profile and request page, so the overrides were removed in
-   favour of froide's `SITE_LOGO` default. Per-page images need them back.
+2. [x] `fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig` is in `INSTALLED_APPS`
+   unconditionally — it has no models, and installing it always keeps
+   `{% load fds_ogimage %}` resolvable regardless of the setting.
+3. [x] `fds_ogimage.urls` is included in `theme/urls.py`, also unconditionally, so
+   the `_og/` pages are reachable for development and for the service to fetch.
+   It must stay ahead of the `cms.urls` catch-all. Under the `de` catalogue the
+   routes are `/anfrage/<slug>/_og/` and `/profil/<slug>/_og/`.
+4. [x] `templates/foirequest/show.html` and `templates/account/profile.html` call
+   `{% ogimage_url %}` again, but now emit `og:image` only when the tag returns
+   non-empty. The request page falls back to `{{ block.super }}` (froide's
+   `twitter:card=summary` + `SITE_LOGO`); the profile page has no such block
+   upstream, so its tags are simply omitted. This is what stops the empty
+   `og:image` that caused the overrides to be deleted in the first place.
+
+Remaining:
+
+1. [ ] Set `FDS_OGIMAGE_URL` (env) once the AT service is up, in DE's shape:
+   `https://<host>/api/{hash}?path={path}`. Both placeholders are required —
+   `{path}` is the URL-encoded `_og/` route to screenshot, `{hash}` a SHA-256 of
+   the locally rendered template that the service should treat as an opaque
+   cache key. Unset (the default) leaves the app inert.
 
 ### 9.3 One-off production steps
 

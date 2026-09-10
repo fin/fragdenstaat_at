@@ -1,11 +1,19 @@
 {% extends "account/profile.html" %}
+{% load fds_ogimage %}
 
 {% block meta %}
-{{ block.super }}
-
-{# fds_ogimage is disabled (see MERGE_PLAN.md 2.3). og:image and
-   twitter:card=summary_large_image were emitted here with an empty URL; they are
-   omitted until an AT ogimage service exists or SITE_LOGO is set. #}
-<meta property="og:title" content="{{ object.get_full_name }} – FragDenStaat-Profil" />
-
-{% endblock %}
+    {{ block.super }}
+    <meta property="og:title"
+          content="{{ object.get_full_name }} – FragDenStaat-Profil" />
+    {% comment %}
+    Emitted only when FDS_OGIMAGE_URL is configured; froide's profile page has no
+    share_image block, so there is nothing to fall back to and the tags are
+    simply omitted.
+    {% endcomment %}
+    {% url 'account-profile-og' slug=object.username as profile_path %}
+    {% ogimage_url path=profile_path as og_image_url %}
+    {% if og_image_url %}
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="og:image" content="{{ og_image_url }}" />
+    {% endif %}
+{% endblock meta %}

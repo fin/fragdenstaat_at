@@ -103,7 +103,7 @@ class FragDenStaatBase(German, Base):
                 "fragdenstaat_at.fds_cms_at.apps.FdsCmsAtConfig",
                 "fragdenstaat_at.fds_donation.apps.FdsDonationConfig",
                 "fragdenstaat_at.fds_mailing.apps.FdsMailingConfig",
-                # "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",
+                "fragdenstaat_at.fds_ogimage.apps.FdsOgImageConfig",
                 # "fragdenstaat_at.fds_fximport.apps.FdsFxImportConfig",
                 # Additional CMS plugins
                 "djangocms_text",
@@ -973,11 +973,16 @@ class FragDenStaatBase(German, Base):
 
     SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
     SENTRY_JS_URL = ""
-    # Per-page Open Graph images, rendered by an external service. Kept and
-    # intended -- an AT service is still to be set up. Empty means the app is
-    # inert and social shares fall back to SITE_LOGO.
+    # Per-page Open Graph images, rendered by an external service. This setting
+    # is the switch for the whole feature: empty (the default) means no og:image
+    # tags are emitted and social shares fall back to SITE_LOGO. The /_og/ routes
+    # stay registered either way so they can be developed against.
+    # Shape -- both placeholders are required by the template tag:
+    #   https://<host>/api/{hash}?path={path}
+    # {path} is the URL-encoded _og/ route the service should screenshot; {hash}
+    # is a SHA-256 of the locally rendered template, an opaque cache key that
+    # changes whenever the page content does.
     # DE's value: "https://ogimage.frag-den-staat.de/api/{hash}?path={path}"
-    # To enable, see the checklist in MERGE_PLAN.md §9.
     FDS_OGIMAGE_URL = env("FDS_OGIMAGE_URL", "")
 
     TELNYX_APP_ID = os.environ.get("TELNYX_APP_ID", "")

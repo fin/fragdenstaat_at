@@ -63,6 +63,14 @@ urlpatterns = [
     # ),
     # ),
     # ),
+    # DE mounts the donation app with a CMS apphook attached to a page instead
+    # (FdsDonationApp, disabled in fds_donation/cms_apps.py -- see the note
+    # there). Same URLs, but from the urlconf they do not depend on a CMS page
+    # existing, which matters for celery workers rendering donation mail.
+    # Note tests/urls.py mounts the same urlconf again under spenden/spende/
+    # on top of these patterns, which is why `manage.py check` reports
+    # urls.W005 for the fds_donation namespace under test settings only, and
+    # why the donation tests expect /spenden/spende/... paths.
     path(
         "spenden/",
         include("fragdenstaat_at.fds_donation.urls", namespace="fds_donation"),
@@ -110,6 +118,11 @@ urlpatterns += i18n_patterns(
     *jurisdiction_urls,
     *admin_urls,
     path("cookies/", include("cookie_consent.urls")),
+    # Registered unconditionally, independent of FDS_OGIMAGE_URL: these are the
+    # noindex pages the rendering service screenshots, and they need to be
+    # reachable to develop against. Only the meta tags that point at the
+    # service are gated on the setting.
+    path("", include("fragdenstaat_at.fds_ogimage.urls")),
     path("", include("cms.urls")),
     prefix_default_language=False,
 )

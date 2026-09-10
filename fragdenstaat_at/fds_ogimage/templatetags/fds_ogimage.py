@@ -11,6 +11,12 @@ register = template.Library()
 
 @register.simple_tag(takes_context=True)
 def ogimage_url(context, path=None, template=None):
+    # No rendering service configured: return empty so callers can fall back to
+    # SITE_LOGO instead of emitting og:image with an empty content attribute.
+    # Also skips the render_to_string below, which is not free.
+    if not settings.FDS_OGIMAGE_URL or not path:
+        return ""
+
     if template is None:
         try:
             match = resolve(path)

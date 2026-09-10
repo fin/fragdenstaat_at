@@ -1,3 +1,6 @@
+import copy
+import os
+
 from .base import FragDenStaatBase, env
 
 
@@ -8,10 +11,26 @@ class Dev(FragDenStaatBase):
     # that whole path and prints the fax instead of sending it, which is what
     # you want for looking at the rendered letter. See froide-fax's README.
     FAX_BACKEND = "froide_fax.backends.console.ConsoleFaxBackend"
+
+    SITE_URL = "http://fragdenstaat.at:9900"
+    # FAX_BACKEND = "froide_fax.backends.telnyx.TelnyxFaxBackend"
+
+    TELNYX_APP_ID = os.environ.get("TELNYX_APP_ID", None)
+    TELNYX_API_KEY = os.environ.get("TELNYX_API_KEY", None)
+    TELNYX_PUBLIC_KEY = os.environ.get("TELNYX_PUBLIC_KEY", None)
+    TELNYX_FROM_NUMBER = os.environ.get("TELNYX_FROM_NUMBER", None)
+
     GEOIP_PATH = None
     FRONTEND_DEBUG = True
 
     DEBUG = True
+
+    LOGGING = copy.deepcopy(FragDenStaatBase.LOGGING)
+    LOGGING["loggers"]["froide_fax"] = {
+        "handlers": ["console"],
+        "level": "DEBUG",
+        "propagate": False,
+    }
 
     @property
     def INSTALLED_APPS(self):

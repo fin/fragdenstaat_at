@@ -12,13 +12,13 @@
     Recherche-Tool
   </h2>
   <p>
-    Recherchieren Sie in bereits von Anderen veröffentlichten Anfragen oder fragen Sie über diese gemeinnützige Plattform selbst Behörden in Österreich nach Auskünften und Informationen!
+    Recherchieren Sie hier in bereits veröffentlichten Anfragen:
   </p>
   {% endblock first_index_row_search %}
 </div>
 <div class="col-lg-6 col-md-6 d-flex flex-column align-content-center justify-content-center">
   {% block index-search %}
-    <form method="get" action="{% url 'foirequest-search' %}" class="card">
+    <form method="get" action="{% url 'foirequest-search' %}" class="card px-3 py-2">
       <div class="form-group">
         <label for="index-search">
           {% blocktrans with foicount=foicount|intcomma pbcount=pbcount|intcomma %}Search {{ foicount }} requests and {{ pbcount }} public bodies:{% endblocktrans %}

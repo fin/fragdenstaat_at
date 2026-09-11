@@ -1371,3 +1371,7 @@ msgid "{amount} every month"
 msgid_plural "{amount} every {interval} months"
 msgstr[0] ""
 msgstr[1] ""
+
+
+msgid "Search %(foicount)s requests and %(pbcount)s public bodies:"
+msgstr "Suche in %(foicount)s Anfragen und %(pbcount)s Behörden:"

@@ -1323,10 +1323,24 @@ Remaining:
 
 ### 9.5 Known live defects — fix with the deploy, none are blockers
 
-- [ ] **The footer alias hardcodes hash-stamped static URLs** (four sponsor logos).
-  They are orphans from a deployment that used manifest storage; production no
-  longer hashes. They resolve today, but `collectstatic --clear` or any edit to
-  those source images breaks them.
+- [x] **The footer alias hardcodes hash-stamped static URLs** (four sponsor logos).
+  Unhashed via `fds_cms/0009`; the alias now references stable names, which is
+  what it must do anyway now that production hashes again (below).
+- [x] **Static files were served unhashed, so a frontend rebuild left browsers
+  and the CDN on stale CSS/JS.** DE cache-busts with
+  `ManifestStaticFilesStorage`; AT had dropped it (49a0f48) because
+  `collectstatic` died on a `sourceMappingURL` in `django_json_widget`'s
+  `jsoneditor.min.js` pointing at a map it never shipped. That was a stale
+  lock, not a DE/AT difference: froide requires `django-json-widget` unpinned,
+  DE's lock has 2.1.1 (no source-map comment), AT's still had 1.1.1 from 2021.
+  Bumped the lock; production now uses the stock backend, same as DE.
+  Also brought over DE's `fds_cms/static/`
+  (`pretix-widget.css`, `foirequest_map.*`): the ported `pretix.html` template
+  already referenced the CSS, and under `manifest_strict` a `{% static %}` of
+  a file that was never collected is a 500, not a broken link. Dev keeps the
+  plain backend (`base.py`). `collectstatic` must run on every deploy that
+  changes assets — it always had to, but a stale manifest now means the old
+  hashed files are served, not the new ones.
 - [ ] **`zwb.html` renders a blank PDF** and the donation receipt field is hidden.
   Leave hidden until P4 lands the Austrian FinanzOnline flow.
 - [ ] **Attach the CMS search apphook to a page.** `FdsCmsSearchApp` is ported and

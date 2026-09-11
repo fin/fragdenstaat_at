@@ -1113,12 +1113,12 @@ wheels = [
 
 [[package]]
 name = "django-json-widget"
-version = "1.1.1"
+version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "future" },
+sdist = { url = "https://files.pythonhosted.org/packages/f9/30/923ff229ee284bf2fac7a289ca446fb2725d94b2a34c7cb006c4f811e6c0/django_json_widget-2.1.1.tar.gz", hash = "sha256:dc8102e2fa9accd0f661ea1988c9389f8fbbcb8a4bb9cbfb8fa0525b3c1265c1", size = 384026, upload-time = "2025-12-12T11:22:05.953Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/19/6a/bdbcc079d11d312e463565819089fe83ae6c7f17f274effa4777ca069f64/django_json_widget-2.1.1-py2.py3-none-any.whl", hash = "sha256:2fa3d6fb6dba9436a29ad2cee23fa794381f54a6678ec7d74e990ae081d9800b", size = 293721, upload-time = "2025-12-12T11:22:04.195Z" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c0/13/f256f113ab2a0828e0c5992d2f2b7c6fd377ee9e9918d6d7cb14a1b2e706/django-json-widget-1.1.1.tar.gz", hash = "sha256:ec948a4c379687f9c854748ba540fdbeb1b1730846ca953f186818521de7e696", size = 249526, upload-time = "2021-02-17T15:21:35.976Z" }
 
 [[package]]
 name = "django-leaflet"
@@ -2270,12 +2270,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e0/a3/5982da14e113d07b325230f95060e2169f5311b1017ea8af2a29b374c289/frozenlist-1.8.0-cp314-cp314t-win_arm64.whl", hash = "sha256:102e6314ca4da683dca92e3b1355490fed5f313b768500084fbe6371fddfdb79", size = 42507, upload-time = "2025-10-06T05:37:54.513Z" },
     { url = "https://files.pythonhosted.org/packages/9a/9a/e35b4a917281c0b8419d4207f4334c8e8c5dbf4f3f5f9ada73958d937dcc/frozenlist-1.8.0-py3-none-any.whl", hash = "sha256:0c18a16eab41e82c295618a77502e17b195883241c563b00f0aa5106fc4eaa0d", size = 13409, upload-time = "2025-10-06T05:38:16.721Z" },
 ]
-
-[[package]]
-name = "future"
-version = "0.18.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/45/0b/38b06fd9b92dc2b68d58b75f900e97884c45bedd2ff83203d933cf5851c9/future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d", size = 829220, upload-time = "2019-10-31T00:58:13.043Z" }
 
 [[package]]
 name = "geoip2"

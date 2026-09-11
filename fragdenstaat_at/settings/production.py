@@ -36,18 +36,15 @@ class FragDenStaat(FragDenStaatBase):
 
     FAX_BACKEND = "froide_fax.backends.telnyx.TelnyxFaxBackend"
 
-    # Django 5.1 removed STATICFILES_STORAGE; this used to point at a
-    # MyStaticFilesStorage subclass and had been silently ignored ever since,
-    # falling back to plain StaticFilesStorage. STORAGES below states that
-    # explicitly rather than relying on the fallback.
+    # Hashed static files (cache busting), as in fragdenstaat_de. Vite emits
+    # stable names (css/main.css); collectstatic writes css/main.<hash>.css
+    # plus a manifest, and {% static %} resolves to the hashed name, so a
+    # rebuild is picked up immediately instead of sitting behind browser/CDN
+    # caches. base.py keeps the plain backend for development.
     #
-    # NOT ManifestStaticFilesStorage: AT dropped hashing deliberately. The
-    # manifest backend's post_process rewrites sourceMappingURL comments and
-    # raises when the target is missing -- django_json_widget ships
-    # dist/jsoneditor.min.js with a `sourceMappingURL=jsoneditor.map` comment
-    # but no jsoneditor.map, so collectstatic dies. base.py already uses the
-    # plain backend; this keeps production in step. (Briefly flipped to the
-    # manifest backend in 514038b; that broke the deploy -- see 434af7f.)
+    # This used to fail collectstatic (49a0f48, 434af7f): django-json-widget
+    # 1.1.1 shipped jsoneditor.min.js with a sourceMappingURL to a map it
+    # didn't include. 2.1.1 has no such comment; uv.lock was just stale.
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -57,7 +54,7 @@ class FragDenStaat(FragDenStaatBase):
             "OPTIONS": {"allow_overwrite": True},
         },
         "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
         },
     }
     STATIC_URL = env("STATIC_URL", "https://static.frag.denstaat.at/static/")

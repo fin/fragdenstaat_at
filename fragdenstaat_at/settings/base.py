@@ -794,8 +794,6 @@ class FragDenStaatBase(German, Base):
         CELERY_BROKER_PORT = os.environ["BROKER_1_PORT"].replace("tcp://", "")
         BROKER_URL = "amqp://guest:**@%s/" % CELERY_BROKER_PORT
 
-    FDS_OGIMAGE_URL = "https://ogimage.frag.denstaat.at/api/{hash}?path={path}"
-
     @property
     def FROIDE_CONFIG(self):
         config = super(FragDenStaatBase, self).FROIDE_CONFIG
@@ -985,7 +983,10 @@ class FragDenStaatBase(German, Base):
     # is a SHA-256 of the locally rendered template, an opaque cache key that
     # changes whenever the page content does.
     # DE's value: "https://ogimage.frag-den-staat.de/api/{hash}?path={path}"
-    FDS_OGIMAGE_URL = env("FDS_OGIMAGE_URL", "")
+    FDS_OGIMAGE_URL = env(
+        "FDS_OGIMAGE_URL",
+        "https://ogimage.frag.denstaat.at/api/{hash}?path={path}",
+    )
 
     TELNYX_APP_ID = os.environ.get("TELNYX_APP_ID", "")
     TELNYX_API_KEY = os.environ.get("TELNYX_API_KEY", "")

@@ -1,0 +1,24 @@
+/* RSS feed CMS plugin (fds_cms_at) */
+
+.rss-feed__image {
+  display: block;
+  margin-bottom: 1rem;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* Inside a card, the image bleeds through the card-inner padding to the
+   edges; and to the top edge when the feed is the first thing in the card. */
+.box-card-inner > .rss-feed > .rss-feed__image {
+  margin-left: calc(-1 * var(--box-card-inner-pad));
+  margin-right: calc(-1 * var(--box-card-inner-pad));
+  margin-bottom: var(--box-card-inner-pad);
+}
+
+.box-card-inner > .rss-feed:first-child > .rss-feed__image {
+  margin-top: calc(-1 * var(--box-card-inner-pad));
+}

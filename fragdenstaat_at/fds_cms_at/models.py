@@ -48,6 +48,14 @@ class RSSFeedCMSPlugin(CMSPlugin):
     )
     count = models.PositiveSmallIntegerField(_("entries to show"), default=1)
     show_summary = models.BooleanField(_("show summary text"), default=True)
+    show_image = models.BooleanField(
+        _("show image"),
+        default=True,
+        help_text=_(
+            "Shows the most recent entry's image above the heading if the feed "
+            "provides one."
+        ),
+    )
 
     def __str__(self):
         return self.title or self.url

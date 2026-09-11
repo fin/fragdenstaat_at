@@ -8,6 +8,7 @@ off the front.
 from django.template.loader import render_to_string
 
 import pytest
+from cms.plugin_base import CMSPluginBase
 
 from fragdenstaat_at.fds_cms_at import tasks
 from fragdenstaat_at.fds_cms_at.cms_plugins import RSSFeedPlugin
@@ -18,13 +19,14 @@ pytestmark = pytest.mark.django_db
 FEED_URL = "https://example.org/feed.xml"
 
 RSS = b"""<?xml version="1.0"?>
-<rss version="2.0"><channel>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel>
   <title>Example Blog</title>
   <item>
     <title>Newest post</title>
     <link>https://example.org/2</link>
     <description>&lt;p&gt;Second &lt;b&gt;body&lt;/b&gt;.&lt;/p&gt;</description>
     <pubDate>Tue, 02 Sep 2026 10:00:00 GMT</pubDate>
+    <media:content url="https://example.org/img/2.png" medium="image" />
   </item>
   <item>
     <title>Older post</title>
@@ -70,6 +72,73 @@ def test_task_populates_the_cache(monkeypatch):
     assert cache.entries[0]["summary"] == "Second body."
     assert cache.entries[0]["link"] == "https://example.org/2"
     assert cache.entries[0]["published"].startswith("2026-09-02T10:00:00")
+    assert cache.entries[0]["image"] == "https://example.org/img/2.png"
+    assert cache.entries[1]["image"] == ""
+
+
+@pytest.mark.parametrize(
+    "entry, expected",
+    [
+        # Media RSS thumbnail wins over everything else.
+        (
+            {
+                "link": "https://example.org/p",
+                "media_thumbnail": [{"url": "https://cdn.example.org/t.jpg"}],
+                "media_content": [{"url": "https://cdn.example.org/c.jpg"}],
+            },
+            "https://cdn.example.org/t.jpg",
+        ),
+        # media:content only counts when it is declared an image.
+        (
+            {
+                "link": "https://example.org/p",
+                "media_content": [
+                    {"url": "https://cdn.example.org/v.mp4", "type": "video/mp4"},
+                    {"url": "https://cdn.example.org/c.jpg", "type": "image/jpeg"},
+                ],
+            },
+            "https://cdn.example.org/c.jpg",
+        ),
+        # Image enclosures.
+        (
+            {
+                "link": "https://example.org/p",
+                "enclosures": [
+                    {"href": "https://cdn.example.org/a.mp3", "type": "audio/mpeg"},
+                    {"href": "https://cdn.example.org/e.png", "type": "image/png"},
+                ],
+            },
+            "https://cdn.example.org/e.png",
+        ),
+        # First <img> in the HTML body, relative URLs resolved against the link.
+        (
+            {
+                "link": "https://example.org/posts/p",
+                "content": [{"value": '<p>Hi</p><img alt="x" src="/media/b.jpg">'}],
+            },
+            "https://example.org/media/b.jpg",
+        ),
+        # Falls back to an <img> in the summary.
+        (
+            {
+                "link": "https://example.org/p",
+                "summary": "<img src='https://example.org/s.gif'> text",
+            },
+            "https://example.org/s.gif",
+        ),
+        # Non-http schemes are dropped.
+        (
+            {
+                "link": "https://example.org/p",
+                "summary": '<img src="data:image/png;base64,AAAA">',
+            },
+            "",
+        ),
+        ({"link": "https://example.org/p", "summary": "no image here"}, ""),
+    ],
+)
+def test_entry_image_extraction(entry, expected):
+    assert tasks._entry_image(entry) == expected
 
 
 def test_task_records_a_network_error(monkeypatch):
@@ -101,6 +170,31 @@ def test_task_keeps_data_on_304(monkeypatch):
     cache = RSSFeedCache.objects.get(url=FEED_URL)
     assert [e["title"] for e in cache.entries] == ["kept"]
     assert cache.error == ""
+
+
+def test_task_force_skips_conditional_headers(monkeypatch):
+    RSSFeedCache.objects.create(
+        url=FEED_URL,
+        data={"feed_title": "Example Blog", "entries": [{"title": "stale"}]},
+        etag='"abc"',
+        last_modified="Mon, 01 Sep 2026 10:00:00 GMT",
+    )
+    seen = {}
+
+    def get(url, headers=None, timeout=None):
+        seen.update(headers)
+        return FakeResponse(content=RSS)
+
+    monkeypatch.setattr(tasks.requests, "get", get)
+
+    tasks.refresh_rss_feed(FEED_URL, force=True)
+
+    assert "If-None-Match" not in seen
+    assert "If-Modified-Since" not in seen
+    assert [e["title"] for e in RSSFeedCache.objects.get(url=FEED_URL).entries] == [
+        "Newest post",
+        "Older post",
+    ]
 
 
 def test_task_records_a_bad_http_status(monkeypatch):
@@ -154,6 +248,68 @@ def test_priming_the_cache_skips_an_already_fetched_feed(monkeypatch):
     ]
 
 
+def test_priming_the_cache_with_force_refetches(monkeypatch):
+    RSSFeedCache.objects.create(
+        url=FEED_URL,
+        data={"feed_title": "Example Blog", "entries": [{"title": "stale"}]},
+        fetched_at=tasks.timezone.now(),
+        etag='"abc"',
+    )
+    seen = {}
+
+    def get(url, headers=None, timeout=None):
+        seen.update(headers)
+        return FakeResponse(content=RSS)
+
+    monkeypatch.setattr(tasks.requests, "get", get)
+
+    RSSFeedPlugin.prime_feed_cache(FEED_URL, force=True)
+
+    assert "If-None-Match" not in seen
+    assert [e["title"] for e in RSSFeedCache.objects.get(url=FEED_URL).entries] == [
+        "Newest post",
+        "Older post",
+    ]
+
+
+def test_plugin_form_refresh_now_checkbox_forces_a_fetch(monkeypatch):
+    from fragdenstaat_at.fds_cms_at.forms import RSSFeedPluginForm
+
+    RSSFeedCache.objects.create(
+        url=FEED_URL,
+        data={"feed_title": "Example Blog", "entries": [{"title": "stale"}]},
+        fetched_at=tasks.timezone.now(),
+    )
+    calls = []
+    monkeypatch.setattr(
+        RSSFeedPlugin,
+        "prime_feed_cache",
+        staticmethod(lambda url, force=False: calls.append(force)),
+    )
+    # The CMS base save_model needs a live placeholder; only our hook matters here.
+    monkeypatch.setattr(CMSPluginBase, "save_model", lambda *args, **kwargs: None)
+    plugin = RSSFeedPlugin()
+
+    def save(refresh_now):
+        form = RSSFeedPluginForm(
+            {
+                "url": FEED_URL,
+                "count": 1,
+                "show_title": "on",
+                "show_summary": "on",
+                "show_image": "on",
+                **({"refresh_now": "on"} if refresh_now else {}),
+            }
+        )
+        assert form.is_valid(), form.errors
+        plugin.save_model(None, form.save(commit=False), form, False)
+
+    save(refresh_now=False)
+    save(refresh_now=True)
+
+    assert calls == [False, True]
+
+
 def test_priming_the_cache_swallows_fetch_errors(monkeypatch):
     def boom(url, headers=None, timeout=None):
         raise tasks.requests.RequestException("connection refused")
@@ -181,12 +337,14 @@ def test_plugin_shows_the_most_recent_entry():
                     "link": "https://example.org/2",
                     "summary": "Second body.",
                     "published": "2026-09-02T10:00:00+00:00",
+                    "image": "https://example.org/img/2.png",
                 },
                 {
                     "title": "Older post",
                     "link": "https://example.org/1",
                     "summary": "First body.",
                     "published": "2026-09-01T10:00:00+00:00",
+                    "image": "https://example.org/img/1.png",
                 },
             ],
         },
@@ -198,7 +356,43 @@ def test_plugin_shows_the_most_recent_entry():
     assert "Newest post" in html
     assert "https://example.org/2" in html
     assert "Second body." in html
+    assert 'src="https://example.org/img/2.png"' in html
     assert "Older post" not in html  # count=1
+
+
+def test_plugin_shows_the_image_only_for_the_most_recent_entry():
+    RSSFeedCache.objects.create(
+        url=FEED_URL,
+        data={
+            "feed_title": "Example Blog",
+            "entries": [
+                {"title": "A", "link": "/a", "image": "https://example.org/a.png"},
+                {"title": "B", "link": "/b", "image": "https://example.org/b.png"},
+            ],
+        },
+    )
+
+    html = _render(RSSFeedCMSPlugin(url=FEED_URL, count=2))
+    assert "https://example.org/a.png" in html
+    assert "https://example.org/b.png" not in html
+
+    html = _render(RSSFeedCMSPlugin(url=FEED_URL, count=2, show_image=False))
+    assert "<img" not in html
+
+
+def test_plugin_skips_the_image_when_the_entry_has_none():
+    RSSFeedCache.objects.create(
+        url=FEED_URL,
+        data={
+            "feed_title": "Example Blog",
+            # Entries cached before the image field existed have no key at all.
+            "entries": [{"title": "A", "link": "/a"}, {"title": "B", "link": "/b"}],
+        },
+    )
+
+    html = _render(RSSFeedCMSPlugin(url=FEED_URL, count=2))
+    assert "A" in html
+    assert "<img" not in html
 
 
 def test_plugin_count_and_summary_toggle():

@@ -1,6 +1,8 @@
 import logging
+import re
 from datetime import datetime
 from datetime import timezone as dt_timezone
+from urllib.parse import urljoin
 
 from django.utils import timezone
 from django.utils.html import strip_tags
@@ -17,6 +19,8 @@ FETCH_TIMEOUT = 15
 USER_AGENT = "FragDenStaat RSS fetcher (+https://fragdenstaat.at)"
 SUMMARY_MAX_CHARS = 600
 
+IMG_SRC_RE = re.compile(r"""<img\b[^>]*?\bsrc\s*=\s*["']([^"']+)["']""", re.IGNORECASE)
+
 
 @celery_app.task(name="fragdenstaat_at.fds_cms_at.refresh_rss_feeds")
 def refresh_rss_feeds():
@@ -28,15 +32,19 @@ def refresh_rss_feeds():
 
 
 @celery_app.task(name="fragdenstaat_at.fds_cms_at.refresh_rss_feed")
-def refresh_rss_feed(url):
+def refresh_rss_feed(url, force=False):
+    """Fetch `url` into its RSSFeedCache row. With `force`, the conditional
+    request headers are left out so the server can't answer 304 and the
+    cached data is rebuilt even if the feed itself is unchanged.
+    """
     import feedparser
 
     cache, _ = RSSFeedCache.objects.get_or_create(url=url)
 
     headers = {"User-Agent": USER_AGENT}
-    if cache.etag:
+    if cache.etag and not force:
         headers["If-None-Match"] = cache.etag
-    if cache.last_modified:
+    if cache.last_modified and not force:
         headers["If-Modified-Since"] = cache.last_modified
 
     try:
@@ -81,7 +89,44 @@ def _entry(entry):
         "link": entry.get("link", "") or "",
         "summary": summary[:SUMMARY_MAX_CHARS],
         "published": published,
+        "image": _entry_image(entry),
     }
+
+
+def _entry_image(entry):
+    """Best-effort image URL for an entry, or "".
+
+    Checks the usual explicit carriers first (Media RSS thumbnail/content,
+    image enclosures), then falls back to the first <img> in the entry's
+    HTML body. Relative URLs are resolved against the entry link.
+    """
+    candidates = []
+    for thumb in entry.get("media_thumbnail") or []:
+        candidates.append(thumb.get("url"))
+    for media in entry.get("media_content") or []:
+        mime = media.get("type") or ""
+        if media.get("medium") == "image" or mime.startswith("image/"):
+            candidates.append(media.get("url"))
+    for enclosure in entry.get("enclosures") or []:
+        if (enclosure.get("type") or "").startswith("image/"):
+            candidates.append(enclosure.get("href"))
+    for content in entry.get("content") or []:
+        html = content.get("value") or ""
+        match = IMG_SRC_RE.search(html)
+        if match:
+            candidates.append(match.group(1))
+    match = IMG_SRC_RE.search(entry.get("summary", "") or "")
+    if match:
+        candidates.append(match.group(1))
+
+    link = entry.get("link", "") or ""
+    for url in candidates:
+        if not url:
+            continue
+        url = urljoin(link, url.strip())
+        if url.startswith(("http://", "https://")):
+            return url
+    return ""
 
 
 def _store_error(cache, message):

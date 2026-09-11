@@ -1,6 +1,11 @@
 {% load i18n %}
 {% if entries %}
     <section class="rss-feed">
+        {% if instance.show_image and entries.0.image %}
+            <a class="rss-feed__image" href="{{ entries.0.link }}" rel="noopener nofollow" tabindex="-1" aria-hidden="true">
+                <img src="{{ entries.0.image }}" alt="" loading="lazy">
+            </a>
+        {% endif %}
         {% if feed_title %}
             <h3 class="rss-feed__title h5">{{ feed_title }}</h3>
         {% endif %}

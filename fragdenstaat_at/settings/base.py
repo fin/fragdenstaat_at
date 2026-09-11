@@ -794,6 +794,8 @@ class FragDenStaatBase(German, Base):
         CELERY_BROKER_PORT = os.environ["BROKER_1_PORT"].replace("tcp://", "")
         BROKER_URL = "amqp://guest:**@%s/" % CELERY_BROKER_PORT
 
+    FDS_OGIMAGE_URL = "https://ogimage.frag.denstaat.at/api/{hash}?path={path}"
+
     @property
     def FROIDE_CONFIG(self):
         config = super(FragDenStaatBase, self).FROIDE_CONFIG

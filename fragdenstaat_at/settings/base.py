@@ -704,7 +704,9 @@ class FragDenStaatBase(German, Base):
     # Absolute by necessity: og:image is fetched by third parties.
     @property
     def SITE_LOGO(self):
-        return "{}img/logo/logo.png".format(self.STATIC_URL)
+        return "{}img/fragdenstaat-share-tile-radial-1200x630.png".format(
+            self.STATIC_URL
+        )
 
     # Domains a mailing may be sent from. fds_mailing.validators reads this
     # unguarded, so without it saving a Mailing raises AttributeError.

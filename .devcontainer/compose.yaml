@@ -14,8 +14,6 @@ services:
       DATABASE_USER: fragdenstaat_at
       DATABASE_PASSWORD: fragdenstaat_at
       DJANGO_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-      DJANGO_SETTINGS_MODULE: fragdenstaat_at.settings.development
-      DJANGO_CONFIGURATION: Dev
       SSH_AUTH_SOCK: /run/host-services/ssh-auth.sock
     init: true
     command: sleep infinity

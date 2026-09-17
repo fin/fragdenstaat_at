@@ -1,7 +1,6 @@
 import csv
 import logging
 import os
-import re
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -26,6 +25,10 @@ BANKTRANSFER_CSV_OPTIONAL = ("identifier", "iban", "date", "purpose", "name")
 BANKTRANSFER_CSV_COLUMNS = BANKTRANSFER_CSV_REQUIRED + BANKTRANSFER_CSV_OPTIONAL
 
 logger = logging.getLogger(__name__)
+
+
+class BanktransferFileError(ValueError):
+    """The CSV was rejected during validation; nothing has been written."""
 
 
 @dataclass
@@ -157,28 +160,21 @@ def import_banktransfer(transfer_ident, row, project):
     return "created" if is_new else "matched"
 
 
-DEBIT_PATTERN = re.compile(r" \(P(\d+)\)")
-
-
-def update_direct_debit(row):
-    match = DEBIT_PATTERN.search(row["reference"])
-    try:
-        payment = Payment.objects.get(id=int(match.group(1)))
-    except Payment.DoesNotExist:
-        return
-    amount = Decimal(str(row["amount"]))
-    payment.captured_amount = amount
-    payment.received_amount = amount
-    payment.received_timestamp = row["date_received"]
-    payment.change_status_and_save(PaymentStatus.CONFIRMED)
-
-
 def parse_banktransfer_amount(value):
     value = value.strip().replace(" ", "")
-    if "," in value:
-        # German notation: thousands "." and decimal ","
-        value = value.replace(".", "").replace(",", ".")
-    return Decimal(value)
+    if "," in value and "." in value:
+        # Both separators present: whichever comes last is the decimal one.
+        if value.rfind(",") > value.rfind("."):
+            value = value.replace(".", "").replace(",", ".")  # 1.234,50
+        else:
+            value = value.replace(",", "")  # 1,234.50
+    elif "," in value:
+        value = value.replace(",", ".")  # 10,50
+    amount = Decimal(value)
+    if amount <= 0:
+        # Outgoing transfers / refunds are not donations
+        raise ValueError(f"amount must be positive, got {amount}")
+    return amount
 
 
 def parse_banktransfer_date(value):
@@ -209,10 +205,10 @@ def read_banktransfer_csv(csv_file):
     columns = [c.strip().lower() for c in reader.fieldnames or []]
     missing = [c for c in BANKTRANSFER_CSV_REQUIRED if c not in columns]
     if missing:
-        raise ValueError("missing columns: {}".format(", ".join(missing)))
+        raise BanktransferFileError("missing columns: {}".format(", ".join(missing)))
 
     rows = []
-    for lineno, raw in enumerate(reader, start=2):
+    for raw in reader:
         raw = {k.strip().lower(): (v or "").strip() for k, v in raw.items() if k}
         if not any(raw.values()):
             continue
@@ -222,7 +218,7 @@ def read_banktransfer_csv(csv_file):
             row["date_received"] = parse_banktransfer_date(row["date_received"])
             row["date"] = parse_banktransfer_date(row["date"]) if row["date"] else None
         except (ValueError, InvalidOperation) as e:
-            raise ValueError(f"line {lineno}: {e}") from e
+            raise BanktransferFileError(f"line {reader.line_num}: {e}") from e
         rows.append(row)
     return rows
 
@@ -268,7 +264,6 @@ def import_banktransfers(csv_file, project):
     rows = read_banktransfer_csv(csv_file)
     total = len(rows)
     result = BanktransferImportResult()
-    seen = Counter()
     logger.info("Importing %d bank transfer row(s) for %s", total, project)
     # A recurring donor's transfers show up many times in one file. Without
     # this, every row re-renumbers and re-analyzes that donor's whole
@@ -277,38 +272,18 @@ def import_banktransfers(csv_file, project):
     # payment_status_changed signal). That's the compounding cost that made
     # imports of otherwise modest files stall and OOM. Collapse it to once
     # per touched donor, after the whole file is done.
-    with defer_donor_updates() as touched_donors:
-        for lineno, row in enumerate(rows, start=1):
-            # Django's DEBUG=True query log grows for the whole request/task; for a
-            # large file that outgrows available memory faster than the import itself.
-            if lineno % 20 == 0:
-                reset_queries()
-                logger.info(
-                    "Bank transfer import: %d/%d rows (matched=%d created=%d unmatched=%d)",
-                    lineno,
-                    total,
-                    result.matched,
-                    result.created,
-                    len(result.unmatched),
-                )
-            with transaction.atomic():
-                if DEBIT_PATTERN.search(row["reference"]):
-                    update_direct_debit(row)
-                    status = "matched"
-                else:
-                    transfer_ident = make_transfer_ident(row, seen)
-                    status = import_banktransfer(transfer_ident, row, project)
-            if status == "matched":
-                result.matched += 1
-            elif status == "created":
-                result.created += 1
-            else:
-                result.unmatched.append(describe_banktransfer_row(row))
-
-    logger.info("Updating donation numbers for %d donor(s)", len(touched_donors))
-    for donor_id in touched_donors:
-        update_donation_numbers(donor_id)
-        transaction.on_commit(partial(process_recurrence_task.delay, donor_id))
+    touched_donors: set[int] = set()
+    try:
+        with defer_donor_updates() as touched_donors:
+            _import_banktransfer_rows(rows, project, result)
+    finally:
+        # Also on failure: every row before the failing one has already
+        # committed, so its donor still needs renumbering / recurrence
+        # detection, or those donations stay inconsistent until the next save.
+        logger.info("Updating donation numbers for %d donor(s)", len(touched_donors))
+        for donor_id in touched_donors:
+            update_donation_numbers(donor_id)
+            transaction.on_commit(partial(process_recurrence_task.delay, donor_id))
     logger.info(
         "Bank transfer import done: %d/%d rows (matched=%d created=%d unmatched=%d)",
         total,
@@ -318,6 +293,33 @@ def import_banktransfers(csv_file, project):
         len(result.unmatched),
     )
     return result
+
+
+def _import_banktransfer_rows(rows, project, result):
+    total = len(rows)
+    seen = Counter()
+    for lineno, row in enumerate(rows, start=1):
+        # Django's DEBUG=True query log grows for the whole request/task; for a
+        # large file that outgrows available memory faster than the import itself.
+        if lineno % 20 == 0:
+            reset_queries()
+            logger.info(
+                "Bank transfer import: %d/%d rows (matched=%d created=%d unmatched=%d)",
+                lineno,
+                total,
+                result.matched,
+                result.created,
+                len(result.unmatched),
+            )
+        with transaction.atomic():
+            transfer_ident = make_transfer_ident(row, seen)
+            status = import_banktransfer(transfer_ident, row, project)
+        if status == "matched":
+            result.matched += 1
+        elif status == "created":
+            result.created += 1
+        else:
+            result.unmatched.append(describe_banktransfer_row(row))
 
 
 def import_paypal(csv_file):

@@ -460,6 +460,9 @@ def get_bucket(days: int) -> Optional[Tuple[int, int]]:
 
 
 def detect_recurring_on_donor(donor):
+    if donor is None:
+        # Donation.donor is nullable (SET_NULL): nothing to analyze
+        return
     touched = _deferred_donor_updates.get()
     if touched is not None:
         # Part of a bulk operation (see models.defer_donor_updates) -- run

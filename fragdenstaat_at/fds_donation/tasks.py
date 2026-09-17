@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import timedelta
 
@@ -15,6 +16,8 @@ from froide.celery import app as celery_app
 from fragdenstaat_at.theme.notifications import send_notification
 
 TIME_ZERO = {"hour": 0, "minute": 0, "second": 0, "microsecond": 0}
+
+logger = logging.getLogger(__name__)
 
 
 @celery_app.task(name="fragdenstaat_at.fds_donation.new_donation")
@@ -136,14 +139,27 @@ def backup_jzwb_pdf_task(donor_id, year, ignore_receipt_date=None):
 
 @celery_app.task(name="fragdenstaat_at.fds_donation.import_banktransfers")
 def import_banktransfers_task(filepath, project, user_id=None):
-    from .external import import_banktransfers
+    from .external import BanktransferFileError, import_banktransfers
 
+    # Either way the uploader is told instead of the task failing silently in
+    # the worker.
     try:
         result = import_banktransfers(filepath, project)
-    except ValueError as e:
-        # Bad file: tell the uploader instead of failing silently in the worker
+    except BanktransferFileError as e:
+        # Rejected during validation, before anything was written
+        logger.warning("Bank transfer import for %s rejected: %s", project, e)
         result = None
-        error = str(e)
+        error = _("Nothing was imported.\n\nError: {error}").format(error=e)
+    except Exception as e:
+        # A row failed mid-import; rows before it are committed and their
+        # donors were still post-processed (see import_banktransfers).
+        logger.exception("Bank transfer import for %s failed", project)
+        result = None
+        error = _(
+            "The import was aborted partway. Rows before the failure were "
+            "imported; re-uploading the same file is safe, already imported "
+            "rows are updated rather than duplicated.\n\nError: {error}"
+        ).format(error=e)
     finally:
         os.remove(filepath)
 
@@ -153,7 +169,7 @@ def import_banktransfers_task(filepath, project, user_id=None):
     if result is None:
         user.send_mail(
             _("Bank transfer import for {project} failed").format(project=project),
-            _("Nothing was imported.\n\nError: {error}").format(error=error),
+            error,
         )
         return
     body = _("Matched: {matched}\nNew: {new}\nUnmatched: {unmatched}").format(

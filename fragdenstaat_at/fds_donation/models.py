@@ -781,7 +781,7 @@ class Donation(models.Model):
         touched = _deferred_donor_updates.get()
         if touched is None:
             update_donation_numbers(self.donor_id)
-        else:
+        elif self.donor_id is not None:
             touched.add(self.donor_id)
 
         return ret

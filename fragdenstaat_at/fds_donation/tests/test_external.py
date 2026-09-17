@@ -1,5 +1,5 @@
 import os
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.utils import timezone
@@ -10,7 +10,13 @@ from froide_payment.provider.banktransfer import generate_transfer_code
 
 from froide.account.factories import UserFactory
 
-from ..external import find_donation, import_banktransfer, import_banktransfers
+from .. import external
+from ..external import (
+    find_donation,
+    import_banktransfer,
+    import_banktransfers,
+    parse_banktransfer_amount,
+)
 from ..models import Donation, Donor
 from ..tasks import import_banktransfers_task
 from .factories import DonationFactory, DonorFactory, make_banktransfer_donation
@@ -215,6 +221,84 @@ def test_import_banktransfers_csv_without_identifier_and_german_formats(tmp_path
     assert Donation.objects.count() == donation_count
 
 
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("10.00", "10.00"),
+        ("10,50", "10.50"),
+        ("1.234,50", "1234.50"),
+        ("1,234.50", "1234.50"),
+        ("1.234.567,89", "1234567.89"),
+        ("1,234,567.89", "1234567.89"),
+        (" 5 ", "5"),
+    ],
+)
+def test_parse_banktransfer_amount(value, expected):
+    assert parse_banktransfer_amount(value) == Decimal(expected)
+
+
+@pytest.mark.parametrize("value", ["-10,00", "0", "0.00", "abc", "1.234.567"])
+def test_parse_banktransfer_amount_rejects(value):
+    with pytest.raises((ValueError, InvalidOperation)):
+        parse_banktransfer_amount(value)
+
+
+@pytest.mark.django_db
+def test_import_banktransfers_csv_donor_deleted(tmp_path):
+    # Donation.donor is SET_NULL: a pending donation can outlive its donor
+    donor = DonorFactory.create()
+    donation = make_banktransfer_donation(donor, Decimal("10.00"), timezone.now())
+    transfer_code = donation.payment.transaction_id
+    donor.delete()
+    donation.refresh_from_db()
+    assert donation.donor is None
+
+    path = write_csv(tmp_path, [f"TX1,{transfer_code},10.00,2026-09-01,AT1,,,"])
+    result = import_banktransfers(path, settings.DONATION_PROJECTS[0][0])
+    assert (result.matched, result.created, result.unmatched) == (1, 0, [])
+    donation.payment.refresh_from_db()
+    assert donation.payment.status == PaymentStatus.CONFIRMED
+
+
+@pytest.mark.django_db
+def test_import_banktransfers_post_processing_runs_on_failure(tmp_path, monkeypatch):
+    donor = DonorFactory.create()
+    donation = make_banktransfer_donation(donor, Decimal("10.00"), timezone.now())
+    transfer_code = donation.payment.transaction_id
+    donation.refresh_from_db()
+    assert donation.number == 1
+
+    calls = []
+    real = external.import_banktransfer
+
+    def flaky(*args, **kwargs):
+        calls.append(1)
+        if len(calls) == 3:
+            raise RuntimeError("db went away")
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(external, "import_banktransfer", flaky)
+
+    path = write_csv(
+        tmp_path,
+        [
+            f"TX1,{transfer_code},10.00,2026-09-01,AT1,,,",
+            # follow-up dated before the existing donation: must become number 1
+            f"TX2,{transfer_code},10.00,2026-09-02,AT1,2026-01-01,,",
+            f"TX3,{transfer_code},10.00,2026-09-03,AT1,,,",
+        ],
+    )
+    with pytest.raises(RuntimeError, match="db went away"):
+        import_banktransfers(path, settings.DONATION_PROJECTS[0][0])
+
+    # Rows before the failure were committed *and* their donor was renumbered
+    follow_up = Donation.objects.get(identifier="TX2")
+    assert follow_up.number == 1
+    donation.refresh_from_db()
+    assert donation.number == 2
+    assert not Donation.objects.filter(identifier="TX3").exists()
+
+
 @pytest.mark.django_db
 def test_import_banktransfers_csv_rejects_bad_files(tmp_path):
     project = settings.DONATION_PROJECTS[0][0]
@@ -237,7 +321,7 @@ def test_import_banktransfers_csv_rejects_bad_files(tmp_path):
 
 
 @pytest.mark.django_db
-def test_import_banktransfers_task(tmp_path, mailoutbox):
+def test_import_banktransfers_task(tmp_path, mailoutbox, monkeypatch):
     user = UserFactory.create()
     donor = DonorFactory.create()
     donation = make_banktransfer_donation(donor, Decimal("10.00"), timezone.now())
@@ -270,4 +354,18 @@ def test_import_banktransfers_task(tmp_path, mailoutbox):
     assert not os.path.exists(path)
     assert len(mailoutbox) == 2
     assert "failed" in mailoutbox[1].subject
+    assert "Nothing was imported" in mailoutbox[1].body
     assert "missing columns" in mailoutbox[1].body
+
+    # Mid-import failure: the uploader is told which rows made it
+    def boom(*args, **kwargs):
+        raise RuntimeError("db went away")
+
+    monkeypatch.setattr(external, "import_banktransfer", boom)
+    path = write_csv(tmp_path, [f"TX1,{transfer_code},10.00,2026-09-01,AT1,,,"])
+    import_banktransfers_task(path, project, user_id=user.id)
+    assert not os.path.exists(path)
+    assert len(mailoutbox) == 3
+    assert "failed" in mailoutbox[2].subject
+    assert "aborted partway" in mailoutbox[2].body
+    assert "db went away" in mailoutbox[2].body

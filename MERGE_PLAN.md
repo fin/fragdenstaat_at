@@ -135,7 +135,9 @@ via the `payment_status_changed` signal) — for a recurring donor appearing
 many times in one file this compounded to the same stalls/OOMs. Both are now
 deferred and run once per touched donor after the whole file, via
 `models.defer_donor_updates()`. DE's `BLOCK_LIST` (Stripe payouts by name) is
-gone — filtered out-of-band. The `.name`/engine bug DE's Celery-task version
+gone — filtered out-of-band. DE's `DEBIT_PATTERN` / `update_direct_debit()`
+(matching ` (P<id>)` in the reference to confirm a Lastschrift payment) is
+gone too — AT does not reconcile direct debits through this file. The `.name`/engine bug DE's Celery-task version
 introduced (task passes a path, not an `UploadedFile`) is moot: no Excel, no
 engine selection. `xlrd` / `openpyxl` are no longer needed by AT code.
 

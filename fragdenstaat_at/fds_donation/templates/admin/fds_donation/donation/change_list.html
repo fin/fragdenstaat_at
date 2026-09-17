@@ -35,7 +35,7 @@
 {% block content %}
     {{ block.super }}
     <div>
-        <h4>Überweisungen (XLS/XLSX)</h4>
+        <h4>Überweisungen aus foi-buchhaltung</h4>
         <form enctype="multipart/form-data"
               method="post"
               action="{% url 'admin:fds_donation-donation-import_banktransfers' %}">

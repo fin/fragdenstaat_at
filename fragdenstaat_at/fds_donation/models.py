@@ -1,7 +1,9 @@
+import contextvars
 import decimal
 import json
 import re
 import uuid
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 from typing import Any
 from urllib.parse import urlencode
@@ -421,6 +423,26 @@ def update_donation_numbers(donor_id):
             Donation.objects.filter(id=d.id).update(number=d.new_number)
 
 
+# Donation.save() renumbers the whole donor by default -- O(donor's donation
+# count) per save. Fine for a single edit, but a bulk import that touches the
+# same (often recurring) donor many times pays that cost on every one of its
+# own rows. Bulk operations use this to collect touched donor ids instead and
+# renumber each one exactly once when done.
+_deferred_donor_updates: contextvars.ContextVar = contextvars.ContextVar(
+    "fds_donation_deferred_donor_updates", default=None
+)
+
+
+@contextmanager
+def defer_donor_updates():
+    touched: set[int] = set()
+    token = _deferred_donor_updates.set(touched)
+    try:
+        yield touched
+    finally:
+        _deferred_donor_updates.reset(token)
+
+
 def get_project_choices():
     return DONATION_PROJECTS
 
@@ -756,7 +778,11 @@ class Donation(models.Model):
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)
 
-        update_donation_numbers(self.donor_id)
+        touched = _deferred_donor_updates.get()
+        if touched is None:
+            update_donation_numbers(self.donor_id)
+        else:
+            touched.add(self.donor_id)
 
         return ret
 

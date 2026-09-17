@@ -1,120 +1,134 @@
+import csv
+import logging
+import os
 import re
-from datetime import timedelta
-from decimal import Decimal
+from collections import Counter
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
+from functools import partial
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.db import reset_queries, transaction
 from django.db.models import Q
 
 import pandas as pd
 from froide_payment.models import Payment, PaymentStatus
 from froide_payment.provider.banktransfer import find_transfer_code
 
-from .models import Donation, Donor
+from .models import Donation, Donor, defer_donor_updates, update_donation_numbers
 from .services import create_donation_from_payment, detect_recurring_on_donor
+from .tasks import process_recurrence_task
+
+BANKTRANSFER_CSV_REQUIRED = ("reference", "amount", "date_received")
+BANKTRANSFER_CSV_OPTIONAL = ("identifier", "iban", "date", "purpose", "name")
+BANKTRANSFER_CSV_COLUMNS = BANKTRANSFER_CSV_REQUIRED + BANKTRANSFER_CSV_OPTIONAL
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class BanktransferImportResult:
+    matched: int = 0  # pending donations that received their transfer
+    created: int = 0  # follow-up donations for known (recurring) donors
+    unmatched: list[str] = field(default_factory=list)  # rows nobody claimed
+
+    @property
+    def count(self):
+        return self.matched + self.created
 
 
 def find_donation(transfer_ident, row):
-    try:
-        return Donation.objects.get(identifier=transfer_ident)
-    except Donation.DoesNotExist:
-        pass
+    donation = Donation.objects.filter(identifier=transfer_ident).first()
+    if donation is not None:
+        return donation
 
     transfer_code = find_transfer_code(row["reference"])
-
     if transfer_code is None:
         return None
 
-    payments = Payment.objects.filter(transaction_id=transfer_code)
-    if not payments:
-        return None
-    try:
-        donation = Donation.objects.get(payment=payments[0], identifier="")
-    except Donation.DoesNotExist:
+    donation = (
+        Donation.objects.filter(payment__transaction_id=transfer_code, identifier="")
+        .order_by("id")
+        .first()
+    )
+    if donation is None:
         return None
 
     donor = donation.donor
     if donor:
-        update_iban_on_donor(donor, row["iban"], row["reference"])
+        update_iban_on_donor(donor, row.get("iban"), row["reference"])
     return donation
 
 
 def update_iban_on_donor(donor, iban, reference):
+    # donor.attributes is a Postgres HStoreField: flat str -> str only, no
+    # nested values. A Python list stored as a value gets stringified via
+    # repr() on save; read back next time it's a *string*, which the old
+    # code then wrapped in a new single-element list and stringified again
+    # -- doubling in size on every save. Keep it as one flat, deduplicated,
+    # ';'-joined string instead (IBANs can't contain ';').
     if not donor.attributes:
         donor.attributes = donor.attributes or {}
-    if "ibans" not in donor.attributes:
-        donor.attributes["ibans"] = []
-    elif not isinstance(donor.attributes["ibans"], list):
-        donor.attributes["ibans"] = [donor.attributes["ibans"]]
-    if "iban" in donor.attributes:
-        if donor.attributes["iban"] not in donor.attributes["ibans"]:
-            donor.attributes["ibans"].append(donor.attributes["iban"])
-    if pd.notnull(iban):
-        if iban not in donor.attributes["ibans"]:
-            donor.attributes["ibans"].append(iban)
+    raw_ibans = donor.attributes.get("ibans") or ""
+    known_ibans = [v for v in raw_ibans.split(";") if v]
+    previous_iban = donor.attributes.get("iban")
+    if previous_iban and previous_iban not in known_ibans:
+        known_ibans.append(previous_iban)
+    if pd.notnull(iban) and iban:
+        if iban not in known_ibans:
+            known_ibans.append(iban)
         donor.attributes["iban"] = iban
+    donor.attributes["ibans"] = ";".join(known_ibans)
     donor.attributes["banktransfer_reference"] = reference
     donor.save()
 
 
-def get_or_create_bank_transfer_donor(row):
-    if pd.notnull(row["iban"]) and row["iban"]:
-        donors = Donor.objects.filter(
-            Q(identifier=row["iban"]) | Q(attributes__iban=row["iban"])
-        )
-        if len(donors) > 0:
-            return donors[0]
-
+def find_known_donor(row):
+    """
+    Find the donor a transfer belongs to when no pending donation claims it,
+    i.e. a follow-up transfer of a recurring donor. Only donors we already know
+    are considered: first by the transfer code in the reference, then by IBAN.
+    Never creates donors -- unknown transfers are handled outside the system.
+    """
     transfer_code = find_transfer_code(row["reference"])
     if transfer_code is not None:
-        donation = Donation.objects.filter(
-            payment__transaction_id=transfer_code
-        ).first()
-        if donation:
-            donor = donation.donor
-            if donor:
-                update_iban_on_donor(donor, row["iban"], row["reference"])
-                return donor
+        donation = (
+            Donation.objects.filter(payment__transaction_id=transfer_code)
+            .order_by("id")
+            .first()
+        )
+        if donation and donation.donor:
+            update_iban_on_donor(donation.donor, row.get("iban"), row["reference"])
+            return donation.donor
 
-    name = row["name"]
-    names = name.strip().rsplit(" ", 1)
-    first_name = " ".join(names[:-1])
-    last_name = " ".join(names[-1:])
-    attrs = {}
-    ident = ""
-    country = ""
-    if pd.notnull(row["iban"]):
-        attrs.update({"iban": row["iban"]})
-        country = row["iban"][:2]
-        ident = row["iban"]
-    if pd.notnull(row["reference"]):
-        attrs["banktransfer_reference"] = row["reference"]
-    return Donor.objects.create(
-        active=True,
-        salutation="",
-        first_name=first_name,
-        last_name=last_name,
-        company_name="",
-        address="",
-        postcode="",
-        city="",
-        country=country,
-        email="",
-        identifier=ident,
-        attributes=attrs,
-        contact_allowed=False,
-        become_user=False,
-        receipt=False,
-    )
+    iban = row.get("iban")
+    if iban:
+        return (
+            Donor.objects.filter(Q(identifier=iban) | Q(attributes__iban=iban))
+            .order_by("id")
+            .first()
+        )
+    return None
 
 
 def import_banktransfer(transfer_ident, row, project):
+    """
+    Returns "matched" if a pending donation received this transfer, "created"
+    if a follow-up donation was created for a known donor, or None if the row
+    could not be attributed to anyone (nothing is written in that case).
+    """
     is_new = False
     donation = find_donation(transfer_ident, row)
     if donation is None:
-        donor = get_or_create_bank_transfer_donor(row)
+        donor = find_known_donor(row)
+        if donor is None:
+            return None
         donation = Donation(
             donor=donor,
             completed=True,
+            timestamp=row.get("date") or row["date_received"],
         )
         is_new = True
     else:
@@ -127,11 +141,6 @@ def import_banktransfer(transfer_ident, row, project):
     donation.received_timestamp = row["date_received"]
     if row.get("purpose"):
         donation.purpose = row["purpose"]
-    if is_new:
-        if pd.notnull(row["date"]) and row["date"]:
-            donation.timestamp = row["date"]
-        else:
-            donation.timestamp = row["date_received"]
     donation.method = "banktransfer"
     donation.completed = True
     donation.save()
@@ -145,10 +154,9 @@ def import_banktransfer(transfer_ident, row, project):
             payment.received_amount = donation.amount
             payment.received_timestamp = donation.received_timestamp
             payment.change_status_and_save(PaymentStatus.CONFIRMED)
-    return is_new
+    return "created" if is_new else "matched"
 
 
-BLOCK_LIST = {"Stripe Payments UK Ltd", "Stripe Technology Europe Ltd", "Stripe"}
 DEBIT_PATTERN = re.compile(r" \(P(\d+)\)")
 
 
@@ -165,64 +173,151 @@ def update_direct_debit(row):
     payment.change_status_and_save(PaymentStatus.CONFIRMED)
 
 
-# AT override: Erste Bank / George statement exports use different column names
-# and split the payment reference across two columns. DE's mapping is kept below
-# for reference, since this is the piece most likely to drift on a future sync.
-#
-#   DE: Betrag, Datum, Wertstellung, Name, Verwendungszweck, Konto, Bank, Purpose
-BANK_COLUMNS = {
-    "Betrag": "amount",
-    "Valutadatum": "date_received",
-    "Buchungsdatum": "date",
-    "Partnername": "name",
-    "Zahlungsreferenz": "reference",
-    "Partner IBAN": "iban",
-    "BIC/SWIFT": "bic",
-}
+def parse_banktransfer_amount(value):
+    value = value.strip().replace(" ", "")
+    if "," in value:
+        # German notation: thousands "." and decimal ","
+        value = value.replace(".", "").replace(",", ".")
+    return Decimal(value)
 
 
-def import_banktransfers(xls_file, project):
-    df = pd.read_excel(
-        xls_file,
-        engine="xlrd" if xls_file.name.endswith(".xls") else "openpyxl",
-        # Keep references as text: they are identifiers, not numbers.
-        dtype={"Zahlungsreferenz": str},
+def parse_banktransfer_date(value):
+    value = value.strip()
+    for fmt in ("%Y-%m-%d", "%d.%m.%Y"):
+        try:
+            naive = datetime.strptime(value, fmt)
+        except ValueError:
+            continue
+        return naive.replace(tzinfo=ZoneInfo(settings.TIME_ZONE))
+    raise ValueError(f"unrecognised date {value!r} (use YYYY-MM-DD)")
+
+
+def read_banktransfer_csv(csv_file):
+    """
+    Parse the AT bank transfer CSV (see BANKTRANSFER_CSV_COLUMNS) into row
+    dicts. Everything is validated up front so a bad row fails the whole file
+    before anything is written.
+    """
+    if isinstance(csv_file, (str, os.PathLike)):
+        with open(csv_file, encoding="utf-8-sig", newline="") as f:
+            return read_banktransfer_csv(f)
+
+    sample = csv_file.readline()
+    csv_file.seek(0)
+    delimiter = ";" if sample.count(";") > sample.count(",") else ","
+    reader = csv.DictReader(csv_file, delimiter=delimiter)
+    columns = [c.strip().lower() for c in reader.fieldnames or []]
+    missing = [c for c in BANKTRANSFER_CSV_REQUIRED if c not in columns]
+    if missing:
+        raise ValueError("missing columns: {}".format(", ".join(missing)))
+
+    rows = []
+    for lineno, raw in enumerate(reader, start=2):
+        raw = {k.strip().lower(): (v or "").strip() for k, v in raw.items() if k}
+        if not any(raw.values()):
+            continue
+        row = {c: raw.get(c, "") for c in BANKTRANSFER_CSV_COLUMNS}
+        try:
+            row["amount"] = parse_banktransfer_amount(row["amount"])
+            row["date_received"] = parse_banktransfer_date(row["date_received"])
+            row["date"] = parse_banktransfer_date(row["date"]) if row["date"] else None
+        except (ValueError, InvalidOperation) as e:
+            raise ValueError(f"line {lineno}: {e}") from e
+        rows.append(row)
+    return rows
+
+
+def make_transfer_ident(row, seen):
+    """
+    Stable identifier for a transfer so re-importing a file is idempotent.
+    Prefers the bank's own transaction id; otherwise derives one from the
+    transfer, numbering identical transfers on the same day.
+    """
+    ident = row["identifier"] or "{date}-{ref}-{amount}-{iban}".format(
+        date=row["date_received"].date().isoformat(),
+        ref=row["reference"],
+        amount=row["amount"],
+        iban=row["iban"],
     )
-    df = df.rename(columns=BANK_COLUMNS)
-    # George splits a long reference between "Zahlungsreferenz" and
-    # "Buchungs-Details"; join them so reference matching sees the whole string.
-    if "Buchungs-Details" in df.columns:
-        df["reference"] = (
-            df["reference"].fillna("").str.cat(df["Buchungs-Details"].fillna(""))
-        )
-    df = df.dropna(subset=["name"])
+    seen[ident] += 1
+    if seen[ident] > 1:
+        ident = f"{ident}-{seen[ident]}"
+    return ident
 
-    df = df.dropna(subset=["date_received"])
-    df["reference"] = df["reference"].fillna("")
-    if "purpose" in df.columns:
-        df["purpose"] = df["purpose"].fillna("")
-    df["date_received"] = df["date_received"].dt.tz_localize(settings.TIME_ZONE)
-    if "date" in df.columns:
-        df["date"] = df["date"].dt.tz_localize(settings.TIME_ZONE)
-    else:
-        df["date"] = None
-    count = 0
-    new_count = 0
-    for i, row in df.iterrows():
-        if row["name"] in BLOCK_LIST:
-            continue
-        if DEBIT_PATTERN.search(row["reference"]):
-            update_direct_debit(row)
-            continue
-        local_date = row["date_received"].date()
-        transfer_ident = "{date}-{ref}-{iban}-{i}".format(
-            date=local_date.isoformat(), ref=row["reference"], iban=row["iban"], i=i
+
+def describe_banktransfer_row(row):
+    return " | ".join(
+        str(v)
+        for v in (
+            row["date_received"].date().isoformat(),
+            row["amount"],
+            row["name"],
+            row["iban"],
+            row["reference"],
         )
-        is_new = import_banktransfer(transfer_ident, row, project)
-        count += 1
-        if is_new:
-            new_count += 1
-    return count, new_count
+        if v
+    )
+
+
+def import_banktransfers(csv_file, project):
+    """
+    Import bank transfers that were already checked against the expected
+    banktransfer donations. Rows that match neither a pending donation nor a
+    known donor are reported back, not imported.
+    """
+    rows = read_banktransfer_csv(csv_file)
+    total = len(rows)
+    result = BanktransferImportResult()
+    seen = Counter()
+    logger.info("Importing %d bank transfer row(s) for %s", total, project)
+    # A recurring donor's transfers show up many times in one file. Without
+    # this, every row re-renumbers and re-analyzes that donor's whole
+    # donation history (see models.defer_donor_updates) -- once per row, and
+    # twice per row with a payment (once directly, once via the
+    # payment_status_changed signal). That's the compounding cost that made
+    # imports of otherwise modest files stall and OOM. Collapse it to once
+    # per touched donor, after the whole file is done.
+    with defer_donor_updates() as touched_donors:
+        for lineno, row in enumerate(rows, start=1):
+            # Django's DEBUG=True query log grows for the whole request/task; for a
+            # large file that outgrows available memory faster than the import itself.
+            if lineno % 20 == 0:
+                reset_queries()
+                logger.info(
+                    "Bank transfer import: %d/%d rows (matched=%d created=%d unmatched=%d)",
+                    lineno,
+                    total,
+                    result.matched,
+                    result.created,
+                    len(result.unmatched),
+                )
+            with transaction.atomic():
+                if DEBIT_PATTERN.search(row["reference"]):
+                    update_direct_debit(row)
+                    status = "matched"
+                else:
+                    transfer_ident = make_transfer_ident(row, seen)
+                    status = import_banktransfer(transfer_ident, row, project)
+            if status == "matched":
+                result.matched += 1
+            elif status == "created":
+                result.created += 1
+            else:
+                result.unmatched.append(describe_banktransfer_row(row))
+
+    logger.info("Updating donation numbers for %d donor(s)", len(touched_donors))
+    for donor_id in touched_donors:
+        update_donation_numbers(donor_id)
+        transaction.on_commit(partial(process_recurrence_task.delay, donor_id))
+    logger.info(
+        "Bank transfer import done: %d/%d rows (matched=%d created=%d unmatched=%d)",
+        total,
+        total,
+        result.matched,
+        result.created,
+        len(result.unmatched),
+    )
+    return result
 
 
 def import_paypal(csv_file):

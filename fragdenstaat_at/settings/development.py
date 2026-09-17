@@ -21,7 +21,7 @@ class Dev(FragDenStaatBase):
     TELNYX_FROM_NUMBER = os.environ.get("TELNYX_FROM_NUMBER", None)
 
     GEOIP_PATH = None
-    FRONTEND_DEBUG = True
+    FRONTEND_DEBUG = False
 
     DEBUG = True
 
@@ -29,6 +29,11 @@ class Dev(FragDenStaatBase):
     LOGGING["loggers"]["froide_fax"] = {
         "handlers": ["console"],
         "level": "DEBUG",
+        "propagate": False,
+    }
+    LOGGING["loggers"]["fragdenstaat_at"] = {
+        "handlers": ["console"],
+        "level": "INFO",
         "propagate": False,
     }
 

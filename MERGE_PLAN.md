@@ -36,8 +36,9 @@
 
 **D2's running cost:** three permanent local patches, re-applied every sync —
 `DONATION_SITE_NAME_OVERRIDE` in `fds_donation/forms.py`, `MIN_AMOUNT=2` in
-`form_settings.py` (DE has 5), and the Erste/George column mapping in
-`external.py`.
+`form_settings.py` (DE has 5), and the bank transfer importer in
+`external.py` (AT's own CSV format and matching rules, see `fds_donation`
+below — DE's `import_banktransfers` is not taken).
 
 **D8's consequence:** `fds_cms` and `fds_donation` can never be `git`-pulled
 cleanly from DE. Justified for `fds_cms` (21 plugin rows of AT content); forced
@@ -113,11 +114,62 @@ template, page-annotation titles, 1h caching of plain CMS views.
 
 **AT has:** `RegularDonorsProgressBarCMSPlugin`, Austrian banking (IBAN/BIC,
 creditor ID, Forum Informationsfreiheit as payee), `DONATION_SITE_NAME_OVERRIDE`,
-`MIN_AMOUNT` 5→2, an Erste Bank/George statement importer.
+`MIN_AMOUNT` 5→2, its own bank transfer importer.
+
+**Bank transfer import (2026-09-17, replaces the Erste/George `.xls` importer):**
+DE imports the whole bank statement and creates donors for unknown transfers.
+AT reconciles the statement against the expected banktransfer donations
+*outside* the system and imports only a prepared CSV (`reference`, `amount`,
+`date_received` required; `identifier`, `iban`, `date`, `purpose`, `name`
+optional). Rows are matched to a pending donation by transfer code, else to a
+known donor (transfer code → IBAN) as a recurring follow-up; anything else is
+listed as *unmatched* in the summary mail and not written. Donors are never
+created. Whole file is validated up front (a bad row rejects before anything
+is written), but each row now commits its own transaction rather than the
+whole file sharing one — an early version held one long-lived transaction for
+the whole import, which combined with `DEBUG=True`'s query log OOM'd the dev
+server on real-sized files. `Donation.save()`'s per-save renumbering and
+`detect_recurring_on_donor()`'s recurrence detection are both O(donor's
+donation count) and were firing on every row (twice, once directly and once
+via the `payment_status_changed` signal) — for a recurring donor appearing
+many times in one file this compounded to the same stalls/OOMs. Both are now
+deferred and run once per touched donor after the whole file, via
+`models.defer_donor_updates()`. DE's `BLOCK_LIST` (Stripe payouts by name) is
+gone — filtered out-of-band. The `.name`/engine bug DE's Celery-task version
+introduced (task passes a path, not an `UploadedFile`) is moot: no Excel, no
+engine selection. `xlrd` / `openpyxl` are no longer needed by AT code.
+
+**IBAN-history corruption bug (found + fixed 2026-09-17, present in DE too):**
+`update_iban_on_donor()` stored a Python list as a value in `Donor.attributes`
+— a Postgres `HStoreField`, flat `str -> str` only. Every save/reload
+round-trip re-stringified the already-stringified list via `repr()`, roughly
+doubling it. In AT's dev DB this had already corrupted 39/395 donors, two
+severely (131KB and 134MB of garbage in one `attributes` column, the latter
+enough to `MemoryError` any query touching that row, including plain admin
+page loads). Now keeps a flat `;`-joined string instead. **DE has the
+identical bug**, unfixed as of this writing — same `update_iban_on_donor`
+logic pattern (DE's importer, not AT's, but the same `HStoreField`-holds-a-
+list mistake would reproduce there too if anything hits that code path
+repeatedly). Worth flagging upstream.
+
+**`DonationChangeList.get_results()` perf (fixed 2026-09-17, DE unfixed):**
+the "Wiederkehrend Monatssumme der Spendenden" stat (and the matching
+`Recurrence` aggregate) ran `Donor.objects.filter(donations__in=qs).distinct()`
+on *every* changelist page load — `.distinct()` forces Postgres to sort and
+deduplicate on all ~27 `Donor` columns (incl. `attributes` and `note`) instead
+of just the id it actually needs. Measured 2.0s on just 870 AT donations,
+scaling with total table size, not page size. `id__in=qs.values("donor_id")`
+gets identical results in ~2ms (id is the PK, so no dedup is needed). DE's
+`admin.py` has the byte-for-byte same query, not yet fixed there.
 
 **AT lacks:** all newsletter and mailing coupling (`Donor.subscriber` FK,
 `SetupMailingMixin`), donation purpose and receipt opt-in (both `HiddenInput`),
 SEPA direct-debit reconciliation, `DONATION_LOGIC_PLUGINS`.
+
+**`cms_apps.py` (2026-09-17):** `FdsDonationApp` uncommented to match DE
+byte-for-byte. It registers but nothing attaches it to a page yet in
+production content, so it has no live effect outside `tests/fixtures/cms.json`
+(loaded by `tests/test_donation.py`), same as DE.
 
 **From DE (374 commits — the largest delta):** `Recurrence` model with cancel
 reasons and upgrade flows, `DonorEvent` audit trail, donor self-service auth,
@@ -510,8 +562,9 @@ Worth a decision, not yet acted on:
   carries known advisories. **[R]**
 - [ ] **`pandas` 3.0.3 — AT is a major *ahead* of DE's 2.3.3.** pandas 3.0
   changed defaults (copy-on-write, string dtypes), and AT parses bank statements
-  with it (`fds_donation/external.py`: `read_excel` for Erste/George `.xls`,
-  `read_csv` for PayPal). `tests/test_external.py` covers the import and passes,
+  with it (`fds_donation/external.py`: `read_csv` for PayPal; the bank transfer
+  import uses the stdlib `csv` module since 2026-09-17).
+  `tests/test_external.py` covers the import and passes,
   which is real reassurance, but this is the one place where being ahead of DE
   carries risk rather than benefit. **[R]**
 - [ ] AT's CMS stack is also ahead: `django-cms` 5.1.1 vs 5.0.7,
@@ -544,8 +597,9 @@ the eleven `froide-*` apps AT does not enable, plus `django-amenities`,
 **Runtime, AT has / DE lacks (6).** `daphne`, `django-leaflet`,
 `django-localflavor`, `django-tinymce`, `drf-spectacular`, `xlrd`. These are
 mostly AT declaring explicitly what DE inherits transitively through froide —
-harmless, and arguably more honest than DE. `xlrd` is a genuine AT need (the
-Erste/George `.xls` bank import). No version conflicts: **every dependency the
+harmless, and arguably more honest than DE. `xlrd` was needed for the former
+Erste/George `.xls` bank import; since the CSV rework (2026-09-17) nothing in
+AT imports it and it can be dropped with `openpyxl`. No version conflicts: **every dependency the
 two declare in common carries an identical constraint.**
 
 **Dev.** DE has `prek` (AT installs it as a system tool in the devcontainer, not
@@ -728,8 +782,8 @@ parallelism now the suite is larger. **[R]**
    AT's layer was **entirely overwritten by the adoption** and re-applied:
    Austrian bank details and creditor ID (6 templates), `MIN_AMOUNT=2`,
    `DONATION_SITE_NAME_OVERRIDE` on payment descriptors, Austria-first country
-   choices, the Erste/George importer (now a named `BANK_COLUMNS` map with DE's
-   recorded beside it), and `RegularDonorsProgressBarCMSPlugin`.
+   choices, the Erste/George importer (since replaced by AT's CSV importer, see
+   `fds_donation` in §3), and `RegularDonorsProgressBarCMSPlugin`.
 
    ⚠️ **It also silently undid D3** — both the hidden `contact` field and the
    removed `?newsletter` bypass. Re-applied, and the first now uses DE's

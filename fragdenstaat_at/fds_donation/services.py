@@ -20,7 +20,7 @@ from froide.helper.utils import update_query_params
 
 from fragdenstaat_at.fds_newsletter.utils import subscribe_to_default_newsletter
 
-from .models import Donation, Donor
+from .models import Donation, Donor, _deferred_donor_updates
 from .tasks import process_recurrence_task
 from .utils import (
     get_email_change_token,
@@ -460,6 +460,12 @@ def get_bucket(days: int) -> Optional[Tuple[int, int]]:
 
 
 def detect_recurring_on_donor(donor):
+    touched = _deferred_donor_updates.get()
+    if touched is not None:
+        # Part of a bulk operation (see models.defer_donor_updates) -- run
+        # once per donor when that batch is done instead of once per save.
+        touched.add(donor.id)
+        return
     transaction.on_commit(lambda: process_recurrence_task.delay(donor.id))
 
 

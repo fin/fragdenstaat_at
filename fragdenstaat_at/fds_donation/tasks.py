@@ -139,16 +139,35 @@ def import_banktransfers_task(filepath, project, user_id=None):
     from .external import import_banktransfers
 
     try:
-        count, new_count = import_banktransfers(filepath, project)
+        result = import_banktransfers(filepath, project)
+    except ValueError as e:
+        # Bad file: tell the uploader instead of failing silently in the worker
+        result = None
+        error = str(e)
     finally:
         os.remove(filepath)
 
-    if user_id is not None:
-        user = get_user_model().objects.get(id=user_id)
+    if user_id is None:
+        return
+    user = get_user_model().objects.get(id=user_id)
+    if result is None:
         user.send_mail(
-            _("Bank transfers imported for {project}").format(project=project),
-            _("Count: {count}\nNew: {new}").format(count=count, new=new_count),
+            _("Bank transfer import for {project} failed").format(project=project),
+            _("Nothing was imported.\n\nError: {error}").format(error=error),
         )
+        return
+    body = _("Matched: {matched}\nNew: {new}\nUnmatched: {unmatched}").format(
+        matched=result.matched,
+        new=result.created,
+        unmatched=len(result.unmatched),
+    )
+    if result.unmatched:
+        body += "\n\n" + _("Unmatched transfers (not imported):") + "\n"
+        body += "\n".join(result.unmatched)
+    user.send_mail(
+        _("Bank transfers imported for {project}").format(project=project),
+        body,
+    )
 
 
 @celery_app.task(name="fragdenstaat_at.fds_donation.import_paypal")

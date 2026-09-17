@@ -261,7 +261,8 @@ that enqueues the task on demand, and a "Banktransfer reminder due" list filter
 that previews exactly who it will mail — both read
 `services.get_unreceived_banktransfers_to_remind()`, which is the one place the
 selection lives (the task used to inline it). Safe to trigger repeatedly — each
-donation is reminded once (`REMINDER:` note guard).
+donation is reminded once (`REMINDER:` note guard). The monthly workflow
+(imports → preview → send) is written up in `MONTHLY_PAYMENT_DATA.md`.
 
 The rename procedure is written up in `docs/runbooks/celery-task-rename.md`.
 

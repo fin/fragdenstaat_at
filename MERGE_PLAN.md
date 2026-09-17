@@ -253,8 +253,15 @@ and load-bearing for delivery status. DE routes `run_subscriber_import` to a
 missed). Any beat schedule or queue rule must use the DE namespace. Renaming is a
 drain-and-deploy operation, not a code edit.
 
-`remind_unreceived_banktransfers` is documented "run on the 15th" but nothing in AT
-schedules it — confirm it exists in the deployment's beat config.
+`remind_unreceived_banktransfers` is documented "run on the 15th" but is
+deliberately **not** on the beat schedule in AT: it should run after the month's
+bank statement has been imported, and only a human knows when that is. The
+donation changelist has a "Erinnerungen senden" form (`DonationAdmin.remind_banktransfers`)
+that enqueues the task on demand, and a "Banktransfer reminder due" list filter
+that previews exactly who it will mail — both read
+`services.get_unreceived_banktransfers_to_remind()`, which is the one place the
+selection lives (the task used to inline it). Safe to trigger repeatedly — each
+donation is reminded once (`REMINDER:` note guard).
 
 The rename procedure is written up in `docs/runbooks/celery-task-rename.md`.
 
@@ -1188,8 +1195,9 @@ Remaining:
   database that lacks those columns — check `information_schema` first.
 - [ ] **Celery task rename** — the five `fragdenstaat_de.fds_donation.*` names. Drain
   and deploy per `docs/runbooks/celery-task-rename.md`; not a code edit.
-- [ ] **Confirm `remind_unreceived_banktransfers` is in the beat config.** It is
-  documented "run on the 15th" but nothing in the repo schedules it.
+- [x] **`remind_unreceived_banktransfers` scheduling** — resolved as a manual admin
+  trigger on the donation changelist rather than a beat entry; see the celery
+  section above. Make sure the deployment's beat config does *not* also schedule it.
 - [ ] **Attach the `FdsCmsPlainAPIApp` apphook to the help page** (after the DB
   migrations above). The machinery is fully ported —
   `fds_cms/cms_apps.py:FdsCmsPlainAPIApp`, `urls_plainapi.py`,

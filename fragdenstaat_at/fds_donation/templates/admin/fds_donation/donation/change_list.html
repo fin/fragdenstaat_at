@@ -57,4 +57,16 @@
             <input type="submit" value="Paypal importieren" />
         </form>
     </div>
+    <div>
+        <h4>Erinnerungen für ausstehende Überweisungen</h4>
+        <p>
+            Erinnert Spendende, deren angekündigte Überweisung aus dem Vormonat noch nicht
+            eingegangen ist. Nach dem Import der Überweisungen auslösen. Jede Spende wird nur einmal erinnert.
+        </p>
+        <form method="post"
+              action="{% url 'admin:fds_donation-donation-remind_banktransfers' %}">
+            {% csrf_token %}
+            <input type="submit" value="Erinnerungen senden" />
+        </form>
+    </div>
 {% endblock %}

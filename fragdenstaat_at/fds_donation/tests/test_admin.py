@@ -166,3 +166,58 @@ def test_invalid_amount_shows_error(
     messages_list = list(get_messages(request))
     assert len(messages_list) == 1
     assert "abc" in str(messages_list[0])
+
+
+@pytest.mark.django_db
+def test_remind_banktransfers_admin_view(client, monkeypatch):
+    from django.urls import reverse
+
+    from .. import tasks
+
+    calls = []
+    monkeypatch.setattr(
+        tasks.remind_unreceived_banktransfers, "delay", lambda: calls.append(True)
+    )
+    url = reverse("admin:fds_donation-donation-remind_banktransfers")
+
+    # Staff without change permission may not trigger it
+    staff = UserFactory(is_staff=True)
+    client.force_login(staff)
+    assert client.post(url).status_code == 403
+    assert calls == []
+
+    superuser = UserFactory(is_staff=True, is_superuser=True)
+    client.force_login(superuser)
+    # GET renders nothing and enqueues nothing
+    assert client.get(url).status_code == 403
+    assert calls == []
+
+    response = client.post(url)
+    assert response.status_code == 302
+    assert response.url == reverse("admin:fds_donation_donation_changelist")
+    assert calls == [True]
+
+
+@pytest.mark.django_db
+def test_reminder_due_filter_matches_task_queryset(client, monkeypatch):
+    from django.urls import reverse
+
+    from .. import services
+    from .factories import DonationFactory
+
+    donation = DonationFactory(completed=True, method="banktransfer")
+    DonationFactory(completed=True, method="banktransfer")
+    monkeypatch.setattr(
+        services,
+        "get_unreceived_banktransfers_to_remind",
+        lambda: Donation.objects.filter(pk=donation.pk),
+    )
+    client.force_login(UserFactory(is_staff=True, is_superuser=True))
+    url = reverse("admin:fds_donation_donation_changelist")
+
+    response = client.get(url, {"reminder_due": "1"})
+    assert response.status_code == 200
+    assert list(response.context["cl"].queryset) == [donation]
+
+    response = client.get(url)
+    assert response.context["cl"].queryset.count() == 2

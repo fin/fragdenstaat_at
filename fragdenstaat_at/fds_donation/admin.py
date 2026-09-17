@@ -57,6 +57,7 @@ from fragdenstaat_at.theme.admin import make_tag_autocomplete_admin
 
 from .admin_utils import (
     ActiveRecurrencesListFilter,
+    BanktransferReminderDueListFilter,
     DonorProjectFilter,
     DonorTagListFilter,
     DonorTotalAmountPerYearFilter,
@@ -832,6 +833,7 @@ class DonationAdmin(admin.ModelAdmin):
         ("recurrence", ForeignKeyFilter),
         make_nullfilter("payment", _("Has payment record")),
         "payment__status",
+        BanktransferReminderDueListFilter,
     )
     date_hierarchy = "timestamp"
     raw_id_fields = ("donor", "order", "payment")
@@ -967,6 +969,11 @@ class DonationAdmin(admin.ModelAdmin):
                 "import-paypal/",
                 self.admin_site.admin_view(self.import_paypal),
                 name="%s-%s-import_paypal" % info,
+            ),
+            path(
+                "remind-banktransfers/",
+                self.admin_site.admin_view(self.remind_banktransfers),
+                name="%s-%s-remind_banktransfers" % info,
             ),
         ]
         return my_urls + urls
@@ -1190,6 +1197,30 @@ class DonationAdmin(admin.ModelAdmin):
         self.message_user(
             request,
             _("Import will start in background."),
+            level=messages.INFO,
+        )
+
+        return redirect("admin:fds_donation_donation_changelist")
+
+    def remind_banktransfers(self, request):
+        """Manually trigger last month's unreceived-banktransfer reminders.
+
+        The task is not on the beat schedule: it should run after the bank
+        statement for the month has been imported, and only a human knows when
+        that is. Safe to trigger repeatedly -- each donation is reminded once.
+        """
+        from .tasks import remind_unreceived_banktransfers
+
+        if not request.method == "POST":
+            raise PermissionDenied
+        if not self.has_change_permission(request):
+            raise PermissionDenied
+
+        remind_unreceived_banktransfers.delay()
+
+        self.message_user(
+            request,
+            _("Banktransfer reminders will be sent in background."),
             level=messages.INFO,
         )
 

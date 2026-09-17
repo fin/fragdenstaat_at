@@ -212,6 +212,25 @@ class PassiveDonationListFilter(admin.SimpleListFilter):
         return queryset
 
 
+class BanktransferReminderDueListFilter(admin.SimpleListFilter):
+    """Exactly the donations the "Erinnerungen senden" button will mail."""
+
+    title = _("Banktransfer reminder due")
+    parameter_name = "reminder_due"
+
+    def lookups(self, request, model_admin):
+        return (("1", _("yes")),)
+
+    def queryset(self, request, queryset):
+        from .services import get_unreceived_banktransfers_to_remind
+
+        if self.value() == "1":
+            return queryset.filter(
+                pk__in=get_unreceived_banktransfers_to_remind().values("pk")
+            )
+        return queryset
+
+
 class ActiveRecurrencesListFilter(admin.SimpleListFilter):
     title = _("Has active recurrences")
     parameter_name = "active_recurrences"

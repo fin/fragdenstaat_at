@@ -41,44 +41,17 @@ def send_donation_notification(donation_id):
 @celery_app.task(name="fragdenstaat_at.fds_donation.remind_unreceived_banktransfers")
 def remind_unreceived_banktransfers():
     """
-    To be run on the 15th of each month
-    Check if there are promised bank transfers in the last
+    Triggered from the donation admin once the month's bank statement has
+    been imported. Check if there are promised bank transfers in the last
     month that have not been received. Account for bank delays.
     """
-    from .models import Donation
-    from .services import send_donation_reminder_email
+    from .services import (
+        get_unreceived_banktransfers_to_remind,
+        send_donation_reminder_email,
+    )
 
-    today = timezone.localtime(timezone.now())
-
-    bank_delay = relativedelta(days=4)
-    last_month = today - relativedelta(months=1)
-    first_of_this_month = today.replace(day=1, **TIME_ZERO)
-    end_date = first_of_this_month - bank_delay
-    first_of_last_month = last_month.replace(day=1, **TIME_ZERO)
-    start_date = first_of_last_month - bank_delay
-
-    donations = Donation.objects.filter(
-        completed=True,
-        received_timestamp__isnull=True,
-        method="banktransfer",
-        timestamp__gte=start_date,
-        timestamp__lt=end_date,
-    ).select_related("donor", "payment")
-
-    for donation in donations:
-        # Have we received any donations from this donor since?
-        donation_from_donor_exists = (
-            Donation.objects.filter(
-                completed=True,
-                received_timestamp__isnull=False,
-                donor_id=donation.donor_id,
-                timestamp__gte=start_date,
-            )
-            .exclude(id=donation.id)
-            .exists()
-        )
-        if not donation_from_donor_exists:
-            send_donation_reminder_email(donation)
+    for donation in get_unreceived_banktransfers_to_remind():
+        send_donation_reminder_email(donation)
 
 
 @celery_app.task(name="fragdenstaat_at.fds_donation.remove_old_donations")

@@ -472,18 +472,68 @@ def detect_recurring_on_donor(donor):
     transaction.on_commit(lambda: process_recurrence_task.delay(donor.id))
 
 
+def day_start(dt):
+    return dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+REMINDER_TEXT = "REMINDER:"
+REMIND_BANKTRANSFER_AFTER_DAYS = 14
+BANKTRANSFER_DELAY_DAYS = 4
+
+
+def get_unreceived_banktransfers_to_remind(base_date=None):
+    """Banktransfer donations promised last month that never arrived.
+
+    This is the queryset ``remind_unreceived_banktransfers`` sends to, and
+    what the admin's "Reminder due" filter shows; keep them the same thing.
+    "Last month" is shifted back by ``BANKTRANSFER_DELAY_DAYS`` to account for
+    bank delays: a transfer promised on the 29th may only show up in the
+    following month's statement.
+    """
+    if base_date is None:
+        base_date = timezone.now()
+    today = timezone.localtime(base_date)
+
+    bank_delay = relativedelta(days=BANKTRANSFER_DELAY_DAYS)
+    first_of_this_month = day_start(today.replace(day=1))
+    first_of_last_month = first_of_this_month - relativedelta(months=1)
+    start_date = first_of_last_month - bank_delay
+    end_date = first_of_this_month - bank_delay
+
+    # Has the donor paid anything since? Then a reminder would be rude.
+    received_since = Donation.objects.filter(
+        completed=True,
+        received_timestamp__isnull=False,
+        donor_id=models.OuterRef("donor_id"),
+        timestamp__gte=start_date,
+    ).exclude(id=models.OuterRef("id"))
+
+    return (
+        Donation.objects.filter(
+            completed=True,
+            received_timestamp__isnull=True,
+            method="banktransfer",
+            timestamp__gte=start_date,
+            timestamp__lt=end_date,
+            timestamp__lte=base_date - timedelta(days=REMIND_BANKTRANSFER_AFTER_DAYS),
+        )
+        .exclude(note__contains=REMINDER_TEXT)
+        .exclude(models.Exists(received_since))
+        .select_related("donor", "payment")
+    )
+
+
 def send_donation_reminder_email(donation):
     if donation.received_timestamp:
         return
     if donation.method != "banktransfer":
         return
-    REMINDER_TEXT = "REMINDER:"
     if REMINDER_TEXT in donation.note:
         return
 
     now = timezone.now()
     diff = now - donation.timestamp
-    if diff < timedelta(days=14):
+    if diff < timedelta(days=REMIND_BANKTRANSFER_AFTER_DAYS):
         return
 
     donor = donation.donor
@@ -558,10 +608,6 @@ def send_donation_gift_order_shipped(gift_order):
 
 REMIND_INCOMPLETE_AFTER_DAYS = 2
 DONATION_SPAM_COUNT = 6
-
-
-def day_start(dt):
-    return dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def get_incomplete_donations_to_remind(base_date=None):

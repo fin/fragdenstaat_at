@@ -2030,7 +2030,7 @@ requires-dist = [
     { name = "feedparser", specifier = ">=6.0.11" },
     { name = "froide", git = "https://github.com/fin/froide.git?rev=2026-feat-messagekind-initial-message" },
     { name = "froide-fax", git = "https://github.com/fin/froide-fax.git?rev=main" },
-    { name = "froide-payment", git = "https://github.com/fin/froide-payment.git?rev=2026-08-de-sync" },
+    { name = "froide-payment", git = "https://github.com/fin/froide-payment.git?rev=main" },
     { name = "geoip2", specifier = ">=4.8.0" },
     { name = "gunicorn", marker = "extra == 'production'" },
     { name = "html-text", specifier = ">=0.7.0" },
@@ -2172,7 +2172,7 @@ dependencies = [
 [[package]]
 name = "froide-payment"
 version = "0.0.3"
-source = { git = "https://github.com/fin/froide-payment.git?rev=2026-08-de-sync#f7d3120ea07b8d29da0bc2ac89aa00f451ca62c6" }
+source = { git = "https://github.com/fin/froide-payment.git?rev=main#45949296cd1269916e7f713889d75a9e71652e93" }
 dependencies = [
     { name = "django-countries" },
     { name = "django-localflavor" },

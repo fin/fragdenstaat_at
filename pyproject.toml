@@ -117,14 +117,15 @@ dependencies = [
   # /v1/billing/subscriptions request with "violates schema" -- every recurring
   # PayPal donation 400s. DE sends a bare "de" and never hits it.
   #
-  # 2026-08-de-sync is okfde/main plus the three Austria-specific one-liners
-  # from the old fin fork, rebased: this locale fix in both subscription paths,
-  # and "de-at" added to Stripe's get_stripe_locales. Public over https, so no
-  # deploy key needed.
+  # fin/main is okfde/main plus the three Austria-specific one-liners from the
+  # old fin fork, rebased: this locale fix in both subscription paths, and
+  # "de-at" added to Stripe's get_stripe_locales. (The old 2023 fork that
+  # fin/main used to be is kept as fin/2026-08-fdsat-deployed.) Public over
+  # https, so no deploy key needed.
   #
-  # Exit criterion: upstream them to okfde/froide-payment and repin to @main.
-  # Tracked in MERGE_PLAN.md 9.9.
-  "froide-payment @ git+https://github.com/fin/froide-payment.git@2026-08-de-sync",
+  # Exit criterion: upstream them to okfde/froide-payment and repin to okfde
+  # @main. Tracked in MERGE_PLAN.md 9.9.
+  "froide-payment @ git+https://github.com/fin/froide-payment.git@main",
   # Fork pin, not a fork of convenience. fin/main carries webhook hardening
   # (replay + malformed-envelope rejection), classification of permanently
   # undeliverable faxes so they stop being retried, Telnyx's OpenAPI examples as

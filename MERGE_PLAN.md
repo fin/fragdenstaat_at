@@ -1487,8 +1487,9 @@ if that stops being true.
 
 ### 9.9 The froide-payment fork is not in the dependency set
 
-`fin/froide-payment@main` and `fin/2026-08-fdsat-deployed` are **identical**, so
-production runs the fork — while `pyproject.toml` and `uv.lock` both declare
+`fin/froide-payment@main` and `fin/2026-08-fdsat-deployed` were **identical**
+(until `fin/main` was repointed on 2026-10-13 — see below), so production runs
+the fork — while `pyproject.toml` and `uv.lock` both declare
 `okfde/froide-payment@main`. The switch therefore drops eight commits. Audited:
 
 | commit | effect | still missing from okfde? | handled |
@@ -1528,7 +1529,13 @@ That was wrong — checked against `fds_final` and corrected.
 
 - [x] **Stripe locale** (`9c24aed`) and **PayPal locale** (`134cc6f`) — both are
   rebased onto current `okfde/main` as `fin/froide-payment@2026-08-de-sync`, and
-  `pyproject.toml` pins it (lock records `f7d3120`). The PayPal one is not
+  `pyproject.toml` pinned it (lock recorded `f7d3120`). On 2026-10-13 the same
+  three were rebased again onto the September `okfde/main` (render_field form
+  templates, IBAN `AttributeError` fix) and force-pushed as `fin/main`;
+  `pyproject.toml` now pins `fin/froide-payment@main` (lock records `4594929`).
+  `2026-08-de-sync` is superseded but kept; it differs only by the older base
+  and an extra `uv.lock` commit. The old 2023 fork survives as
+  `fin/2026-08-fdsat-deployed`. The PayPal one is not
   hypothetical: `application_context.locale` was sending `de-at`, which is not
   valid BCP-47 — the region subtag must be uppercase — so PayPal rejected every
   recurring subscription with "violates schema". `test_paypal_recurring` proves

@@ -1107,7 +1107,7 @@ class DonationFormCMSPlugin(CMSPlugin):
     collapsed = models.BooleanField(default=False)
     hide_contact = models.BooleanField(default=False)
     hide_account = models.BooleanField(default=False)
-    hide_receipt = models.BooleanField(default=False)
+    hide_receipt = models.BooleanField(default=True)
     quick_payment = models.CharField(
         blank=True, max_length=20, choices=QUICKPAYMENT_CHOICES
     )

@@ -126,8 +126,13 @@ class FragDenStaatBase(German, Base):
                 # plugin that renders an icon raises TemplateSyntaxError. Icon is
                 # a proxy model, so enabling it adds no table.
                 "djangocms_frontend.contrib.icon",
-                # We use djangocms_picture instead
-                # "djangocms_frontend.contrib.image",
+                # Installed for its migration, not its plugin. contrib.carousel
+                # imports ..image.models, which defines the Image proxy model;
+                # without this app Django files it under djangocms_frontend,
+                # which has no migration for it, so makemigrations keeps
+                # proposing one. A proxy, so no table. The ImagePlugin itself is
+                # unregistered in fds_cms/apps.py: we use djangocms_picture.
+                "djangocms_frontend.contrib.image",
                 "djangocms_frontend.contrib.jumbotron",
                 "djangocms_frontend.contrib.link",
                 "djangocms_frontend.contrib.listgroup",

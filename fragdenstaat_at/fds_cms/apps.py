@@ -32,6 +32,16 @@ class FdsCmsConfig(AppConfig):
         except Exception:  # already absent, e.g. on a later DE version
             pass
 
+        # djangocms_frontend.contrib.image is installed only so its Image proxy
+        # model has a migration (see settings). Editors use djangocms_picture's
+        # "Image"; don't offer them a second one.
+        from djangocms_frontend.contrib.image.cms_plugins import ImagePlugin
+
+        try:
+            plugin_pool.unregister_plugin(ImagePlugin)
+        except Exception:  # not registered
+            pass
+
         account_merged.connect(merge_user)
 
         thumbnail_created.disconnect(thumbnail_created_callback)

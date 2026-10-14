@@ -1581,6 +1581,40 @@ carry the lock, not just the source.
   level, so 4.x turns every payment page into an `ImportError` at startup. If a
   future lock refresh drops the constraint this regresses — loudly at boot
   rather than silently, but only once something imports the app.
+- [x] **Lock `django-oauth-toolkit`, `django-parler` and `oauthlib` to what
+  froide was built against** (2026-10-14): 3.1.0 → 3.3.0, 2.3 → 2.4, and
+  3.2.2 → 3.3.1, the same as froide's and DE's locks. froide's
+  `account/0041`, `account/0043` and `publicbody/0055` (froide `8433f24`,
+  "add migrations due to parler and oauth upgrade") describe the newer
+  libraries, so on the old ones `makemigrations` proposed migrations *into
+  froide* that undo them. Pin these exact versions: a bare
+  `--upgrade-package` resolves DOT 3.4.1, which ships six more migrations
+  (`oauth2_provider/0017`–`0022`) that froide's `Application` model doesn't
+  match, and oauthlib 4.0.0, a major version froide hasn't been tested on.
+- [ ] **Apply `oauth2_provider/0013` and `0014` on deploy.** They arrive with
+  DOT 3.3.0.
+
+**Expected `makemigrations --dry-run` output.** After the above, it still
+lists three third-party apps. None is AT's to fix, and generating them would
+write into `.venv/site-packages`, where the next `uv sync` deletes them:
+
+- `djangocms_alias`: its `0001` has `unique_together` on the translation
+  table, while parler 2.4 builds a named `UniqueConstraint`. This is the same
+  change froide's `publicbody/0055` made for froide.
+- `contractor`, `sortabletable`: django-cms (5.0.x and 5.1) defines
+  `cmsplugin_ptr` with `related_name='%(app_label)s_%(class)s'`, while their
+  migrations have the expanded name. sortabletable's model also has
+  `verbose_name`s that its migration lacks. These change field descriptions,
+  not the schema.
+
+A fourth, `djangocms_frontend`, is fixed by installing
+`djangocms_frontend.contrib.image`. `contrib.carousel` imports
+`..image.models`, which defines the `Image` proxy model. Without the image app
+installed, Django assigns that model to `djangocms_frontend`, which has no
+migration for it. This applies to every djangocms-frontend version AT has
+locked (2.1.3, 2.4.0, 2.5.1), and DE has the same setup. The image app's
+`ImagePlugin` is unregistered in `fds_cms/apps.py`, next to `DarkModeToggle`,
+so editors are still offered only djangocms_picture's "Image".
 
 **Developer trap: changing a vite entry needs a Django restart.**
 `froide/helper/templatetags/frontendbuild.py` keeps a module-level

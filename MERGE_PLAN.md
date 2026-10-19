@@ -168,6 +168,24 @@ gets identical results in ~2ms (id is the PK, so no dedup is needed). DE's
 `SetupMailingMixin`), donation purpose and receipt opt-in (both `HiddenInput`),
 SEPA direct-debit reconciliation, `DONATION_LOGIC_PLUGINS`.
 
+**Stats templates removed (2026-10-18):** step 4 took DE's `donation_tags.py`
+(which had dropped the stats tags in DE `d3a8bfcc`) but kept AT's
+`admin/fds_donation/app_index.html` and `fds_donation/stats/*.html`, which DE
+deleted in the same commit. `/admin/fds_donation/` raised
+`TemplateSyntaxError: Invalid block tag 'donor_type_counts'` in production.
+All three deleted to match DE; the app index is Django's default again.
+
+**Donor login 500 without newsletters (fixed 2026-10-19):** neither dev nor live
+has any `Newsletter` rows. `subscribe_to_newsletter` returns `None` (not a
+tuple) for an unknown slug, and `utils.subscribe_donor_newsletter` unpacked it,
+so the first login link of any donor with `contact_allowed` and an unconfirmed
+email 500'd inside `confirm_donor_email` — after `email_confirmed` and any user
+linking were saved, but before `connect_payments_to_user`. A second click
+worked (already confirmed, early return), so those donors' orders were never
+attached to their account. Now guarded; repair by re-running
+`connect_payments_to_user` (idempotent) for affected donors. DE never hits this
+because its newsletters exist.
+
 **`cms_apps.py` (2026-09-17):** `FdsDonationApp` uncommented to match DE
 byte-for-byte. It registers but nothing attaches it to a page yet in
 production content, so it has no live effect outside `tests/fixtures/cms.json`

@@ -360,3 +360,21 @@ def test_subscription_access_user(client, dummy_user, donor):
     client.force_login(dummy_user)
     response = client.get(sub_url)
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_donor_access_unconfirmed_contact_allowed_without_newsletters(client):
+    """Regression: AT has no Newsletter rows (neither DEFAULT_NEWSLETTER nor
+    DONOR_NEWSLETTER), so subscribe_to_newsletter returns None and
+    subscribe_donor_newsletter used to crash unpacking it -- a 500 on the
+    first login link of every donor with contact_allowed and an unconfirmed
+    email."""
+    donor = Donor.objects.create(email="test@example.org", contact_allowed=True)
+    Donation.objects.create(donor=donor, amount=10.0, completed=True)
+
+    response = client.post(donor.get_login_url())
+    assert response.status_code == 302
+    assert client.session["donor_id"] == donor.id
+    donor.refresh_from_db()
+    assert donor.email_confirmed is not None
+    assert donor.subscriber is None

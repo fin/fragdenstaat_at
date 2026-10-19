@@ -141,13 +141,19 @@ def merge_dict(attr: str):
 
 
 def subscribe_donor_newsletter(donor, email_confirmed=False):
-    result, subscriber = subscribe_to_newsletter(
+    ret = subscribe_to_newsletter(
         settings.DONOR_NEWSLETTER,
         donor.email,
         user=donor.user,
         name=donor.get_full_name(),
         email_confirmed=email_confirmed,
     )
+    if ret is None:
+        # AT override: subscribe_to_newsletter returns None, not a tuple, when
+        # no Newsletter has the slug -- and AT has none. Unpacking that 500'd
+        # the donor login link midway through confirm_donor_email.
+        return
+    result, subscriber = ret
     donor.subscriber = subscriber
     donor.save(update_fields=["subscriber"])
 

@@ -6,8 +6,22 @@ from froide.account.factories import UserFactory
 
 from .. import models as donation_models
 from .factories import DonorFactory
+from .utils import ensure_donation_apphook
 
 register(DonorFactory)
+
+
+@pytest.fixture(autouse=True)
+def donation_apphook(request):
+    """Route fds_donation via its CMS apphook for every DB test here."""
+    if request.node.get_closest_marker("django_db") is None and not (
+        {"db", "transactional_db"} & set(request.fixturenames)
+    ):
+        return
+    # The shared helper behind both db and transactional_db, so this runs
+    # inside whichever one the test asked for (transactional_db wins).
+    request.getfixturevalue("_django_db_helper")
+    ensure_donation_apphook()
 
 
 @pytest.fixture

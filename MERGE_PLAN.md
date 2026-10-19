@@ -186,6 +186,27 @@ attached to their account. Now guarded; repair by re-running
 `connect_payments_to_user` (idempotent) for affected donors. DE never hits this
 because its newsletters exist.
 
+**`DonationFormCMSPlugin.hide_contact` default True (0048, 2026-10-19):** the
+`form_settings` default was already True (D3), but the CMS plugin model still
+defaulted to False, so 19 of 43 placed forms on dev still offered the opt-in
+and kept setting `contact_allowed`. 0048 flips the model default (DE: False)
+and backfills every existing plugin to True; its reverse is a no-op.
+
+**Tests route fds_donation via the apphook (2026-10-19):** `tests/urls.py` used
+to mount the donation urlconf by hand at `spenden/spende/` on top of
+`theme/urls.py`'s `spenden/` mount (same namespace, so `manage.py check` warned
+urls.W005 and `reverse()` returned the theme mount's `/spenden/...` paths). It
+now drops the theme mount, and `tests/fixtures/cms.json` gains a `spende` child
+of the `spenden` page with `FdsDonationApp` attached (namespace `fds_donation`),
+as on DE. An autouse fixture in `fds_donation/tests/conftest.py`
+(`ensure_donation_apphook`) reloads the fixture when a transactional test has
+flushed it and reloads the urlconf once per process. Production still mounts
+via the urlconf. Pitfall found on the way: `tests/conftest.py`'s
+settings-mismatch guard does not apply when only `fragdenstaat_at/...` tests are
+collected, so with the devcontainer's `DJANGO_CONFIGURATION=Dev` exported those
+runs silently use Dev settings -- run with `env -u DJANGO_SETTINGS_MODULE -u
+DJANGO_CONFIGURATION`.
+
 **`cms_apps.py` (2026-09-17):** `FdsDonationApp` uncommented to match DE
 byte-for-byte. It registers but nothing attaches it to a page yet in
 production content, so it has no live effect outside `tests/fixtures/cms.json`

@@ -1736,7 +1736,7 @@
     "fields": {
       "path": "00010002",
       "depth": 2,
-      "numchild": 0,
+      "numchild": 1,
       "parent": 21,
       "site": [
         "fragdenstaat.at"
@@ -2063,6 +2063,30 @@
       "is_home": false,
       "application_urls": "",
       "application_namespace": null,
+      "is_page_type": false
+    }
+  },
+  {
+    "model": "cms.page",
+    "pk": 37,
+    "fields": {
+      "path": "000100020001",
+      "depth": 3,
+      "numchild": 0,
+      "parent": 23,
+      "site": [
+        "fragdenstaat.at"
+      ],
+      "created_by": "dev",
+      "changed_by": "dev",
+      "creation_date": "2026-10-19T12:00:00.000Z",
+      "changed_date": "2026-10-19T12:00:00.000Z",
+      "reverse_id": "fds_donation",
+      "navigation_extenders": null,
+      "login_required": false,
+      "is_home": false,
+      "application_urls": "FdsDonationApp",
+      "application_namespace": "fds_donation",
       "is_page_type": false
     }
   },
@@ -2529,6 +2553,26 @@
     }
   },
   {
+    "model": "djangocms_versioning.version",
+    "pk": 69,
+    "fields": {
+      "created": "2026-10-19T12:00:00.000Z",
+      "modified": "2026-10-19T12:00:00.000Z",
+      "created_by": [
+        "dev@localhost"
+      ],
+      "number": "1",
+      "content_type": [
+        "cms",
+        "pagecontent"
+      ],
+      "object_id": 85,
+      "state": "published",
+      "locked_by": null,
+      "source": null
+    }
+  },
+  {
     "model": "cms.pagecontent",
     "pk": 22,
     "fields": {
@@ -2913,6 +2957,30 @@
     }
   },
   {
+    "model": "cms.pagecontent",
+    "pk": 85,
+    "fields": {
+      "language": "de-at",
+      "title": "Spende",
+      "page_title": "",
+      "menu_title": "",
+      "meta_description": "",
+      "redirect": "",
+      "slug": "spende",
+      "overwrite_url": null,
+      "page": 37,
+      "creation_date": "2026-10-19T12:00:00.000Z",
+      "created_by": "dev",
+      "changed_by": "dev",
+      "changed_date": "2026-10-19T12:00:00.000Z",
+      "in_navigation": false,
+      "soft_root": false,
+      "template": "INHERIT",
+      "limit_visibility_in_menu": null,
+      "xframe_options": 0
+    }
+  },
+  {
     "model": "cms.pageurl",
     "pk": 1,
     "fields": {
@@ -3130,6 +3198,20 @@
       "path": "hilfe/fragen-antworten/spenden",
       "language": "de-at",
       "page": 36,
+      "site": [
+        "fragdenstaat.at"
+      ],
+      "managed": true
+    }
+  },
+  {
+    "model": "cms.pageurl",
+    "pk": 17,
+    "fields": {
+      "slug": "spende",
+      "path": "spenden/spende",
+      "language": "de-at",
+      "page": 37,
       "site": [
         "fragdenstaat.at"
       ],

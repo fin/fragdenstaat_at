@@ -89,3 +89,30 @@ class ProcessReader:
             raise Exception("Process not started")
         self.stop_event.set()
         self.thread.join()
+
+
+_apphook_urls_loaded = False
+
+
+def ensure_donation_apphook():
+    """Make sure the FdsDonationApp page exists and its URLs are routed.
+
+    The test urlconf serves fds_donation only through that CMS apphook (see
+    tests/urls.py), on the "spenden/spende" page in tests/fixtures/cms.json.
+    The fixture is reloaded when the page is missing -- transactional tests
+    flush the DB, so it cannot just be loaded once per session -- and cms.urls
+    builds its apphook patterns from the DB at import time, so the urlconf is
+    reloaded once per process to pick them up.
+    """
+    global _apphook_urls_loaded
+
+    from django.core.management import call_command
+
+    from cms.models import Page
+    from cms.utils.apphook_reload import reload_urlconf
+
+    if not Page.objects.filter(reverse_id="fds_donation").exists():
+        call_command("loaddata", "cms.json", verbosity=0)
+    if not _apphook_urls_loaded:
+        reload_urlconf()
+        _apphook_urls_loaded = True

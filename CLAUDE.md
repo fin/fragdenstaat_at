@@ -31,6 +31,21 @@ import configurations; configurations.setup()
 
 Plain `django.setup()` appears to work but only sees module-level names.
 
+## Tests
+
+**Always run pytest as `env -u DJANGO_SETTINGS_MODULE -u DJANGO_CONFIGURATION
+python -m pytest …`.** The devcontainer exports `DJANGO_SETTINGS_MODULE=
+fragdenstaat_at.settings.development` / `DJANGO_CONFIGURATION=Dev`, and
+pytest-django lets environment variables override `pytest.ini`'s `Test`
+settings. `tests/conftest.py` refuses to run in that case, but a conftest only
+applies to its own directory: a run that collects only `fragdenstaat_at/…`
+tests (e.g. `pytest fragdenstaat_at/fds_donation/tests`) skips the guard and
+silently runs under **Dev** — production's `theme.urls` instead of
+`tests.urls`, among other things — producing failures that look real.
+
+`pytest.ini` deselects `stripe` and `paypal` tests by default
+(`-m "not stripe and not paypal"`); they need sandbox keys.
+
 ## URLs
 
 Public URL segments are translated via `pgettext_lazy("url part", …)`. The active

@@ -4,12 +4,15 @@ from django.core.management import call_command
 import pytest
 
 from fragdenstaat_at.fds_donation.models import Donation
+from fragdenstaat_at.fds_donation.tests.utils import ensure_donation_apphook
 
 
 @pytest.fixture(scope="function")
 def django_db_setup(django_db_setup, django_db_blocker):
     with django_db_blocker.unblock():
         call_command("loaddata", "cms.json")
+        # cms.json carries the FdsDonationApp page; route its URLs too
+        ensure_donation_apphook()
 
 
 # Pinned to one xdist worker: it drives a real browser against live_server,

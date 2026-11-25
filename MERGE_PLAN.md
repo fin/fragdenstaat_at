@@ -527,7 +527,8 @@ design or legal judgement.
 - [ ] **P7** — second sync: DE `938901ef..b70ab730` + `okfde/froide@65bdbb35`
   - [ ] P7.1 dependencies
     - [x] froide → okfde@`65bdbb35`, froide-payment → okfde@`713337fb`, filingcabinet → `5f825a21`
-    - [ ] froide-fax: merge okfde's 2 commits into `fin/main` (resolved in a worktree, not yet pushed)
+    - [ ] froide-fax: okfde's 2 commits merged as `fin/froide-fax@sync/okfde-2026-11` (`7dfd964`); not yet on `fin/main`, AT still pins `@main`
+      (the auto-merge silently broke `send_fax_telnyx`'s return value; fixed, with a regression test)
     - [ ] DE version floors (lands with P7.2 group 1)
   - [ ] P7.2 DE code, seven groups
   - [ ] P7.3 migrations forward-ported and rehearsed

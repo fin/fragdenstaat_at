@@ -524,6 +524,11 @@ design or legal judgement.
   - [x] sync script covers AT's own catalogs and flags hardcoded German
   - [ ] 44 strings still untranslated (26 + 17 + 1), mostly admin-side
   - [ ] **D5 exit:** drop `de_AT` from the froide fork, repin `okfde/froide@main`
+- [ ] **P7** — second sync: DE `938901ef..b70ab730` + `okfde/froide@65bdbb35`
+  - [ ] P7.1 dependencies (froide, froide-payment, froide-fax, filingcabinet, DE floors)
+  - [ ] P7.2 DE code, seven groups
+  - [ ] P7.3 migrations forward-ported and rehearsed
+  - [ ] P7.4 close-out: baseline, drift gate, §9.9 / §9.13
 
 ### Ported: DE's `theme/tests/` — and what they caught
 
@@ -986,6 +991,163 @@ fill in the msgstrs, land `locale/de_AT/`. Keep `LANGUAGE_CODE="de-at"` with
 Then drop `de_AT` from the froide fork and repin to `okfde/froide@main` — the D5
 exit criterion. Note the fork currently checked out is `okfde-main`, not fin's;
 run `scripts/froide-source.sh fin` before starting.
+
+### P7 — second sync: DE@`b70ab730` + okfde/froide@`65bdbb35` — ❌ not started
+
+Measured 2026-11-25. Work on a fresh branch `sync/de-head-2026-11` off `dev`.
+
+| | from | to | |
+|---|---|---|---|
+| `fragdenstaat_de` | `938901ef` (2026-08-17) | `b70ab730` (2026-11-24) | 180 commits, 162 files |
+| froide | `fin/…messagekind…@2b0d5a81` | `okfde/froide@65bdbb35` | +156 upstream commits; **DE@`b70ab730` pins exactly this** |
+| froide-payment | `fin@45949296` | `okfde@713337fb` (DE's pin) | +17 |
+| froide-fax | `fin@7b74f80c` | `fin@main` + 2 okfde commits | stays on the fork |
+| django-filingcabinet | `53fe999d` | `5f825a21` (DE's pin) | |
+
+Take DE and froide **together**: DE@`b70ab730` was built against froide
+`65bdbb35`. Several DE template commits (breadcrumbs, skip link, a11y) pair with
+froide template changes, and a half-step would test a combination nobody runs.
+
+#### P7.1 — dependencies first, one commit each, suite green after each [A/R]
+
+Doing these first separates "froide moved 156 commits" breakage from "we ported
+DE code wrong" breakage.
+
+1. **froide → `okfde/froide@main`.** The fork has nothing left of its own. All 9
+   fork commits (6 pinned plus 3 lint fixes on `fin/main`) are patch-equivalent in
+   okfde/main (`git cherry` reports `-` for every one), and merging `fin/main`
+   into `okfde/main` gives back okfde/main's tree exactly. The fork carries no
+   `de_AT` beyond upstream's own one file. So the **P6 D5 exit is met on the
+   froide side**: tick it here.
+   - `pyproject.toml:112-113` (drop the "Exit: upstream…" comment), `package.json:44`,
+     `uv lock`, `pnpm install`; `scripts/check_fork_pins.py` must pass.
+   - `scripts/froide-source.sh`: make `okfde` the default and retire `FORK_BRANCH`.
+     Switch the sibling checkout with `scripts/froide-source.sh okfde`.
+   - Watch in the 156 commits: `8e33439a` gives bounce/unsubscribe local parts
+     random tokens (new migration `bounce/0003_emailtoken`), so verify AT's bounce
+     mailbox handling. Also a11y/modal template changes to froide templates that AT
+     overrides, so re-run `scripts/verify_render.py`. `cb9ea867` edits historical
+     `document` migrations (makes `foirequest` optional); that is a no-op for AT.
+   - `classification_reminder` / `get_unclassified` are unchanged, so AT's
+     `StaleClassificationReminderMiddleware` stays needed.
+2. **froide-payment → `okfde@main`.** fin's three `de-at` locale commits
+   (`fd7ae4e`, `34cc709`, `4594929`) are patch-equivalent in DE's pin `713337fb`.
+   Re-audit the §9.9 table against `713337fb`. `get_stripe_locales` now maps
+   `de-at`; check the remaining rows, especially the `stripe.api_version` pin.
+   Update `package.json:45` too.
+3. **froide-fax stays on `fin`.** 28 fin commits are not upstream (§9.13). Merge
+   okfde's `cc562a6` (error handling when sending) and `5f590b8` (typo) into
+   `fin/main`. That **conflicts in `froide_fax/fax.py` and `views.py`** [R]. Then
+   run froide-fax's tests against froide `65bdbb35`, since the MessageKind hook
+   names (`13fff93`) now come from upstream. Upstreaming the fin commits is a
+   separate track.
+4. **filingcabinet** → `5f825a21` (froide's `9e0abc06` upgraded it).
+5. **DE's version floors**: `django-cms>=5.1`, `djangocms-text>=1.0.1,<2` (a
+   major bump), `django-filer[svg]`, `django-flowcontrol>=0.0.21`,
+   `django-extended-makemessages>=1.11,<1.12`, `playwright`. **`djangocms-text`
+   1.x must land with** `c8980d46` (ckeditor plugin fix), `5a225194` (bundle
+   override) and `2141ca8d` (figureblockquote removal), so do this step together
+   with P7.2 group 1, not alone.
+
+Skip DE's ~25 "Update dependencies" commits. `uv lock` against the new floors
+replaces them.
+
+#### P7.2 — DE code, by theme [R unless marked]
+
+Classified with AT's tree compared against DE@`938901ef`:
+
+| bucket | files | handling |
+|---|---|---|
+| AT still identical to DE baseline | 32 | copy from `b70ab730` (except files a skipped group owns) |
+| AT adapted | 57 | hand-merge `git diff 938901ef b70ab730 -- <file>` |
+| new in DE, app present in AT | 44 | adopt per group below |
+| app absent in AT (D3) | 29 | skip |
+
+1. **CMS: django-cms 5.1 + SiteSettings.** `fa976e3a c8980d46 00d220d3 16ee1baa
+   9508e0a8 4346bd5e 7ace80d3 2f931a00 b1d759bb a3d13db0 3b0e48a3 032c6e6e
+   49ce027b 3a7de13e 7958f68c 7b783d1c 98cac58a 5a225194 2141ca8d 293bb80d 1c653ab8`.
+   **Decided (2026-11-25): AT stays single-site** (`SITE_ID = 1`, no
+   `templates/cmssites/`). Take the `SiteSettings` model, middleware and context
+   processor (DE's base-template hierarchy reads them). Skip the UBF/GRS site
+   templates and styles (`2b8e9432 96ef9a37 5d4b2e4a 1dde3ecb 5cad006f ef9241e3
+   efd76029`, `ubf.scss`, `cmssites/*_base.html`) and DE's `settings/cms.py`
+   (`CMSSiteBase`, the separate settings class those sites run under).
+2. **fds_donation.** `5f20c60b d99c5a99 d697ea1a c8959f38 3efe0019 91a5140c
+   2dedbfaf 9610c82a c80c355f 79d48dfd b4dae2b5 4fe90ea6 b30192cd
+   4722d6f3 c394893d 3aeb55a1 85138db4 7b22408c
+   002c8264 30649965 4f275292 112edbd8 8e9c395e fb80c3bb 3f6d557b
+   0d205fcb b8c3899f b783f8b5 501e5787 2b281de7 b70ab730`.
+   `8e9c395e` converts `Donor.attributes` from hstore to JSON; see P7.3.
+
+   **Gifts: AT runs no gift programme**, but the code inherited from DE is still
+   there (`DonationGift`, `DonationGiftOrder`, `is_eligible_for_gift`,
+   `test_gift_order.py`), unused. DE's gift commits `02d98316 12e697c7 6178d8ab
+   e0608e3b 909ae2c5 d938a3fd 16b25674 07c252e2` (admin filters, inventory
+   warning, donor tagging on order, double-order guards, 5 EUR/month threshold)
+   are taken **as-is without review**. They never run without gifts configured,
+   and taking them keeps `admin.py`, `forms.py`, `listeners.py`, `tasks.py` and
+   `models.py` close to DE, which lowers drift. Ripping the gift code out would
+   need its own migration and would raise drift in those five files on every
+   future sync.
+3. **fds_mailing / fds_newsletter.** `844c143d 42dac2ff d988aff6 a329eb4b
+   942c80ab 40179bb7 ae640aea 52f286f6 7cbb54ff fbb982cc`. The batch sending
+   (`a329eb4b`) and Feedback-ID (`40179bb7`) commits affect delivery, so send a
+   test mailing. DE leaves `fds_mailing/middleware.py` alone, so AT's
+   classification-reminder filter does not conflict.
+4. **a11y / templates.** `73116957 a54477c1 6bf767a2 da19e6a7 e27782dc f9fa9596
+   986d88da c0ac2fbd f9eb231a 9538aa00 25f04c5e c60d948a 9ba2e703 2c06b973
+   d991891b 43b162dd`. Needs froide `65bdbb35` (its newest commit is the froide
+   half of `d991891b`). AT templates are not djlint-formatted, so hand-merge and
+   do not reformat.
+5. **Search / CMS tests.** `1de1d826 f074a785 8db64caf 37c1f080 ca72223b cdad0be2`
+   (skip `67f2bd7a`, the cmssite cookie test). DE's new `tests/test_cmssites.py`,
+   `tests/utils.py` and `fragdenstaat_de/conftest.py`: take only what the single-
+   site setup exercises.
+6. **i18n tooling.** `0498ae8a 336ff6b3 41c6653f 02610510 af63d306 dc0ddebb
+   43598878 32fb9e19 fb36072d 30428f22 9c5fb39e 6e55277b 8fbbc395`. It has to
+   coexist with AT's `check_de_at_translations.py` and the `de_AT` compile step
+   (§9.10). **Do not copy DE's `.po` files**; re-sync with the P6 scripts.
+7. **Dev tooling.** `960abab4 6e307365 d0695ab8 ab8f0471 ce6b59ba 646c9842
+   95f4dd7a` (devsetup.sh / Makefile). Dependabot (`7f25cd5a 50668338
+   157a0fe1`) is optional, given §9.14.
+
+**Skip:** `fds_blog`, `fds_easylang`, `fds_events`, `fds_fximport` (D3; this
+includes the Frontex certificates `af25c1c0 d2954166`). Also skip the
+German-specific `56f8a717` (online-projektportal.de redaction) and `40c7fc63`
+(Democracy menu link). **Decided (2026-11-25): no IFG banner.** Skip `69981f88
+119f580a d54a1e3e 0d8f614e` and `frontend/javascript/misc/redact-banner.ts`;
+when hand-merging the base templates, drop the banner include. `608c34a3`
+(froide.bounce in `CMSSiteBase.INSTALLED_APPS`) does not apply: it only touches
+the multi-site settings class AT does not have, and AT's main site already gets
+`froide.bounce` from froide's base `INSTALLED_APPS`.
+
+**Take** `95bde5e8` with AT's address: `MANAGERS = (("FragDenStaat.at",
+"info@fragdenstaat.at"),)` in `base.py`. Production already sets this
+(`production.py:20`). The commit only makes `mail_managers()` deliver in dev, so
+problem reports, failed-mailing alerts and donation admin summaries show up in
+the dev mail sink. Without it, froide's `MANAGERS = ADMINS` is empty there.
+
+#### P7.3 — migrations (D8: forward-port, keep AT's graph) [R]
+
+| DE | AT | note |
+|---|---|---|
+| `fds_cms/0087` | — | already AT `0007` |
+| `fds_cms/0088`, `0089` | `fds_cms/0010` (+ data) | `SiteSettings` + row for site 1 |
+| `fds_cms/0005`, `0011` edits | review | make `foirequest` optional; AT's 0005 differs |
+| `fds_donation/0080` | `0049` | `CheckDonorTagCMSPlugin` |
+| `fds_donation/0081–0083` | `0050–0052` | hstore → JSON, **data migration** |
+| `fds_mailing/0030–0032` | `0003–0005` | condition plugin, data migration |
+| froide `bounce/0003` | — | upstream, applies as-is |
+
+Rehearse against a production dump (`docs/runbooks/live-db-verification.md`).
+This matters for `0051`: count AT donors with non-empty `attributes` first.
+
+#### P7.4 — close-out [A]
+
+- Header table: DE@HEAD → `b70ab730`. P5 baseline → `b70ab730`. Re-measure with
+  `python scripts/de_drift.py` and re-tighten `--check-max-modified`.
+- Tick D5 / P6 for froide. Update §9.9 (payment now upstream) and §9.13 (fax
+  rebased).
 
 ---
 

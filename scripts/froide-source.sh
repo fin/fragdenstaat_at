@@ -2,8 +2,8 @@
 # Switch the sibling froide checkout between upstream (okfde) and the fork (fin).
 #
 #   ./scripts/froide-source.sh status   # which source is active
-#   ./scripts/froide-source.sh okfde    # upstream — the porting baseline
-#   ./scripts/froide-source.sh fin      # the fork — fax transport / translation work
+#   ./scripts/froide-source.sh okfde    # upstream — what pyproject.toml pins
+#   ./scripts/froide-source.sh fin      # the fork — only for new work meant for upstream
 #
 # froide is installed *editable* from ../froide, so switching the checkout is all
 # that is required — no `uv sync`, no reinstall. Uncommitted local edits (e.g. the
@@ -78,12 +78,9 @@ case "${1:-status}" in
 
   froide is installed editable — nothing to reinstall.
 
-  ⚠️  Migration divergence: the fork adds foirequest/0076_alter_foimessage_kind,
-      which does not exist upstream (upstream head is 0075). A database that was
-      migrated against the fork therefore has an applied migration with no file.
-      Use a FRESH scratch database for upstream verification runs:
-        psql -h db -U fragdenstaat_at -d postgres -c "CREATE DATABASE fds_verify_okfde"
-      See MERGE_PLAN.md §1b.
+  This is the pinned source again (pyproject.toml -> okfde/froide@main, P7.1).
+  The fork's MessageKind work, including foirequest/0076_alter_foimessage_kind,
+  is merged upstream, so databases migrated against either source agree.
 NOTE
     ;;
 

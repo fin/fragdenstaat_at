@@ -105,27 +105,11 @@ dependencies = [
   "webp>=0.4.0",
   "websockets>=13.0.1",
   "xlrd>=2.0.1",
-  # TEMPORARY fork pin (D5). Carries the recipient-aware outgoing-message-kind
-  # hook: get_request_outgoing_message_kind(request, recipient_email=...) and the
-  # matching MessageHandler.handle_foirequest_outgoing_messages signature, which
-  # froide-fax uses to fax a reply only when it is addressed to the fax-only
-  # public body's own address. Exit: upstream to okfde/froide, repin @main.
-  "froide @ git+https://github.com/fin/froide.git@2026-feat-messagekind-initial-message",
-  # TEMPORARY fork pin. okfde/main sends application_context.locale =
-  # settings.LANGUAGE_CODE verbatim, so AT sends "de-at", which is not valid
-  # BCP-47 (the region subtag must be uppercase) and PayPal rejects the whole
-  # /v1/billing/subscriptions request with "violates schema" -- every recurring
-  # PayPal donation 400s. DE sends a bare "de" and never hits it.
-  #
-  # fin/main is okfde/main plus the three Austria-specific one-liners from the
-  # old fin fork, rebased: this locale fix in both subscription paths, and
-  # "de-at" added to Stripe's get_stripe_locales. (The old 2023 fork that
-  # fin/main used to be is kept as fin/2026-08-fdsat-deployed.) Public over
-  # https, so no deploy key needed.
-  #
-  # Exit criterion: upstream them to okfde/froide-payment and repin to okfde
-  # @main. Tracked in MERGE_PLAN.md 9.9.
-  "froide-payment @ git+https://github.com/fin/froide-payment.git@main",
+  # Back on upstream (P7.1). The recipient-aware outgoing-message-kind hook
+  # froide-fax relies on, and froide-payment's "de-at" PayPal/Stripe locale
+  # fixes, are all merged into okfde; the fin forks add nothing beyond them.
+  "froide @ git+https://github.com/okfde/froide.git@main",
+  "froide-payment @ git+https://github.com/okfde/froide-payment.git@main",
   # Fork pin, not a fork of convenience. fin/main carries webhook hardening
   # (replay + malformed-envelope rejection), classification of permanently
   # undeliverable faxes so they stop being retried, Telnyx's OpenAPI examples as
@@ -134,8 +118,8 @@ dependencies = [
   # rather than nacl agreeing with nacl -- and FAX_BACKEND, which lets dev
   # render a fax letter and its PDF without a Telnyx account.
   #
-  # Not on okfde: AT is running ahead of upstream here, so unlike the
-  # froide-payment pin there is no "repin to @main upstream" exit criterion --
+  # Not on okfde: AT is running ahead of upstream here, so unlike froide and
+  # froide-payment there is no "repin to @main upstream" exit criterion --
   # okfde would have to catch up first. MERGE_PLAN.md 9.13.
   "froide-fax @ git+https://github.com/fin/froide-fax.git@main",
   "sortabletable @ git+https://github.com/stefanw/djangocms-sortabletable.git@main",

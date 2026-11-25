@@ -523,9 +523,12 @@ design or legal judgement.
   - [x] AT's own German ported from DE (`locale`, `fds_donation`, `fds_cms`)
   - [x] sync script covers AT's own catalogs and flags hardcoded German
   - [ ] 44 strings still untranslated (26 + 17 + 1), mostly admin-side
-  - [ ] **D5 exit:** drop `de_AT` from the froide fork, repin `okfde/froide@main`
+  - [x] **D5 exit:** repinned `okfde/froide@main` in P7.1. The fork had no `de_AT` of its own left, and all its commits were merged upstream
 - [ ] **P7** — second sync: DE `938901ef..b70ab730` + `okfde/froide@65bdbb35`
-  - [ ] P7.1 dependencies (froide, froide-payment, froide-fax, filingcabinet, DE floors)
+  - [ ] P7.1 dependencies
+    - [x] froide → okfde@`65bdbb35`, froide-payment → okfde@`713337fb`, filingcabinet → `5f825a21`
+    - [ ] froide-fax: merge okfde's 2 commits into `fin/main` (resolved in a worktree, not yet pushed)
+    - [ ] DE version floors (lands with P7.2 group 1)
   - [ ] P7.2 DE code, seven groups
   - [ ] P7.3 migrations forward-ported and rehearsed
   - [ ] P7.4 close-out: baseline, drift gate, §9.9 / §9.13
@@ -1658,6 +1661,11 @@ rename through `git update-index` if `git mv` refuses.
 
 ### 9.8 Fixed: recurring donations 500'd on `Plan.slug`
 
+> **Superseded (P7.1, 2026-11-25):** okfde/froide-payment widened `Plan.slug` to
+> 256 (`60a5d8e`, migration `0021_alter_plan_slug`). The listener and its test
+> were removed, as the test itself instructed. The history below is kept for the
+> record.
+
 **Resolved locally — no upstream dependency, no product change.** Recorded
 because the failure mode is instructive and the workaround should be removed
 once upstream moves.
@@ -1693,11 +1701,17 @@ Regression test: `fds_donation/tests/test_plan_slug.py`, which asserts up front
 that AT's name still overflows and tells you to delete both it and the listener
 if that stops being true.
 
-- [ ] **Optional, low priority:** upstream `SlugField(max_length=256)` + migration
+- [x] ~~**Optional, low priority:**~~ done upstream as `60a5d8e`. Was: upstream `SlugField(max_length=256)` + migration
   to `okfde/froide-payment`, so the next deployment with an organisation name
   longer than Germany's does not have to rediscover this. Not a blocker for AT.
 
 ### 9.9 The froide-payment fork is not in the dependency set
+
+> **Resolved (P7.1, 2026-11-25):** back on `okfde/froide-payment@main`
+> (`713337fb`). fin/main's three `de-at` locale commits are patch-equivalent
+> upstream, and merging fin/main into okfde/main yields okfde/main's tree. Both
+> PayPal subscription paths send `LANGUAGE_CODE.split("-")[0]`, and Stripe maps
+> `de-at`. The table below is historical.
 
 `fin/froide-payment@main` and `fin/2026-08-fdsat-deployed` were **identical**
 (until `fin/main` was repointed on 2026-10-13 — see below), so production runs

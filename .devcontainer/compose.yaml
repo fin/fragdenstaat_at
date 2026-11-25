@@ -5,7 +5,7 @@ services:
       dockerfile: fragdenstaat_at/.devcontainer/Dockerfile
     volumes:
      - type: bind
-       source: $SSH_AUTH_SOCK
+       source: /run/host-services/ssh-auth.sock
        target: /run/host-services/ssh-auth.sock
      - ..:/workspaces/fds_at:cached
     environment:

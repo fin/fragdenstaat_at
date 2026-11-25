@@ -20,8 +20,12 @@ class FdsMailingConfig(AppConfig):
             actions,  # noqa: F401
             preview,  # noqa: F401
         )
-        from .middleware import EmailTemplateMiddleware
+        from .middleware import (
+            EmailTemplateMiddleware,
+            StaleClassificationReminderMiddleware,
+        )
         from .utils import handle_bounce
 
         mail_middleware_registry.register(EmailTemplateMiddleware())
+        mail_middleware_registry.register(StaleClassificationReminderMiddleware())
         email_bounced.connect(handle_bounce)

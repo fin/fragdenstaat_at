@@ -292,6 +292,17 @@ and load-bearing for delivery status. DE routes `run_subscriber_import` to a
 missed). Any beat schedule or queue rule must use the DE namespace. Renaming is a
 drain-and-deploy operation, not a code edit.
 
+**AT-only: stale classification reminders are suppressed.** froide's
+`classification-reminder` beat task (Saturdays 07:00) mails every request in
+`awaiting_classification` whose last message is older than 4 days — with no upper
+bound, so requests from years ago are nagged weekly forever (DE inherits this
+unchanged). `fds_mailing.middleware.StaleClassificationReminderMiddleware` vetoes
+that one intent via `should_mail` unless `last_message` is under 30 days old or
+in a 7-day window starting at day 60 — i.e. 3–4 weekly reminders, one final one
+around day 60, then silence. It is a mail filter, not a queryset
+change, so the moderation queue (`get_unclassified_for_moderation`) still lists
+those requests. Candidate for an upstream froide fix in the task itself.
+
 `remind_unreceived_banktransfers` is documented "run on the 15th" but is
 deliberately **not** on the beat schedule in AT: it should run after the month's
 bank statement has been imported, and only a human knows when that is. The

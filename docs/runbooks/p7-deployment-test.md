@@ -7,6 +7,23 @@ the output can be shared for review without exposing donor data.
 
 Budget: about an hour. Stop and report if any step says **STOP**.
 
+**Baseline: production runs `dev` @ `55ac7c4` (2026-10-19).** Everything below
+is relative to that, not to `main`. What this deploy changes:
+
+- **Code:** the P7 merge (DE@`b70ab730`), the classification-reminder cutoff
+  (`e40bcdb`, on `dev` but never deployed), and Feedback-ID.
+- **Dependencies (`uv.lock`):** froide moves from fin's
+  `2026-feat-messagekind-initial-message` branch to `okfde/froide@main`
+  (`65bdbb35`); froide-payment from `fin/froide-payment@main` to `okfde@main`;
+  froide-fax to `fin/froide-fax@sync/okfde-2026-11`; djangocms-text 0.9.1 →
+  1.1.0, django-flowcontrol 0.0.19 → 0.0.21. django-cms is unchanged.
+- **Frontend:** Vite 7 and new devDependencies (`pnpm-lock.yaml`), so rebuild.
+- **Celery:** no renames (production already has `e07f8e5`); two new tasks
+  queued from signal handlers, none scheduled. Restart the workers together
+  with the web processes.
+- **Unchanged:** the production settings resolve the same redirect hosts
+  (`fragdenstaat.at` comes from `ALLOWED_HOSTS`); no new environment variables.
+
 ---
 
 ## 0. Before migrating
@@ -17,7 +34,10 @@ Budget: about an hour. Stop and report if any step says **STOP**.
 pg_dump -h <staging-host> -U <user> <db> > staging-pre-p7-$(date +%F).sql
 ```
 
-Record these numbers. Section 2 compares against them:
+Record these numbers. Section 2 compares against them. Production's import code
+(`55ac7c4`) writes `ibans` as one `;`-joined string, `iban` and
+`banktransfer_reference` as strings; older rows may hold list reprs or
+`old_data`. Migration 0051 converts all of these.
 
 ```sql
 SELECT
@@ -50,7 +70,11 @@ python manage.py makemigrations --check --dry-run      # see note
 ```
 
 New migrations, in order: `bounce 0003`, `froide_payment 0021`,
-`fds_cms 0010–0011`, `fds_donation 0049–0052`, `fds_mailing 0003–0005`.
+`fds_cms 0010–0011`, `fds_donation 0049–0052`, `fds_mailing 0003–0005`. That
+list is complete against production's lock, third-party packages included:
+djangocms-text and flowcontrol add none, and the four edited froide `document`
+migrations only make their `foirequest` dependency conditional (already applied,
+no effect).
 
 `makemigrations --check` also reports `djangocms_alias`, `contractor` and
 `sortabletable`. That is pre-existing and comes from those third-party
@@ -101,10 +125,10 @@ SELECT count(*) AS condition_plugins,
 FROM fds_mailing_conditioncmsplugin;
 ```
 
-`condition_plugins` should equal section 0. `empty_conditions` should be 0
-unless a plugin had no key before. Open one mailing that uses a condition
-block in the admin preview, and check it renders as before for a donor and a
-non-donor.
+`condition_plugins` should equal section 0. fds_mailing is installed but unused
+in production, so expect 0 for both; if `condition_plugins` is not 0, check that
+`empty_conditions` is 0 and that one email template using a condition block
+previews as before for a donor and a non-donor.
 
 ```bash
 python scripts/verify_render.py   # needs a built frontend; every CMS page 200, no logged errors
@@ -117,8 +141,8 @@ python scripts/verify_render.py   # needs a built frontend; every CMS page 200, 
   matched donor's `attributes->'ibans'` must be an array (re-run the shape
   query).
 - **Donation form.** Make one test donation per enabled method. Recurring
-  PayPal must not 400 (the `de-at` locale fix now comes from upstream
-  froide-payment).
+  PayPal must not 400: production has the `de-at` locale fix from fin's
+  froide-payment fork, and this deploy swaps it for upstream's copy.
 - **Donation embed.** `python manage.py shell -c "from django.urls import reverse; print(reverse('fds_donation:donate-embed'))"`,
   then:
   - `curl -sI <url>` must show `Content-Security-Policy: frame-ancestors 'self'`
@@ -129,21 +153,22 @@ python scripts/verify_render.py   # needs a built frontend; every CMS page 200, 
     inside the iframe**. Unverified so far: the CSRF and session cookies are
     `SameSite=Lax`, so a cross-site POST may be rejected (DE has the same
     settings). Report what happens either way.
-- **Feedback-ID.** Send a test mailing and one transactional mail (any
-  froide notification) to a Gmail address. The raw message must carry `Feedback-ID:`
-  (`mailing-<id>::<newsletter slug or "mailing">:fragdenstaat.at`, and
-  `::<mail intent, "/" replaced by ".">:fragdenstaat.at` for transactional
-  mail), and the `h=` list of the
+- **Feedback-ID.** Send one transactional mail (any froide notification) to a
+  Gmail address. Mailings are not in use, so skip the mailing variant. The raw
+  message must carry
+  `Feedback-ID: ::<mail intent, "/" replaced by ".">:fragdenstaat.at`, and the
+  `h=` list of the
   `DKIM-Signature` must include `feedback-id`. If it does not, Gmail ignores the
   header: fix the MTA's DKIM header list (ops, not code).
-- **Classification reminders.** In a shell, check the Saturday task would only
-  mail recent requests:
+- **Classification reminders.** New behaviour against production, which still
+  mails every unclassified request weekly. In a shell, check the Saturday task
+  would only mail recent requests:
   `FoiRequest.objects.get_unclassified().filter(last_message__lt=now()-timedelta(days=67)).count()`
   is how many stale requests now get **no** mail.
 - **Fax.** With `FAX_BACKEND` pointing at the dummy backend, send a fax-routed
   reply and check a `DeliveryStatus` is created and `email_message_id` is set.
-  This exercises the froide-fax send path that the okfde merge broke and
-  P7.1 fixed.
+  Production's froide-fax (`7b74f80`) works; this checks the okfde merge on the
+  sync branch, whose auto-merge broke the send path before P7.1 fixed it.
 
 ## 5. Report
 

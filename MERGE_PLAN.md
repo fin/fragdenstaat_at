@@ -2,9 +2,10 @@
 
 | | ref | date |
 |---|---|---|
-| **AT** | `fragdenstaat_at` @ `sync/de-head-2026-08` | working branch |
+| **AT** | `fragdenstaat_at` @ `sync/de-head-2026-11` | working branch (P7) |
 | **DE@hash** | `fragdenstaat_de` @ `abe0781d` — the fork baseline | 2023-01-19 |
-| **DE@HEAD** | `fragdenstaat_de` @ `938901ef` | 2026-08-17 |
+| **DE@HEAD** | `fragdenstaat_de` @ `b70ab730` — merged in P7 | 2026-11-24 |
+| previous sync | `fragdenstaat_de` @ `938901ef` — P1–P6 | 2026-08-17 |
 
 `abe0781d..HEAD` is 2194 commits over 3 years 7 months.
 
@@ -287,10 +288,15 @@ Small surface. AT's `production.py` adds `check_mail_log` (every minute) — AT-
 and load-bearing for delivery status. DE routes `run_subscriber_import` to a
 `convert` queue; AT has no task routing.
 
-**All five `fds_donation` tasks are still registered as
-`fragdenstaat_de.fds_donation.*`** (the `theme` tasks were renamed; these were
-missed). Any beat schedule or queue rule must use the DE namespace. Renaming is a
-drain-and-deploy operation, not a code edit.
+**The `fds_donation` tasks are renamed in code, not yet in production.** `e07f8e5`
+(P2 step 4, adopting DE's fds_donation) renamed every
+`fragdenstaat_de.fds_donation.*` task to `fragdenstaat_at.*`, through the same
+package-name substitution the DE sync uses. `origin/main` still registers the old
+names. **Deploying this branch is the rename**, so follow the drain-and-deploy
+steps in `docs/runbooks/celery-task-rename.md`. Otherwise tasks queued under the
+old names are dropped, and `django_celery_beat` rows pointing at them fail. P7
+adds two tasks (`process_new_donation_task`,
+`gift_order_inventory_warning_notification`), both under the new names.
 
 **AT-only: stale classification reminders are suppressed.** froide's
 `classification-reminder` beat task (Saturdays 07:00) mails every request in
@@ -529,10 +535,11 @@ design or legal judgement.
     - [x] froide → okfde@`65bdbb35`, froide-payment → okfde@`713337fb`, filingcabinet → `5f825a21`
     - [x] froide-fax: okfde's 2 commits merged as `fin/froide-fax@sync/okfde-2026-11` (`7dfd964`). AT pins that branch until `fin/main` has it
       (the auto-merge silently broke `send_fax_telnyx`'s return value; fixed, with a regression test)
-    - [ ] DE version floors (lands with P7.2 group 1)
-  - [ ] P7.2 DE code, seven groups
-  - [ ] P7.3 migrations forward-ported and rehearsed
-  - [ ] P7.4 close-out: baseline, drift gate, §9.9 / §9.13
+    - [x] DE version floors (django-cms 5.1, djangocms-text 1.1, flowcontrol 0.0.21, playwright 1.65, Vite 7, ...)
+  - [x] P7.2 DE code: per-file three-way merge, 23 conflicts resolved by hand, skipped commits kept out
+  - [x] P7.3 migrations forward-ported (fds_cms 0010–0011, fds_donation 0049–0052, fds_mailing 0003–0005), synthetic rehearsal passing
+  - [ ] **P7.3 deployment test on a staging copy, run by a human** — `docs/runbooks/p7-deployment-test.md`
+  - [x] P7.4 close-out: baseline, drift gate, task-name note
 
 ### Ported: DE's `theme/tests/` — and what they caught
 
@@ -944,8 +951,12 @@ commented-out DE code is gone from `theme/views.py` (68 comment lines → 0) and
 `theme/urls.py` (55 → 11, the survivors being real explanations). Per D2, git
 history is where dead code belongs.
 
-**Baseline:** compare against `fragdenstaat_de@938901ef` (2026-08-17). Re-measure
-with `python scripts/de_drift.py` rather than trusting numbers in prose.
+**Baseline:** compare against `fragdenstaat_de@b70ab730` (2026-11-24, P7). Re-measure
+with `python scripts/de_drift.py` rather than trusting numbers in prose. After P7:
+165 modified, gate 170. Before P7 it was already 157, above the old gate of 145,
+unnoticed because CI does not run (9.14). P7 itself added 8 modified files, each
+a deliberate AT decision: no Carto key, no IFG banner, the fail-closed embed,
+AT's Feedback-ID, and the CMS test helpers adapted to AT's layout.
 
 ### P6 — translations (D4/D5) — ❌ not started · **LAST**
 
@@ -996,7 +1007,7 @@ Then drop `de_AT` from the froide fork and repin to `okfde/froide@main` — the 
 exit criterion. Note the fork currently checked out is `okfde-main`, not fin's;
 run `scripts/froide-source.sh fin` before starting.
 
-### P7 — second sync: DE@`b70ab730` + okfde/froide@`65bdbb35` — ❌ not started
+### P7 — second sync: DE@`b70ab730` + okfde/froide@`65bdbb35` — ⚠️ merged; deployment test outstanding
 
 Measured 2026-11-25. Work on a fresh branch `sync/de-head-2026-11` off `dev`.
 

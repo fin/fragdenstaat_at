@@ -1243,22 +1243,24 @@ wrong data in front of real people or break the deploy.
       goes out with German footers and links. Find them with
       `python manage_at_translations.py --dry-run` (§9.12). Same class as the
       bank details, which are now fixed.
+      **Deferred (2026-11-26): not a deploy blocker while unused.** fin will
+      not use the fds_mailing / fds_newsletter functionality for now, so no
+      mailing is sent; leave this and the other fds_mailing / fds_newsletter
+      todos open, and fix before the first `EmailTemplate` or mailing is
+      created. `formal/base.html` only overrides the social-media block of
+      `default/base.html`, so fixing `default` covers both.
 - [x] **Five dead `reverse_id` links (three of them unguarded)** — §9.3. Set on
       the CMS pages, captured in `tests/fixtures/cms.json`, guarded by
       `tests/test_at_identity.py` (`test_page_url_ids_are_all_accounted_for` +
       `PageUrlResolutionTest`).
-- [ ] **Six froide-rendered `content_urls` — settings done, three loose ends.**
-      §9.3. `pseudonym`, `throttled`, `help_request_public`,
-      `help_request_privacy`, `help_attachments_management`,
-      `help_postupload_redaction` were all filled in by `514038b` (2026-08-23), so
-      nothing falls back to the homepage. Against a fresh `cms.json`: `pseudonym`
-      and `throttled` resolve; three (`help_*_public`, `*_attachments_management`,
-      `*_postupload_redaction`) use froide's `/hilfe/plain/…` route, which needs
-      the help apphook attached (no page in the extract has one); and
-      `help_request_privacy` points at DE's `/hilfe/datenschutz-und-privatsphare/`
-      — AT has `hilfe/privatsphaere`, so that one is a wrong value to fix. No test
-      covers any of the six (`test_footer.py` only checks
-      `terms`/`privacy`/`about`/`help`).
+- [x] **Six froide-rendered `content_urls` — all resolve live (2026-11-26).**
+      §9.3. Filled in by `514038b`, two moved to the reorganised help section by
+      `aa4c1d3`; `help_request_public` was missed there and is now fixed. Checked
+      against **fragdenstaat.at**, not `cms.json`: the fixture predates the help
+      reorganisation and has no apphook, so it is the wrong reference for these.
+      Still no test covers them (`test_footer.py` only checks
+      `terms`/`privacy`/`about`/`help`); one would need fixture paths matching
+      the live help tree.
 
 **Security** — both done
 
@@ -1474,7 +1476,7 @@ Remaining:
 - [x] **`remind_unreceived_banktransfers` scheduling** — resolved as a manual admin
   trigger on the donation changelist rather than a beat entry; see the celery
   section above. Make sure the deployment's beat config does *not* also schedule it.
-- [ ] **Attach the `FdsCmsPlainAPIApp` apphook to the help page** (after the DB
+- [x] **Attach the `FdsCmsPlainAPIApp` apphook to the help page** (after the DB
   migrations above). The machinery is fully ported —
   `fds_cms/cms_apps.py:FdsCmsPlainAPIApp`, `urls_plainapi.py`,
   `views.cms_plain_api` — but nothing serves `/hilfe/plain/<slug>/` until the
@@ -1483,14 +1485,12 @@ Remaining:
   `help_postupload_redaction`, `help_attachments_management`,
   `help_request_public`.
 
-  ⚠️ **The current production deployment does not allow attaching apphooks**, so
-  this step is blocked there. Until it is unblocked, point those three keys at the
-  **non-`/plain/`** URLs of the same pages, which already exist and render (with
-  full chrome instead of bare):
-  `/hilfe/fragen-antworten/schwarzungen-durchfuhren/`,
-  `/hilfe/fragen-antworten/anhange-verwalten/`,
-  `/hilfe/fragen-antworten/anfrage-nicht-offentlich-stellen/`. Switch back to
-  `/plain/` once the apphook can be attached.
+  ✅ **Already attached in production (observed 2026-11-26).** The three
+  `/hilfe/plain/…` URLs return 200 on fragdenstaat.at with the chrome-less render,
+  so the apphook is set on the live `/hilfe/` page and survives the deploy with
+  the database. The earlier note that production could not attach apphooks, and
+  the interim advice to drop `/plain/`, are superseded. After deploy, spot-check
+  one `/plain/` URL still returns the bare page.
 - [ ] **Check "hide contact" on the two production donation forms.** D3's
   intent is no newsletter opt-in on any donation form. The form drops the
   `contact` field only when `hide_contact` is set. Two surfaces:
@@ -1561,43 +1561,39 @@ Remaining:
   was rewritten to dump and then re-sort by the real FK graph; its previous app
   list was stale (`djangocms_text_ckeditor`, `djangocms_picture`,
   `djangocms_video`) and missing alias, versioning and frontend.
-- [ ] **Confirm the six `content_urls` target pages exist.** The settings half is
+- [x] **Confirm the six `content_urls` target pages exist.** (All six 200 on the live site, 2026-11-26; table below.) The settings half is
   **done** — `514038b` (2026-08-23) filled in all six keys, so `base.py` now sets
   all ten `content_urls` froide references and `get_content_url()`
   (`CONTENT_URLS.get(name, "/")`) no longer falls back to the homepage for any of
   them. What is left is content: each points at an AT help page that must actually
   exist.
 
-  | key | now points at | target page in `cms.json` | rendered from |
+  | key | now points at | live (2026-11-26) | rendered from |
   |---|---|---|---|
-  | `pseudonym` | `/hilfe/fragen-antworten/pseudonyme-nutzung/` | ✅ `hilfe/fragen-antworten/pseudonyme-nutzung` | `account/forms.py` |
-  | `throttled` | `/hilfe/fragen-antworten/anfragenanzahl/` | ✅ `hilfe/fragen-antworten/anfragenanzahl` | `foirequest/utils.py` |
-  | `help_request_public` | `/hilfe/plain/fragen-antworten/anfrage-nicht-offentlich-stellen/` | ✅ page exists; `/plain/` route | `foirequest/views/make_request.py` |
-  | `help_attachments_management` | `/hilfe/plain/fragen-antworten/anhange-verwalten/` | ✅ page exists; `/plain/` route | `foirequest/views/message.py` |
-  | `help_postupload_redaction` | `/hilfe/plain/fragen-antworten/schwarzungen-durchfuhren/` | ✅ page exists; `/plain/` route | `foirequest/views/message.py` |
-  | `help_request_privacy` | `/hilfe/datenschutz-und-privatsphare/` | ❌ **no such page** — DE's path, AT has `hilfe/privatsphaere` | `foirequest/views/make_request.py` |
+  | `pseudonym` | `/hilfe/datenschutz-und-privatsphare/pseudonyme-nutzung/` | ✅ 200 | `account/forms.py` |
+  | `throttled` | `/hilfe/fragen-antworten/anfragenanzahl/` | ✅ 200 | `foirequest/utils.py` |
+  | `help_request_public` | `/hilfe/plain/datenschutz-und-privatsphare/anfrage-nicht-offentlich-stellen/` | ✅ 200 (was ❌ 404 under `fragen-antworten/`; fixed 2026-11-26) | `foirequest/views/make_request.py` |
+  | `help_attachments_management` | `/hilfe/plain/fragen-antworten/anhange-verwalten/` | ✅ 200 | `foirequest/views/message.py` |
+  | `help_postupload_redaction` | `/hilfe/plain/datenschutz-und-privatsphare/schwarzungen-durchfuhren/` | ✅ 200 | `foirequest/views/message.py` |
+  | `help_request_privacy` | `/hilfe/datenschutz-und-privatsphare/` | ✅ 200 | `foirequest/views/make_request.py` |
 
   All six render from froide, in the request flow and account forms —
   user-facing, not admin. `throttled` and `pseudonym` fire exactly when a user is
-  already confused, so a 404 there is worse than most. State against a fresh
-  `tests/fixtures/cms.json` (production extract):
+  already confused, so a 404 there is worse than most.
 
-  - **Two are clean:** `pseudonym`, `throttled` — target pages exist.
-  - **Three depend on the `/hilfe/plain/…` route.** The pages exist under
-    `hilfe/fragen-antworten/`, but the value prepends `/plain/`, `fds_cms`'s
-    chrome-less help render (for iframes), served by `FdsCmsPlainAPIApp`. That
-    route only works once the apphook is attached to `/hilfe/` — the extract has
-    `application_urls: ""` on every page, and **the current production deployment
-    does not allow attaching apphooks** (see the "Attach the `FdsCmsPlainAPIApp`
-    apphook" step above). Interim: point the three keys at the non-`/plain/` URLs
-    of the same pages.
-  - **One is a bug:** `help_request_privacy` points at `/hilfe/datenschutz-und-privatsphare/`,
-    DE's slug, copied unchanged in `514038b`. AT's tree has `hilfe/privatsphaere`.
-    Fix the setting to `/hilfe/privatsphaere/` (or whatever the real AT page is).
+  **Correction (2026-11-26).** An earlier version of this section, checked
+  against `tests/fixtures/cms.json`, called `help_request_privacy` a bug (AT
+  supposedly had `hilfe/privatsphaere`) and said the three `/plain/` keys could
+  not work because production cannot attach apphooks. Both were wrong for the
+  live site: the help section was reorganised under
+  `hilfe/datenschutz-und-privatsphare/` after the extract was taken, and the
+  `/plain/` URLs serve the chrome-less render (about 2 KB, no nav or footer, vs
+  about 14 KB for the normal page), so `FdsCmsPlainAPIApp` is attached in
+  production. `cms.json` is stale for the help tree.
 
   No test covers any of the six — `test_footer.py` only checks
   `terms`/`privacy`/`about`/`help`. Add a `PageUrlResolutionTest`-style check for
-  `content_urls`, and settle the apphook question. `page_url` and `content_urls`
+  `content_urls` (needs fixture paths matching the live help tree). `page_url` and `content_urls`
   are the only two such indirections: neither froide nor froide-payment uses
   `{% page_url %}` at all. **[H]**
 - [ ] **Decide whether the proof-of-identity widget should be law-specific.**

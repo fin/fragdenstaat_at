@@ -6,8 +6,7 @@ Bitte bestätigen Sie mit Klick auf folgenden Link, dass Sie sich bei {{ site_na
 
 <p><a href="{{ action_url }}">E-Mail bestätigen</a></p>
 
-<p>{% blocktrans %}Cheers,<br/>
-{{ site_name }}{% endblocktrans %}
-</p>
+<p>{% blocktrans asvar cheers %}Cheers,
+{{ site_name }}{% endblocktrans %}{{ cheers|linebreaksbr }}</p>
 
 {% include "emails/footer.html" %}

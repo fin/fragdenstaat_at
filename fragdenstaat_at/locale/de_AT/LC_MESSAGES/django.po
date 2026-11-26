@@ -749,14 +749,6 @@ msgid "Checks if object has recently donated"
 msgstr ""
 
 #. from AT source
-#: templates/account/emails/confirmation_mail.html:9
-#, python-format
-msgid ""
-"Cheers,<br/>\n"
-"%(site_name)s"
-msgstr ""
-
-#. from AT source
 #: cms_plugins.py:907
 msgid "Column "
 msgstr ""
@@ -1371,7 +1363,6 @@ msgid "{amount} every month"
 msgid_plural "{amount} every {interval} months"
 msgstr[0] ""
 msgstr[1] ""
-
 
 msgid "Search %(foicount)s requests and %(pbcount)s public bodies:"
 msgstr "Suche in %(foicount)s Anfragen und %(pbcount)s Behörden:"

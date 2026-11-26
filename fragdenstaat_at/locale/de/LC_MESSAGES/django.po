@@ -135,6 +135,7 @@ msgid "Check if an object is in a specific segment"
 msgstr "Prüft, ob Objekt in einem bestimmten Segment ist"
 
 #: fragdenstaat_at/templates/account/emails/confirmation_mail.txt
+#: fragdenstaat_at/templates/account/emails/confirmation_mail.html
 #, python-format
 msgid ""
 "Cheers,\n"
@@ -142,13 +143,6 @@ msgid ""
 msgstr ""
 "Grüße\n"
 "%(site_name)s"
-
-#: fragdenstaat_at/templates/account/emails/confirmation_mail.html
-#, python-format
-msgid ""
-"Cheers,<br/>\n"
-"%(site_name)s"
-msgstr ""
 
 #: fragdenstaat_at/fds_newsletter/models.py
 msgid "Comment"

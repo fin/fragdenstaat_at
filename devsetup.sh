@@ -107,6 +107,17 @@ dependencies() {
       for project in "${REPOS[@]}"; do
         uv pip install -e "../$project" --config-setting editable_mode=compat --no-deps
       done
+
+      # The browser for the Playwright tests. Per-user (~/.cache/ms-playwright)
+      # and tied to the venv's playwright version, so it is installed here
+      # rather than in the image; the system libraries it needs come from
+      # .devcontainer/Dockerfile. Headless shell only: pytest runs headless.
+      # Warn rather than fail -- only the browser tests need it.
+      if ! python -m playwright install chromium-headless-shell; then
+        echo "note: playwright browser install failed; browser tests will error." >&2
+        echo "      Missing system libraries? Rebuild the devcontainer, or run" >&2
+        echo "      sudo .venv/bin/python -m playwright install-deps chromium" >&2
+      fi
     fi
 
     if [ -e ".pre-commit-config.yaml" ]; then

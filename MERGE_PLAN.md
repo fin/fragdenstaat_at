@@ -1048,7 +1048,7 @@ DE code wrong" breakage.
 4. **filingcabinet** → `5f825a21` (froide's `9e0abc06` upgraded it).
 5. **DE's version floors**: `django-cms>=5.1`, `djangocms-text>=1.0.1,<2` (a
    major bump), `django-filer[svg]`, `django-flowcontrol>=0.0.21`,
-   `django-extended-makemessages>=1.11,<1.12`, `playwright`. **`djangocms-text`
+   `django-extended-makemessages>=1.11,<1.12`, `playwright` (bump `ARG PLAYWRIGHT_VERSION` in `.devcontainer/Dockerfile` with it). **`djangocms-text`
    1.x must land with** `c8980d46` (ckeditor plugin fix), `5a225194` (bundle
    override) and `2141ca8d` (figureblockquote removal), so do this step together
    with P7.2 group 1, not alone.

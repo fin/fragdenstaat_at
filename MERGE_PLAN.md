@@ -520,7 +520,7 @@ design or legal judgement.
 - [ ] **P3** — migrations
   - [x] forward-port as `fds_cms/0008` and `fds_donation/0046`
   - [x] **rehearsed against a production dump** — went through cleanly; see `docs/runbooks/live-db-verification.md`
-- [ ] **P4** — Austrian donation receipts *(not started; needs external tax/legal input)*
+- [ ] **P4** — Austrian donation receipts *(not started; needs external tax/legal input; future work, §10.1)*
 - [x] **P5** — repeatable sync
   - [x] drift job wired into CI
   - [x] tighten `--check-max-modified` 260 → 140 (measured 127)
@@ -931,11 +931,7 @@ Note for the runbook: production needs a one-off
 `manage.py migrate --fake fds_cms 0005` (D9), and must **not** be faked on a
 database lacking those columns.
 
-### P4 — Austrian donation receipts — ❌ not started · 2–4 weeks · independent
-
-Design and build the Spendenabsetzbarkeit / FinanzOnline flow replacing the German
-ZWB pipeline. Until it lands, do not un-hide the `receipt` form field. Gated on
-external tax/legal input — **start immediately**, it is the long pole. **[H]**
+### P4 — Austrian donation receipts — moved to §10.1 (future work)
 
 ### P5 — repeatable sync — ✅ done
 
@@ -1218,7 +1214,7 @@ needs a pre-migration dump to roll back to.
 
 ## 8. Sequencing
 
-Critical path **P1b → P2 → P3 → P6**, roughly 6–8 weeks, with **P4 (2–4 weeks)
+Critical path **P1b → P2 → P3 → P6**, roughly 6–8 weeks, with **P4 (2–4 weeks, §10.1)
 running alongside from day one** — it is the only part gated on external input.
 
 Open, and needing a human: everything marked **[H]** above, of which P4 is the only
@@ -1239,18 +1235,7 @@ wrong data in front of real people or break the deploy.
 
 **Wrong content reaching users**
 
-- [ ] **German identity in the mailing templates.** `fds_mailing/templates/email/
-      default/base.html` carries `fragdenstaat.de` five times plus Open Knowledge
-      Foundation Deutschland; `formal/base.html` one more. Every mailing AT sends
-      goes out with German footers and links. Find them with
-      `python manage_at_translations.py --dry-run` (§9.12). Same class as the
-      bank details, which are now fixed.
-      **Deferred (2026-11-26): not a deploy blocker while unused.** fin will
-      not use the fds_mailing / fds_newsletter functionality for now, so no
-      mailing is sent; leave this and the other fds_mailing / fds_newsletter
-      todos open, and fix before the first `EmailTemplate` or mailing is
-      created. `formal/base.html` only overrides the social-media block of
-      `default/base.html`, so fixing `default` covers both.
+- *German identity in the mailing templates: deferred, moved to §10.2.*
 - [x] **Five dead `reverse_id` links (three of them unguarded)** — §9.3. Set on
       the CMS pages, captured in `tests/fixtures/cms.json`, guarded by
       `tests/test_at_identity.py` (`test_page_url_ids_are_all_accounted_for` +
@@ -2314,3 +2299,34 @@ Current state: **17 hits across 7 files**, of which
   caught by the bare-BLZ pattern. Kept, because the alternative is missing a
   wrong bank code.
 
+---
+
+## 10. Future work (as of Nov 2026)
+
+Not part of the sync or the P7 deploy. Moved here on 2026-11-26 so the phase
+list and the §9.0 blockers show only what is actually outstanding.
+
+### 10.1 P4 — Austrian donation receipts — ❌ not started · 2–4 weeks · independent
+
+Design and build the Spendenabsetzbarkeit / FinanzOnline flow replacing the German
+ZWB pipeline. Until it lands, do not un-hide the `receipt` form field. Gated on
+external tax/legal input — **start immediately**, it is the long pole. **[H]**
+
+### 10.2 fds_mailing / fds_newsletter AT adaptation (from §9.0)
+
+Deferred: fin will not use the mailing / newsletter functionality for now, so
+nothing sends these templates. Fix before the first `EmailTemplate` or mailing
+is created.
+
+- [ ] **German identity in the mailing templates.** `fds_mailing/templates/email/
+      default/base.html` carries `fragdenstaat.de` five times plus Open Knowledge
+      Foundation Deutschland; `formal/base.html` one more. Every mailing AT sends
+      goes out with German footers and links. Find them with
+      `python manage_at_translations.py --dry-run` (§9.12). Same class as the
+      bank details, which are now fixed.
+      **Deferred (2026-11-26): not a deploy blocker while unused.** fin will
+      not use the fds_mailing / fds_newsletter functionality for now, so no
+      mailing is sent; leave this and the other fds_mailing / fds_newsletter
+      todos open, and fix before the first `EmailTemplate` or mailing is
+      created. `formal/base.html` only overrides the social-media block of
+      `default/base.html`, so fixing `default` covers both.

@@ -288,13 +288,15 @@ Small surface. AT's `production.py` adds `check_mail_log` (every minute) — AT-
 and load-bearing for delivery status. DE routes `run_subscriber_import` to a
 `convert` queue; AT has no task routing.
 
-**The `fds_donation` tasks are renamed in code, not yet in production.** `e07f8e5`
-(P2 step 4, adopting DE's fds_donation) renamed every
+**The `fds_donation` tasks are renamed, and production already runs the new
+names.** `e07f8e5` (P2 step 4, adopting DE's fds_donation) renamed every
 `fragdenstaat_de.fds_donation.*` task to `fragdenstaat_at.*`, through the same
-package-name substitution the DE sync uses. `origin/main` still registers the old
-names. **Deploying this branch is the rename**, so follow the drain-and-deploy
-steps in `docs/runbooks/celery-task-rename.md`. Otherwise tasks queued under the
-old names are dropped, and `django_celery_beat` rows pointing at them fail. P7
+package-name substitution the DE sync uses. Production runs `dev` at `55ac7c4`
+(2026-10-19), which contains `e07f8e5`, so the rename was deployed then; only
+`origin/main` still registers the old names. `docs/runbooks/celery-task-rename.md`
+documents that (past) cutover. Checked 2026-11-26: production's
+`django_celery_beat` has 12 periodic tasks, none of them fds_donation, so no row
+points at an old name. **P7 renames nothing**: against `55ac7c4` it only
 adds two tasks (`process_new_donation_task`,
 `gift_order_inventory_warning_notification`), both under the new names.
 
@@ -1275,8 +1277,8 @@ wrong data in front of real people or break the deploy.
 - [ ] **Check the `fds_cms/0005` precondition, then `migrate --fake`** (D9, §9.3).
       Must not run where those columns are absent — check `information_schema`
       first.
-- [ ] **Celery task rename** — drain, then deploy, per
-      `docs/runbooks/celery-task-rename.md`.
+- [x] **Celery task rename** — already deployed: production (`dev` @ `55ac7c4`)
+      contains `e07f8e5`. P7 adds tasks and renames none.
 - [ ] **`migrate froide_fax`** — five migrations (`0001_initial` ..
       `0005_faxoverride_email_copy`), all new tables plus one `AddField`
       (`FaxOverride.email_copy`); nothing pre-existing is touched.
@@ -1471,8 +1473,8 @@ Remaining:
 
 - [ ] **`manage.py migrate --fake fds_cms 0005`** (D9). Must **not** be run on a
   database that lacks those columns — check `information_schema` first.
-- [ ] **Celery task rename** — the five `fragdenstaat_de.fds_donation.*` names. Drain
-  and deploy per `docs/runbooks/celery-task-rename.md`; not a code edit.
+- [x] **Celery task rename** — the five `fragdenstaat_de.fds_donation.*` names.
+  Deployed with `dev` @ `55ac7c4`, which production runs (2026-11-26).
 - [x] **`remind_unreceived_banktransfers` scheduling** — resolved as a manual admin
   trigger on the donation changelist rather than a beat entry; see the celery
   section above. Make sure the deployment's beat config does *not* also schedule it.

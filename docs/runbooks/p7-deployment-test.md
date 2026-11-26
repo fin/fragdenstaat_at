@@ -35,10 +35,11 @@ SELECT
   (SELECT count(*) FROM django_site)                              AS sites;
 ```
 
-**Celery task rename.** This deploy renames the `fds_donation` tasks from
-`fragdenstaat_de.*` to `fragdenstaat_at.*` (see MERGE_PLAN "Celery"). On
-production, follow `docs/runbooks/celery-task-rename.md`. On staging, check now
-that the queue has nothing under the old names, so section 4 is meaningful.
+**Celery tasks.** This deploy renames no tasks: production (`dev` @ `55ac7c4`)
+already runs the `fragdenstaat_at.*` names. It adds two,
+`fragdenstaat_at.fds_donation.process_new_donation_task` and the dormant
+`gift_order_inventory_warning_notification`, so restart the workers with the
+web processes. Neither is in the beat schedule.
 
 ## 1. Migrate
 

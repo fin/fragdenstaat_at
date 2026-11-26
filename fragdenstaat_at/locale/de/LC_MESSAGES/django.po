@@ -1564,3 +1564,43 @@ msgstr "Fußzeile"
 #: templates/snippets/skip_link.html:5
 msgid "Skip to main content"
 msgstr "Zum Hauptinhalt springen"
+
+#: fragdenstaat_at/templates/foirequest/body/actions/send_message.html
+msgid "Replies to the default address are sent by fax"
+msgstr "TRANSLATED IN AT"
+
+#: fragdenstaat_at/templates/foirequest/body/actions/send_message.html
+#, python-format
+msgid ""
+"This public body does not accept requests by email. If you select its "
+"default address (%(address)s) a reply sent there is delivered by fax "
+"instead. If you select any other email, the message will be emailed "
+"normally. Replies from the public body still reach you by email here."
+msgstr "TRANSLATED IN AT %(address)s"
+
+#: fragdenstaat_at/templates/foirequest/snippets/fax_delivery_notice.html
+msgid "This request will be sent by fax"
+msgstr "TRANSLATED IN AT"
+
+#: fragdenstaat_at/templates/foirequest/snippets/fax_delivery_notice.html
+msgid "Some of these requests will be sent by fax"
+msgstr "TRANSLATED IN AT"
+
+#: fragdenstaat_at/templates/foirequest/snippets/fax_delivery_notice.html
+msgid ""
+"This public body does not accept requests by email, so your request is "
+"delivered by fax instead. Nothing changes in how you write it, and replies "
+"still reach you by email here."
+msgstr "TRANSLATED IN AT"
+
+#: fragdenstaat_at/templates/foirequest/snippets/fax_delivery_notice.html
+#, python-brace-format
+msgid ""
+"{count} of the {total} public bodies you selected do not accept requests by "
+"email. Those requests are delivered by fax instead. Nothing changes in how "
+"you write them, and replies still reach you by email here."
+msgstr "TRANSLATED IN AT {count} {total}"
+
+#: fragdenstaat_at/templates/foirequest/snippets/fax_delivery_notice.html
+msgid "Donate to FragDenStaat"
+msgstr "TRANSLATED IN AT"

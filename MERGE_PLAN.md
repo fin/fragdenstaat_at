@@ -1007,6 +1007,22 @@ Then drop `de_AT` from the froide fork and repin to `okfde/froide@main` — the 
 exit criterion. Note the fork currently checked out is `okfde-main`, not fin's;
 run `scripts/froide-source.sh fin` before starting.
 
+**`de` catalog status (2026-11-26).** AT's three `de` catalogs have no empty
+msgstr left for strings AT's code uses: DE's German for everything DE has, AT
+German for AT-only strings, and the marker below for the 7 strings whose
+wording lives in `de_AT` only (the fax notices, "Donate to FragDenStaat").
+That is the precondition for DE's `makemessages-de` hook; enabling it still
+needs one deliberate `make messagesde` reformat commit first (DE's
+`--no-wrap --sort-output` layout differs from AT's 78-column catalogs).
+
+**`TRANSLATED IN AT` marker.** A string translated *only* in `de_AT` gets
+`msgstr "TRANSLATED IN AT"` in `de`, followed by the msgid's placeholders
+(`TRANSLATED IN AT %(address)s`, since `msgfmt -c` rejects dropped ones), never
+empty and never a second German wording. `tests/test_at_translated_placeholder.py`
+fails if a marker has no non-fuzzy `de_AT` translation, if `de_AT` itself
+contains one, or if gettext returns one for any language in `LANGUAGES` (that
+check needs compiled catalogs; CI compiles first).
+
 ### P7 — second sync: DE@`b70ab730` + okfde/froide@`65bdbb35` — ⚠️ merged; deployment test outstanding
 
 Measured 2026-11-25. Work on a fresh branch `sync/de-head-2026-11` off `dev`.

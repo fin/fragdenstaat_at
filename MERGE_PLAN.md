@@ -1103,7 +1103,7 @@ Classified with AT's tree compared against DE@`938901ef`:
    d991891b 43b162dd`. Needs froide `65bdbb35` (its newest commit is the froide
    half of `d991891b`). AT templates are not djlint-formatted, so hand-merge and
    do not reformat.
-5. **Search / CMS tests.** `1de1d826 f074a785 8db64caf 37c1f080 ca72223b cdad0be2`
+5. **Search / CMS tests.** `1de1d826 f074a785 8db64caf ca72223b cdad0be2`. (`37c1f080` is already ported into `fds_donation/tests/utils.py::ensure_donation_apphook`, where it fixed an order-dependent failure of the donation browser tests.)
    (skip `67f2bd7a`, the cmssite cookie test). DE's new `tests/test_cmssites.py`,
    `tests/utils.py` and `fragdenstaat_de/conftest.py`: take only what the single-
    site setup exercises.

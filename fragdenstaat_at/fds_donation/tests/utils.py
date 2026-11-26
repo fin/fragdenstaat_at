@@ -103,8 +103,17 @@ def ensure_donation_apphook():
     flush the DB, so it cannot just be loaded once per session -- and cms.urls
     builds its apphook patterns from the DB at import time, so the urlconf is
     reloaded once per process to pick them up.
+
+    theme.urls is reloaded first, as DE does (37c1f080): tests.urls imports its
+    patterns from it, and reload_urlconf() reloads only cms.urls and the root
+    urlconf. Without that, a test that resolved any URL before the page existed
+    (the fax notice browser tests, say) leaves theme.urls holding the stale
+    apphook-less patterns, and fds_donation stays unregistered for the rest of
+    the run. In isolation the bug hid, because nothing resolved a URL first.
     """
     global _apphook_urls_loaded
+
+    from importlib import import_module, reload
 
     from django.core.management import call_command
 
@@ -114,5 +123,6 @@ def ensure_donation_apphook():
     if not Page.objects.filter(reverse_id="fds_donation").exists():
         call_command("loaddata", "cms.json", verbosity=0)
     if not _apphook_urls_loaded:
+        reload(import_module("fragdenstaat_at.theme.urls"))
         reload_urlconf()
         _apphook_urls_loaded = True

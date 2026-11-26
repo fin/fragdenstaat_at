@@ -134,10 +134,6 @@ msgid "Collapsible"
 msgstr "Collapsible"
 
 #: cms_plugins.py
-msgid "Column "
-msgstr ""
-
-#: cms_plugins.py
 msgid "Contact"
 msgstr "Kontakt"
 
@@ -819,3 +815,8 @@ msgstr "Konfiguration für {site}"
 #, python-brace-format
 msgid "One click form for {foirequest}"
 msgstr "Ein-Klick Formular für {foirequest}"
+
+#: cms_plugins.py
+#, python-format
+msgid "Column %s"
+msgstr "Spalte %s"

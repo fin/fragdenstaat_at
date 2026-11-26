@@ -749,11 +749,6 @@ msgid "Checks if object has recently donated"
 msgstr ""
 
 #. from AT source
-#: cms_plugins.py:907
-msgid "Column "
-msgstr ""
-
-#. from AT source
 #: templates/foirequest/snippets/fax_delivery_notice.html:58
 msgid "Donate to FragDenStaat"
 msgstr "FragDenStaat.at Unterstützen"

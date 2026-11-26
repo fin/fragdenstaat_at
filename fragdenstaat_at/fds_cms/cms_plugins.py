@@ -3,6 +3,7 @@ import urllib.parse
 from pathlib import Path
 
 from django.apps import apps
+from django.utils.functional import lazy
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
@@ -925,13 +926,21 @@ COLUMNS = [
     (9, _("Nine")),
     (12, _("Twelve")),
 ]
+
+
+def _column_plugin_name(col_name):
+    # DE's msgid ("Column %s"). Formatting a gettext_lazy proxy with % would
+    # translate it once, at import; lazy() defers it to each render.
+    return gettext("Column %s") % col_name
+
+
 for col_count, col_name in COLUMNS:
     plugin_pool.register_plugin(
         type(
             "Column%sPlugin" % col_count,
             (ColumnPlugin,),
             {
-                "name": _("Column " + str(col_name)),
+                "name": lazy(_column_plugin_name, str)(col_name),
                 "render_template": "cms/plugins/col_%d.html" % col_count,
             },
         )

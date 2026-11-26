@@ -1274,21 +1274,26 @@ wrong data in front of real people or break the deploy.
 
 **Deploy mechanics, in order**
 
-- [ ] **Check the `fds_cms/0005` precondition, then `migrate --fake`** (D9, §9.3).
+Done with the October deploy of `dev` @ `55ac7c4`, which production runs
+(confirmed by fin, 2026-11-26). `uv sync --locked` and the frontend build repeat
+on every deploy; the P7 deploy additionally needs only the steps in
+`docs/runbooks/p7-deployment-test.md`.
+
+- [x] **Check the `fds_cms/0005` precondition, then `migrate --fake`** (D9, §9.3).
       Must not run where those columns are absent — check `information_schema`
       first.
 - [x] **Celery task rename** — already deployed: production (`dev` @ `55ac7c4`)
       contains `e07f8e5`. P7 adds tasks and renames none.
-- [ ] **`migrate froide_fax`** — five migrations (`0001_initial` ..
+- [x] **`migrate froide_fax`** — five migrations (`0001_initial` ..
       `0005_faxoverride_email_copy`), all new tables plus one `AddField`
       (`FaxOverride.email_copy`); nothing pre-existing is touched.
       Introduced by enabling the app, see §9.13.
-- [ ] **`migrate fds_cms_at`** — one migration (`0001_initial`), two new tables
+- [x] **`migrate fds_cms_at`** — one migration (`0001_initial`), two new tables
       (`RSSFeedCache`, `RSSFeedCMSPlugin`). AT-only app for the RSS-feed CMS
       plugin; `feedparser` is a new dependency (in `uv.lock`). Beat gains
       `refresh-rss-feeds` (every 30 min, `fragdenstaat_at.fds_cms_at.*`, default
       queue).
-- [ ] **`manage.py fix_plugin_positions`** — the imported CMS content carries
+- [x] **`manage.py fix_plugin_positions`** — the imported CMS content carries
       plugins whose `position` does not match the plugin tree (a child ordered
       at or before its parent), which makes django-cms refuse *new* plugins in
       that placeholder with "Plugin position must be greater than N". django-cms
@@ -1297,13 +1302,13 @@ wrong data in front of real people or break the deploy.
       position order*, so a mis-ordered child stays mis-ordered. Run `--dry-run`
       first. On the dev extract this was 3 placeholders / 61 plugins, 7
       violations -> 0.
-- [ ] **`uv sync --locked`**, shipping `uv.lock` and `pyproject.toml` with the
+- [x] **`uv sync --locked`**, shipping `uv.lock` and `pyproject.toml` with the
       code (§9.10). A plain `uv sync` may re-resolve and hand production an
       untested set.
-- [ ] **Rebuild the Elasticsearch image** (8.19.3; also picks up `init: true`),
+- [x] **Rebuild the Elasticsearch image** (8.19.3; also picks up `init: true`),
       and confirm production ES is **≥ 8.16** — below that `no_sub_matches` is
       silently ignored and search quality degrades with no error.
-- [ ] **Confirm `django-payments` resolves to 3.x** — free resolution picks
+- [x] **Confirm `django-payments` resolves to 3.x** — free resolution picks
       4.1.0, where `StripeProvider` no longer exists and
       `import froide_payment.provider` raises `ImportError`. The site does not
       boot. Verified against the 4.1.0 wheel, see §7.
@@ -1471,7 +1476,7 @@ Remaining:
 
 ### 9.3 One-off production steps
 
-- [ ] **`manage.py migrate --fake fds_cms 0005`** (D9). Must **not** be run on a
+- [x] **`manage.py migrate --fake fds_cms 0005`** (D9). Done with `dev` @ `55ac7c4`. Must **not** be run on a
   database that lacks those columns — check `information_schema` first.
 - [x] **Celery task rename** — the five `fragdenstaat_de.fds_donation.*` names.
   Deployed with `dev` @ `55ac7c4`, which production runs (2026-11-26).

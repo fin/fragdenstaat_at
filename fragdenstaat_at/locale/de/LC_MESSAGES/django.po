@@ -75,7 +75,7 @@ msgstr "Archiviere Segmente"
 
 #: fragdenstaat_at/settings/base.py
 msgid "Austrian"
-msgstr ""
+msgstr "Deutsch (Österreich)"
 
 #: fragdenstaat_at/templates/header.html
 msgid "Beginner's guide"

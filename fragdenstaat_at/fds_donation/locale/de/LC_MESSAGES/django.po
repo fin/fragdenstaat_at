@@ -1095,7 +1095,7 @@ msgstr "Verwendungszweck"
 #: cms_plugins.py
 #| msgid "Donation Progress Bar"
 msgid "Regular Donors Progress Bar"
-msgstr ""
+msgstr "Fortschrittsbalken Dauerspender:innen"
 
 #: templates/fds_donation/email/incomplete_donation_reminder_subject.txt
 msgid "Reminder: Complete your donation"
@@ -2149,3 +2149,57 @@ msgstr "spenden/embed/"
 #, python-brace-format
 msgid "The amount needs to be at least {amount}."
 msgstr "Der Betrag muss mindestens {amount} sein."
+
+#: admin.py
+msgid "Banktransfer reminders will be sent in background."
+msgstr "Überweisungserinnerungen werden im Hintergrund versendet."
+
+#: admin_utils.py
+msgid "Banktransfer reminder due"
+msgstr "Überweisungserinnerung fällig"
+
+#: admin_utils.py
+msgid "yes"
+msgstr "ja"
+
+#: tasks.py
+#, python-brace-format
+msgid ""
+"Nothing was imported.\n"
+"\n"
+"Error: {error}"
+msgstr ""
+"Es wurde nichts importiert.\n"
+"\n"
+"Fehler: {error}"
+
+#: tasks.py
+#, python-brace-format
+msgid ""
+"The import was aborted partway. Rows before the failure were imported; re-uploading the same file is safe, already imported rows are updated rather than duplicated.\n"
+"\n"
+"Error: {error}"
+msgstr ""
+"Der Import wurde mittendrin abgebrochen. Zeilen vor dem Fehler wurden importiert. Dieselbe Datei kann gefahrlos erneut hochgeladen werden: Bereits importierte Zeilen werden aktualisiert statt doppelt angelegt.\n"
+"\n"
+"Fehler: {error}"
+
+#: tasks.py
+#, python-brace-format
+msgid "Bank transfer import for {project} failed"
+msgstr "Überweisungsimport für {project} fehlgeschlagen"
+
+#: tasks.py
+#, python-brace-format
+msgid ""
+"Matched: {matched}\n"
+"New: {new}\n"
+"Unmatched: {unmatched}"
+msgstr ""
+"Zugeordnet: {matched}\n"
+"Neu: {new}\n"
+"Nicht zugeordnet: {unmatched}"
+
+#: tasks.py
+msgid "Unmatched transfers (not imported):"
+msgstr "Nicht zugeordnete Überweisungen (nicht importiert):"

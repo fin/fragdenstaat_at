@@ -322,7 +322,11 @@ def test_import_banktransfers_csv_rejects_bad_files(tmp_path):
 
 
 @pytest.mark.django_db
-def test_import_banktransfers_task(tmp_path, mailoutbox, monkeypatch):
+def test_import_banktransfers_task(tmp_path, mailoutbox, monkeypatch, settings):
+    # Assert the English source strings, not the de catalogue (as the fax
+    # notice tests do): `en` is a stub catalogue, so it falls through to msgid.
+    settings.LANGUAGE_CODE = "en"
+    settings.LANGUAGES = [("en", "English")]
     user = UserFactory.create()
     donor = DonorFactory.create()
     donation = make_banktransfer_donation(donor, Decimal("10.00"), timezone.now())

@@ -791,7 +791,7 @@ msgstr "Prozent"
 
 #: models.py
 msgid "tags"
-msgstr "Tags"
+msgstr "Schlagwörter"
 
 #: models.py
 msgid "template"
@@ -800,3 +800,22 @@ msgstr "Template"
 #: models.py
 msgid "template used to display the plugin"
 msgstr "Template, mit dem das Plugin angezeigt wird"
+
+#: models.py:45
+#, python-brace-format
+msgid ""
+"Enter an icon name from the <a href=\"{url}\" target=\"_blank\">FontAwesome "
+"4 icon set</a>"
+msgstr ""
+"Icon-Name aus der <a href=\"{url}\" target=\"_blank\">Font Awesome 4 Icon "
+"Liste</a>"
+
+#: models.py:105
+#, python-brace-format
+msgid "Settings for {site}"
+msgstr "Konfiguration für {site}"
+
+#: models.py:410
+#, python-brace-format
+msgid "One click form for {foirequest}"
+msgstr "Ein-Klick Formular für {foirequest}"

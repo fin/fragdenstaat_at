@@ -66,25 +66,22 @@ def find_donation(transfer_ident, row):
 
 
 def update_iban_on_donor(donor, iban, reference):
-    # donor.attributes is a Postgres HStoreField: flat str -> str only, no
-    # nested values. A Python list stored as a value gets stringified via
-    # repr() on save; read back next time it's a *string*, which the old
-    # code then wrapped in a new single-element list and stringified again
-    # -- doubling in size on every save. Keep it as one flat, deduplicated,
-    # ';'-joined string instead (IBANs can't contain ';').
-    if not donor.attributes:
-        donor.attributes = donor.attributes or {}
-    raw_ibans = donor.attributes.get("ibans") or ""
-    known_ibans = [v for v in raw_ibans.split(";") if v]
-    previous_iban = donor.attributes.get("iban")
+    # donor.attributes is a JSONField (hstore until P7, see migration 0051):
+    # "ibans" is a flat, de-duplicated list. Under hstore it was a ';'-joined
+    # string, because a list stored there got repr()-ed and doubled on every
+    # save.
+    attributes = donor.attributes or {}
+    known_ibans = list(dict.fromkeys(attributes.get("ibans") or []))
+    previous_iban = attributes.get("iban")
     if previous_iban and previous_iban not in known_ibans:
         known_ibans.append(previous_iban)
     if pd.notnull(iban) and iban:
         if iban not in known_ibans:
             known_ibans.append(iban)
-        donor.attributes["iban"] = iban
-    donor.attributes["ibans"] = ";".join(known_ibans)
-    donor.attributes["banktransfer_reference"] = reference
+        attributes["iban"] = iban
+    attributes["ibans"] = known_ibans
+    attributes["banktransfer_reference"] = reference
+    donor.attributes = attributes
     donor.save()
 
 

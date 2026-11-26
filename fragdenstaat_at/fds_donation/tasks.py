@@ -196,6 +196,23 @@ def process_recurrence_task(donor_id):
     process_recurrence_on_donor(donor)
 
 
+@celery_app.task(name="fragdenstaat_at.fds_donation.process_new_donation_task")
+def process_new_donation_task(donation_id):
+    from .models import Donation
+    from .recurrence import process_recurrence_on_donor
+    from .services import process_new_donation
+
+    try:
+        donation = Donation.objects.get(id=donation_id)
+    except Donation.DoesNotExist:
+        return
+
+    if donation.donor:
+        process_recurrence_on_donor(donation.donor)
+
+    process_new_donation(donation)
+
+
 @celery_app.task(name="fragdenstaat_at.fds_donation.send_donation_tasks_update_mail")
 def send_donation_tasks_update_mail():
     from froide_payment.models import PaymentStatus
@@ -240,3 +257,30 @@ def remind_incomplete_donations_task():
     from .services import remind_incomplete_donations
 
     remind_incomplete_donations()
+
+
+@celery_app.task(
+    name="fragdenstaat_at.fds_donation.gift_order_inventory_warning_notification"
+)
+def send_gift_order_inventory_warning_notification(gift_id):
+    from .models import DonationGift
+
+    try:
+        gift = DonationGift.objects.get(
+            id=gift_id,
+        )
+    except DonationGift.DoesNotExist:
+        return
+
+    admin_url = settings.SITE_URL + reverse(
+        "admin:fds_donation_donationgift_change", args=(gift.id,)
+    )
+    mail_managers(
+        str(_("Donation gift order inventory warning: {name}").format(name=gift.name)),
+        admin_url,
+    )
+    send_notification(
+        _("🚨 Donation gift order inventory warning: {name} ({id})").format(
+            name=gift.name, id=gift.id
+        )
+    )

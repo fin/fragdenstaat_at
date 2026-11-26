@@ -18,7 +18,7 @@ import stripe
 from playwright.async_api import Page
 
 from fragdenstaat_at.fds_donation.forms import QuickDonationForm
-from fragdenstaat_at.fds_donation.models import Donation
+from fragdenstaat_at.fds_donation.models import Donation, Donor
 
 from .conftest import dump_page_state
 from .utils import ProcessReader
@@ -171,7 +171,7 @@ def stripe_sepa_setup(settings, live_server, monkeypatch):
 async def fill_donation_page(page: Page, donor_email):
     await page.get_by_placeholder("Vorname").fill("Peter")
     await page.get_by_placeholder("Nachname").fill("Parker")
-    await page.get_by_placeholder("z.B. name@beispiel.de").fill(donor_email)
+    await page.get_by_placeholder("z.B. name@beispiel.at").fill(donor_email)
     # Opt out of the donation receipt and the user account. Addressed by field
     # id, not by get_by_text(...).nth(): DE's form has a third "Nein, danke."
     # (the contact/newsletter opt-in) ahead of these two, which D3 removes on AT,
@@ -213,6 +213,11 @@ async def test_sepa_recurring_donation_success(
 
         assert await page.get_by_text("Vielen Dank für Ihre Spende!").is_visible()
         assert await page.get_by_text(donor_email).is_visible()
+
+        email_message = mail.outbox[0]
+        assert email_message.subject == "Vielen Dank für Ihre Spende"
+        donor = Donor.objects.get(email=donor_email)
+        assert donor.recurring_amount == 5
 
         print("waiting for webhooks to complete...")
 

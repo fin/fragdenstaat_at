@@ -34,7 +34,7 @@ dependencies = [
   "django-admin-sortable2>=2.2.8",
   "django-celery-beat>=2.8.1",
   "django-celery-email>=3.0.0",
-  "django-cms[admin-style]>=5.0.5,<6",
+  "django-cms[admin-style]>=5.1,<6",
   "django-configurations>=2.5.1",
   "django-contractor>=0.0.8",
   "django-contrib-comments>=2.2.0",
@@ -42,10 +42,10 @@ dependencies = [
   "django-crossdomainmedia>=0.0.4",
   "django-datashow>=0.1.10",
   "django-elasticsearch-dsl>=8.0,<9.0",
-  "django-filer>=3.0.0",
+  "django-filer[svg]>=3.0.0",
   "django-filingcabinet @ git+https://github.com/okfde/django-filingcabinet.git@main",
   "django-filter>=25.1",
-  "django-flowcontrol>=0.0.19",
+  "django-flowcontrol>=0.0.21",
   "django-leaflet>=0.31.0",
   "django-localflavor>=3.1",
   "django-logentry-admin>=1.1.0",
@@ -63,7 +63,7 @@ dependencies = [
   "djangocms-link>=5.0.1",
   "djangocms-icon>=2.1.0",
   "djangocms-picture>=4.1.1",
-  "djangocms-text>=0.9.1",
+  "djangocms-text>=1.0.1,<2",
   "djangocms-transfer>=2.0.1",
   "djangocms-versioning>=2.5.1",
   "djangocms-video>=3.1.0",
@@ -150,7 +150,7 @@ production = [
 [dependency-groups]
 dev = [
   "django-debug-toolbar>=3.2.1",
-  "django-extended-makemessages>=1.7.1",
+  "django-extended-makemessages>=1.11.0,<1.12.0",
   # froide's test package (imported by the vendored fds_newsletter tests) needs
   # bs4; froide is installed with --no-deps so it does not come along.
   "beautifulsoup4",
@@ -168,14 +168,17 @@ dev = [
   "honcho",
   "ipdb",
   "ipython",
+  "playwright>=1.65.0",
   "polib",
+  "pywatchman",
+  "prek>=0.3.0",
   "pytest-xdist>=3.8.0",
   "pytest-cov>=7.1.0",
   # Async, not the sync pytest-playwright: DE's browser tests (fds_donation's
   # test_banktransfer/test_stripe/test_paypal) are `async def` and await the
   # Page. The two plugins both define a `page` fixture and cannot coexist, so
   # AT's own browser test is async too (tests/test_donation.py).
-  "pytest-playwright-asyncio>=0.7.2",
+  "pytest-playwright-asyncio>=0.10.0",
   # Pulled in by pytest-playwright-asyncio, but named explicitly because
   # fds_donation's tests carry @pytest.mark.asyncio. Running the Stripe ones
   # also needs the Stripe CLI and test keys -- see MERGE_PLAN.md 9.3.
@@ -191,7 +194,7 @@ dev = [
   # '__pytest_wrapped__'. AT's lock had drifted to 2.5.1 while DE resolved 2.8.1.
   # The floor is on factoryboy, not pytest -- do not "fix" this by pinning pytest.
   "pytest-factoryboy>=2.8.1",
-  "ruff>=0.6.0",
+  "ruff>=0.15.15",
 ]
 
 [tool.uv]

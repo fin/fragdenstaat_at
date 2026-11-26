@@ -34,11 +34,13 @@ repos:
         pass_filenames: false
         always_run: true
 
-  # - repo: local
-  #   hooks:
-  #     - id: ensure-consistent-dependencies
-  #       name: Ensure consistent dependencies (pnpm/requirements.txt)
-  #       language: python
-  #       entry: scripts/ensure_consistent_dependencies.py
-  #       additional_dependencies:
-  #         - pyyaml
+  # froide's shared i18n lint hooks (DE 43598878). Pinned to the same froide
+  # revision as pyproject.toml. DE's third hook, makemessages-de, is deferred to
+  # P6: AT's catalogs (de_AT overrides, 44 untranslated strings) would fail it
+  # on every commit. DE's ensure-consistent-dependencies is not taken either;
+  # check-fork-pins above deliberately compares refs, not resolved commits.
+  - repo: https://github.com/okfde/froide
+    rev: 65bdbb3548bfe7a8691b9330b0dace95d71f48d0
+    hooks:
+      - id: django-blocktrans-trimmed
+      - id: gettext-named-placeholders

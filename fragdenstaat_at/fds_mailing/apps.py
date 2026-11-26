@@ -22,10 +22,12 @@ class FdsMailingConfig(AppConfig):
         )
         from .middleware import (
             EmailTemplateMiddleware,
+            FeedbackIdMailMiddleware,
             StaleClassificationReminderMiddleware,
         )
         from .utils import handle_bounce
 
         mail_middleware_registry.register(EmailTemplateMiddleware())
         mail_middleware_registry.register(StaleClassificationReminderMiddleware())
+        mail_middleware_registry.register(FeedbackIdMailMiddleware())
         email_bounced.connect(handle_bounce)

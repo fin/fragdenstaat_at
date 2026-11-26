@@ -9,10 +9,10 @@ from typing import Any
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.postgres.fields import HStoreField
 from django.core.exceptions import ValidationError
 from django.db import connection, models
-from django.db.models.functions import RowNumber
+from django.db.models import Exists, OuterRef
+from django.db.models.functions import RowNumber, Trunc
 from django.urls import reverse
 from django.utils import formats, timezone
 from django.utils.formats import date_format, number_format
@@ -85,6 +85,7 @@ SALUTATION_CHOICES = (
 )
 SALUTATION_DICT = dict(SALUTATION_CHOICES)
 
+DEFAULT_PURPOSE = _("General donation")
 
 DONATION_PROJECTS = getattr(settings, "DONATION_PROJECTS", [("", _("Default"))])
 DEFAULT_DONATION_PROJECT = DONATION_PROJECTS[0][0]
@@ -127,7 +128,7 @@ class Donor(models.Model):
 
     email = models.EmailField(blank=True, default="")
     identifier = models.CharField(blank=True, max_length=256)
-    attributes = HStoreField(null=True, blank=True)
+    attributes = models.JSONField(blank=True, default=dict)
 
     active = models.BooleanField(default=False)
     first_donation = models.DateTimeField(default=timezone.now)
@@ -297,12 +298,25 @@ class Donor(models.Model):
         """
         Calculate the total recurring amount for this donor.
         """
-        return self.recurrences.filter(cancel_date__isnull=True).aggregate(
-            total=models.Sum(models.F("amount") / models.F("interval"))
-        )["total"] or decimal.Decimal("0.00")
+        has_completed_donation = Exists(
+            Donation.objects.filter(completed=True, recurrence_id=OuterRef("pk"))
+        )
+        return self.recurrences.filter(has_completed_donation).filter(
+            cancel_date__isnull=True
+        ).aggregate(total=models.Sum(models.F("amount") / models.F("interval")))[
+            "total"
+        ] or decimal.Decimal("0.00")
 
     def get_current_recurrence(self):
-        return self.recurrences.filter(cancel_date=None).order_by("-start_date").first()
+        has_completed_donation = Exists(
+            Donation.objects.filter(completed=True, recurrence_id=OuterRef("pk"))
+        )
+        return (
+            self.recurrences.filter(has_completed_donation)
+            .filter(cancel_date=None)
+            .order_by("-start_date")
+            .first()
+        )
 
     def get_recurrence_streak_start_date(self):
         """
@@ -342,9 +356,28 @@ class Donor(models.Model):
             recently_donated = timezone.now() - self.last_donation <= year
         return recently_donated
 
+    def get_receiving_donations(self):
+        return annotate_donations_with_receiving(self.donations)
+
+    def has_recently_donated(self, days_since_donation=180, extra_filters=None):
+        if extra_filters is None:
+            extra_filters = {}
+        stats = (
+            self.get_receiving_donations()
+            .filter(receiving=True, **extra_filters)
+            .aggregate(last_receiving_donation=models.Max("timestamp"))
+        )
+        if stats["last_receiving_donation"]:
+            days_since_last_receiving_donation = (
+                timezone.now() - stats["last_receiving_donation"]
+            ).days
+            if days_since_last_receiving_donation < days_since_donation:
+                return False
+        return True
+
     @property
     def is_eligible_for_gift(self):
-        return self.recurring_amount >= 10
+        return self.recurring_amount >= 5
 
     @property
     def can_receive_receipt(self):
@@ -532,8 +565,8 @@ class Recurrence(models.Model):
             start=date_format(self.start_date, "SHORT_DATE_FORMAT"),
         ) + (
             " ({})".format(
-                _("canceled on {}").format(
-                    date_format(self.cancel_date, "SHORT_DATE_FORMAT")
+                _("canceled on {date}").format(
+                    date=date_format(self.cancel_date, "SHORT_DATE_FORMAT")
                 )
             )
             if self.cancel_date
@@ -621,12 +654,17 @@ class Recurrence(models.Model):
         self.amount = self.subscription.plan.amount
         self.save(update_fields=["interval", "amount", "last_upgrade"])
 
-    def should_upgrade(self, days_between_upgrade):
+    def should_upgrade(self, days_between_upgrade=180):
         if not days_between_upgrade:
             return True
         last_upgrade = self.last_upgrade or self.start_date
         days_since = (timezone.now() - last_upgrade).days
-        return days_between_upgrade < days_since
+        could_upgrade = days_between_upgrade < days_since
+        if not could_upgrade:
+            return False
+        return self.donor.has_recently_donated(
+            days_between_upgrade, extra_filters={"recurrence": None}
+        )
 
 
 class DonationManager(models.Manager):
@@ -1344,7 +1382,28 @@ class UpgradeRecurrenceFormCMSPlugin(CMSPlugin):
     next_url = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
-        return _("Upgrade Recurrence ({})").format(self.choice_count)
+        return _("Upgrade Recurrence ({choice_count})").format(
+            choice_count=self.choice_count
+        )
+
+
+class CheckDonorTagCMSPlugin(CMSPlugin):
+    tag = models.ForeignKey(
+        DonorTag,
+        on_delete=models.PROTECT,
+        verbose_name=_("Donor Tag"),
+    )
+    negate = models.BooleanField(
+        default=False,
+        verbose_name=_("Negate condition"),
+        help_text=_("If doesn't have tag"),
+    )
+
+    def __str__(self):
+        if self.negate:
+            return _("Donor doesn't have tag '{tag}'").format(tag=self.tag)
+        else:
+            return _("Donor has tag '{tag}'").format(tag=self.tag)
 
 
 class DonorTagActionConfig(ActionBase):
@@ -1363,9 +1422,9 @@ class DonorTagActionConfig(ActionBase):
 
     def __str__(self):
         if self.remove:
-            return _("Remove tag {}").format(self.tag)
+            return _("Remove tag {tag}").format(tag=self.tag)
         else:
-            return _("Add tag {}").format(self.tag)
+            return _("Add tag {tag}").format(tag=self.tag)
 
 
 class RecentlyDonatedActionConfig(ActionBase):
@@ -1378,13 +1437,47 @@ class RecentlyDonatedActionConfig(ActionBase):
     )
 
     def __str__(self):
-        since = _("{} days ago").format(self.since_days)
+        since = _("{days} days ago").format(days=self.since_days)
         if self.since_date:
             since = formats.date_format(self.since_date, "SHORT_DATETIME_FORMAT")
         if self.negate:
-            return _("Has not donated since {}").format(since)
+            return _("Has not donated since {since}").format(since=since)
         else:
-            return _("Has donated since {}").format(since)
+            return _("Has donated since {since}").format(since=since)
+
+
+def annotate_donations_with_receiving(
+    donations: models.QuerySet[Donation],
+) -> models.QuerySet[Donation]:
+    """
+    Annotates a donation queryset of donations with a boolean field 'receiving'
+    that indicates whether the donation is still expected to be received or has
+    already been received.
+    """
+    return donations.annotate(
+        month_start=Trunc("timestamp", "month", output_field=models.DateTimeField())
+    ).annotate(
+        receiving=models.ExpressionWrapper(
+            models.Q(received_timestamp__isnull=False)
+            | (
+                models.Q(method="banktransfer")
+                & models.Q(month_start__gt=timezone.now() - timedelta(days=35))
+            )
+            | (
+                models.Q(method="sepa")
+                & models.Q(timestamp__gt=timezone.now() - timedelta(days=24))
+                & ~models.Q(
+                    payment__status__in=[
+                        PaymentStatus.REJECTED,
+                        PaymentStatus.REFUNDED,
+                        PaymentStatus.ERROR,
+                        PaymentStatus.CANCELED,
+                    ]
+                )
+            ),
+            output_field=models.BooleanField(),
+        )
+    )
 
 
 # AT-only: progress bar counting recurring donors against a goal.

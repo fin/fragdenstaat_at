@@ -1,6 +1,8 @@
 import json
 import urllib.parse
+from pathlib import Path
 
+from django.apps import apps
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
@@ -10,8 +12,9 @@ from cms.plugin_pool import plugin_pool
 from datashow.models import Dataset
 from datashow.table import RowQueryset
 from djangocms_picture.cms_plugins import PicturePlugin as BasePicturePlugin
+from easy_thumbnails.files import get_thumbnailer
+from filingcabinet.models import PageAnnotation
 
-from froide.foirequest.models import FoiRequest
 from froide.helper.auth import is_crew
 from froide.helper.utils import get_redirect_url
 
@@ -39,9 +42,7 @@ from .models import (
     DocumentPortalEmbedCMSPlugin,
     DropdownBannerCMSPlugin,
     ExternalPixelCMSPlugin,
-    FoiRequestListCMSPlugin,
     ModalCMSPlugin,
-    OneClickFoiRequestCMSPlugin,
     OpenSearchCMSPlugin,
     PageAnnotationCMSPlugin,
     PagePreviewCMSPlugin,
@@ -69,11 +70,33 @@ class PageAnnotationPlugin(CMSPluginBase):
     def render(self, context, instance, placeholder):
         context = super().render(context, instance, placeholder)
         context["instance"] = instance
-        context["title"] = instance.title or instance.page_annotation.title
-        context["description"] = (
-            instance.description or instance.page_annotation.description
+        page_annotation = (
+            PageAnnotation.objects.filter(id=instance.page_annotation_id)
+            .select_related(
+                "page",
+                "page__document",
+            )
+            .get()
         )
-        context["object"] = instance.page_annotation
+        context["title"] = instance.title or page_annotation.title
+        context["description"] = instance.description or page_annotation.description
+        context["object"] = page_annotation
+
+        document = page_annotation.page.document
+        images = {}
+        if page_annotation.image:
+            thumbnailer = get_thumbnailer(page_annotation.image)
+
+            for size in (1140, 940, 768):
+                thumbnail = thumbnailer.get_thumbnail({"size": (size, 0)})
+                images[f"w{size}"] = document.get_authorized_file_url(
+                    Path(thumbnail.name).name
+                )
+        context["image_url"] = document.get_authorized_file_url(
+            Path(page_annotation.image.name).name
+        )
+        context["unpublished"] = not document.is_public()
+        context["images"] = images
 
         return context
 
@@ -217,104 +240,108 @@ class DropdownBannerPlugin(CMSPluginBase):
     render_template = "cms/plugins/dropdown_banner.html"
 
 
-@plugin_pool.register_plugin
-class FoiRequestListPlugin(CMSPluginBase):
-    """
-    Plugin for including the latest entries filtered
-    """
+if apps.is_installed("froide.foirequest"):
+    from froide.foirequest.models import FoiRequest
 
-    model = FoiRequestListCMSPlugin
-    name = _("Latest FOI requests")
-    default_template = "foirequest/cms_plugins/list.html"
-    filter_horizontal = ["tags"]
-    text_enabled = True
-    raw_id_fields = [
-        "user",
-        "jurisdiction",
-        "category",
-        "project",
-        "classification",
-        "publicbody",
-    ]
+    from .models import FoiRequestListCMSPlugin, OneClickFoiRequestCMSPlugin
 
-    def get_render_template(self, context, instance, placeholder):
-        if instance.template:
-            return instance.template
-        return self.default_template
-
-    def render(self, context, instance, placeholder):
+    @plugin_pool.register_plugin
+    class FoiRequestListPlugin(CMSPluginBase):
         """
-        Update the context with plugin's data
+        Plugin for including the latest entries filtered
         """
-        request = context.get("request")
-        if request is not None and is_crew(request.user):
-            foirequests = FoiRequest.objects.all()
-        else:
-            foirequests = FoiRequest.published.all()
 
-        FILTER_KEYS = (
+        model = FoiRequestListCMSPlugin
+        name = _("Latest FOI requests")
+        default_template = "foirequest/cms_plugins/list.html"
+        filter_horizontal = ["tags"]
+        text_enabled = True
+        raw_id_fields = [
             "user",
-            "jurisdiction_id",
-            "category_id",
-            "classification_id",
-            "project_id",
-            "status",
-            "resolution",
-        )
-        filters = {}
+            "jurisdiction",
+            "category",
+            "project",
+            "classification",
+            "publicbody",
+        ]
 
-        tag_list = instance.tags.all().values_list("id", flat=True)
-        if tag_list:
-            filters["tags__in"] = tag_list
+        def get_render_template(self, context, instance, placeholder):
+            if instance.template:
+                return instance.template
+            return self.default_template
 
-        for key in FILTER_KEYS:
-            if getattr(instance, key, None):
-                filters[key] = getattr(instance, key)
+        def render(self, context, instance, placeholder):
+            """
+            Update the context with plugin's data
+            """
+            request = context.get("request")
+            if request is not None and is_crew(request.user):
+                foirequests = FoiRequest.objects.all()
+            else:
+                foirequests = FoiRequest.published.all()
 
-        if instance.publicbody_id:
-            filters["public_body_id"] = instance.publicbody_id
+            FILTER_KEYS = (
+                "user",
+                "jurisdiction_id",
+                "category_id",
+                "classification_id",
+                "project_id",
+                "status",
+                "resolution",
+            )
+            filters = {}
 
-        foirequests = foirequests.filter(**filters).distinct()
+            tag_list = instance.tags.all().values_list("id", flat=True)
+            if tag_list:
+                filters["tags__in"] = tag_list
 
-        offset = instance.offset
-        if instance.number_of_entries:
-            foirequests = foirequests[offset : offset + instance.number_of_entries]
-        else:
-            foirequests = foirequests[offset:]
+            for key in FILTER_KEYS:
+                if getattr(instance, key, None):
+                    filters[key] = getattr(instance, key)
 
-        context = super().render(context, instance, placeholder)
-        context["object_list"] = foirequests
-        return context
+            if instance.publicbody_id:
+                filters["public_body_id"] = instance.publicbody_id
 
+            foirequests = foirequests.filter(**filters).distinct()
 
-@plugin_pool.register_plugin
-class OneClickFoiRequestPlugin(CMSPluginBase):
-    """
-    Plugin for including the latest entries filtered
-    """
+            offset = instance.offset
+            if instance.number_of_entries:
+                foirequests = foirequests[offset : offset + instance.number_of_entries]
+            else:
+                foirequests = foirequests[offset:]
 
-    model = OneClickFoiRequestCMSPlugin
-    name = _("One click FoiRequest form")
-    default_template = "foirequest/cms_plugins/one_click.html"
-    text_enabled = True
-    cache = False
-    raw_id_fields = ["foirequest"]
+            context = super().render(context, instance, placeholder)
+            context["object_list"] = foirequests
+            return context
 
-    def get_render_template(self, context, instance, placeholder):
-        if instance.template:
-            return instance.template
-        return self.default_template
-
-    def render(self, context, instance, placeholder):
+    @plugin_pool.register_plugin
+    class OneClickFoiRequestPlugin(CMSPluginBase):
         """
-        Update the context with plugin's data
+        Plugin for including the latest entries filtered
         """
 
-        context = super().render(context, instance, placeholder)
-        context["object"] = instance.foirequest
-        context["redirect_url"] = instance.redirect_url
-        context["reference"] = instance.reference
-        return context
+        model = OneClickFoiRequestCMSPlugin
+        name = _("One click FoiRequest form")
+        default_template = "foirequest/cms_plugins/one_click.html"
+        text_enabled = True
+        cache = False
+        raw_id_fields = ["foirequest"]
+
+        def get_render_template(self, context, instance, placeholder):
+            if instance.template:
+                return instance.template
+            return self.default_template
+
+        def render(self, context, instance, placeholder):
+            """
+            Update the context with plugin's data
+            """
+
+            context = super().render(context, instance, placeholder)
+            context["object"] = instance.foirequest
+            context["redirect_url"] = instance.redirect_url
+            context["reference"] = instance.reference
+            return context
 
 
 @plugin_pool.register_plugin

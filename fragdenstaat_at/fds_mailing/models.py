@@ -22,6 +22,7 @@ from cms.utils.placeholder import get_placeholder_from_slot
 from djangocms_frontend.fields import AttributesField
 from filer.fields.image import FilerImageField
 from flowcontrol.models import ActionBase
+from flowcontrol.utils import validate_template_condition
 from mjml import mjml2html
 
 from froide.helper.email_sending import EmailContent, mail_registry, send_mail
@@ -34,7 +35,12 @@ from fragdenstaat_at.fds_newsletter.utils import get_subscribers
 
 from . import mailing_submitted
 from .pixel_log import generate_random_unique_pixel_url
-from .utils import get_url_tagger, render_text, render_web_html
+from .utils import (
+    get_url_tagger,
+    make_mailing_feedback_id,
+    render_text,
+    render_web_html,
+)
 from .validators import validate_sender_domain
 
 User = get_user_model()
@@ -603,18 +609,21 @@ class Mailing(models.Model):
         )
         mailing_submitted.send(sender=self, mailing=self)
 
-    def send(self):
-        if self.sending or self.sent or not self.submitted:
-            return
-
-        recipients = self.recipients.all()
-
+    def get_waiting_recipients(self):
+        recipients = self.recipients.filter(sent__isnull=True)
         if self.newsletter:
             # Force limit to selected newsletter
             recipients = recipients.filter(
                 subscriber__newsletter=self.newsletter,
                 subscriber__subscribed__isnull=False,
             )
+        return recipients
+
+    def continue_sending(self, batch_size=500):
+        if self.sending or self.sent or not self.submitted:
+            return
+
+        recipients = self.get_waiting_recipients()
 
         logger.info(
             _("Sending %(mailing)s to %(count)d people"),
@@ -626,19 +635,15 @@ class Mailing(models.Model):
         context = self.get_email_context()
 
         try:
-            for recipient in recipients:
+            for recipient in recipients.select_for_update()[:batch_size]:
                 recipient.send(context)
-
-            self.sent = True
-            self.sent_date = timezone.now()
 
         except Exception:
             logger.exception("Mailing %s sending failed", self.name)
             mail_managers("Sending out {} partly failed".format(self.name), "")
 
-        finally:
-            self.sending = False
-            self.save()
+        self.sending = False
+        self.save()
 
 
 class ContinuousMailingManager(MailingBaseManager):
@@ -811,6 +816,8 @@ class MailingMessage(models.Model):
         if list_id := context.get("list_id"):
             headers["List-Id"] = list_id
 
+        headers["Feedback-ID"] = make_mailing_feedback_id(self)
+
         try:
             logger.debug("Sending mailing message to: %s.", self)
 
@@ -876,27 +883,10 @@ class NewsletterArchiveCMSPlugin(CMSPlugin):
 
 
 class ConditionCMSPlugin(CMSPlugin):
-    context_key = models.CharField(
-        max_length=255,
-        help_text=_("Key to check in the context."),
-    )
-    context_value = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text=_("Optional value to check on key. Checks for presence if empty."),
-    )
-    negate = models.BooleanField(
-        default=False,
-        help_text=_("Negate the condition."),
-    )
+    condition = models.TextField(blank=False, validators=[validate_template_condition])
 
     def __str__(self):
-        return "%s%s%s%s" % (
-            "not " if self.negate else "",
-            self.context_key,
-            " == " if self.context_value else "",
-            self.context_value,
-        )
+        return self.condition
 
 
 class DelayMailActionConfig(ActionBase):

@@ -6,6 +6,10 @@
 
 {% block body_extra_attributes %} data-staticurl="{{ STATIC_URL }}"{% if request.user.is_staff and SENTRY_JS_URL %} data-sentry="{{ SENTRY_JS_URL}}"{% endif %}{% endblock %}
 
+{% block skip_link %}
+  {% include "snippets/skip_link.html" %}
+{% endblock skip_link %}
+
 {% block top_block %}
   <div class="dropdown-wrapper">
     {% static_alias "dropdown_banner" %}
@@ -13,11 +17,11 @@
 {% endblock %}
 
 {% block footer_container %}
-  <footer class="footer" id="footer">
-    <div class="container">
-      {% static_alias "footer" %}
-    </div>
-  </footer>
+  {% comment %}
+    DE's footer snippet (a54477c1), which adds a visually hidden heading.
+    hide_banner: AT has no "bottom_banner" alias.
+  {% endcomment %}
+  {% include "snippets/footer.html" with hide_banner=True %}
 {% endblock %}
 
 {% block scripts %}

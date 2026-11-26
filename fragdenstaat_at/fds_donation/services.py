@@ -1,7 +1,7 @@
 import logging
 from datetime import timedelta
 from decimal import Decimal
-from typing import Optional, Tuple
+from functools import partial
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
+from froide_payment.models import PaymentStatus
 
 from froide.account.auth import try_login_user_without_mfa
 from froide.account.models import User
@@ -20,8 +21,9 @@ from froide.helper.utils import update_query_params
 
 from fragdenstaat_at.fds_newsletter.utils import subscribe_to_default_newsletter
 
+from .auth import DONOR_SESSION_KEY
 from .models import Donation, Donor, _deferred_donor_updates
-from .tasks import process_recurrence_task
+from .tasks import process_recurrence_task, send_donation_notification
 from .utils import (
     get_email_change_token,
     merge_donor_list,
@@ -70,6 +72,7 @@ donor_thanks_optin_email = mail_registry.register(
         "order",
         "donor",
         "donation",
+        "action_url",
     ),
 )
 
@@ -161,28 +164,35 @@ donor_change_email_email = mail_registry.register(
 )
 
 
-def get_or_create_donor(data, user=None, subscription=None):
+def get_or_create_donor(data, user=None, subscription=None, request=None):
     if user is not None:
-        try:
-            donor = Donor.objects.get(user=user)
-            if subscription:
-                donor.recurring_amount = subscription.plan.amount_year / 12
-                donor.subscriptions.add(subscription)
-            donor.save()
+        donor = None
+        donors = Donor.objects.filter(user=user)
+        if len(donors) > 1:
+            donor = merge_donor_list(list(donors))
+        elif donors:
+            donor = donors[0]
+        if donor:
             return donor
-        except Donor.DoesNotExist:
-            return create_donor(data, user=user, subscription=subscription)
     if subscription is not None:
         donor = Donor.objects.filter(subscriptions=subscription).first()
         if donor is not None:
             return donor
-    return create_donor(data, user=user, subscription=subscription)
+    if request is not None:
+        donor_id = request.session.get(DONOR_SESSION_KEY)
+        donor_email = request.session.get("donor_email")
+        if donor_id and donor_email and donor_email == data["email"]:
+            # Same device donates with same email address
+            donor = Donor.objects.filter(id=donor_id, email=donor_email).first()
+            if donor is not None:
+                return donor
+    return create_donor(data, user=user, subscription=subscription, request=request)
 
 
-def create_donor(data, user=None, subscription=None):
+def create_donor(data, user=None, subscription=None, request=None):
     email_confirmed = None
     if user is not None and user.email and user.is_active:
-        if user.email.lower() == data["email"].lower():
+        if user.email.lower() == data["email"]:
             email_confirmed = user.date_joined
     recurring_amount = Decimal(0)
     if subscription:
@@ -196,7 +206,7 @@ def create_donor(data, user=None, subscription=None):
         postcode=data.get("postcode", ""),
         city=data.get("city", ""),
         country=data.get("country", ""),
-        email=data["email"].lower(),
+        email=data["email"],
         user=user,
         email_confirmed=email_confirmed,
         recurring_amount=recurring_amount,
@@ -211,10 +221,14 @@ def create_donor(data, user=None, subscription=None):
         subscribe_to_default_newsletter(donor.email, user=user)
         subscribe_donor_newsletter(donor)
 
+    if request:
+        request.session[DONOR_SESSION_KEY] = donor.id
+        request.session["donor_email"] = donor.email
+
     return donor
 
 
-def send_donation_email(donation, domain_obj=None):
+def send_donation_email(donation):
     if donation.email_sent:
         return
     donor = donation.donor
@@ -223,7 +237,6 @@ def send_donation_email(donation, domain_obj=None):
 
     extra_context = {}
     if donor.email_confirmed:
-        needs_optin = False
         # No opt-in needed
         if donor.email_confirmation_sent:
             # not a new donor
@@ -231,14 +244,8 @@ def send_donation_email(donation, domain_obj=None):
         else:
             mail_intent = new_donor_thanks_email
     else:
-        needs_optin = True
         mail_intent = donor_thanks_optin_email
         extra_context = {"action_url": donor.get_url()}
-
-    if domain_obj is not None and not needs_optin:
-        # payment not a donation
-        # and no optin needed
-        return
 
     context = {
         "name": donor.get_full_name(),
@@ -267,7 +274,7 @@ def send_donation_email(donation, domain_obj=None):
     return True
 
 
-def send_donor_optin_email(donor):
+def send_donor_optin_email(donor: Donor):
     if not donor.email:
         return
 
@@ -452,7 +459,7 @@ recurring_buckets = [  # in days
 ]
 
 
-def get_bucket(days: int) -> Optional[Tuple[int, int]]:
+def get_bucket(days: int) -> tuple[int, int] | None:
     for bucket in recurring_buckets:
         if bucket[0] <= days <= bucket[1]:
             return bucket
@@ -469,7 +476,32 @@ def detect_recurring_on_donor(donor):
         # once per donor when that batch is done instead of once per save.
         touched.add(donor.id)
         return
-    transaction.on_commit(lambda: process_recurrence_task.delay(donor.id))
+    transaction.on_commit(partial(process_recurrence_task.delay, donor.id))
+
+
+def process_new_donation(donation):
+    payment = donation.payment
+    if payment is None:
+        return
+    if not donation.completed:
+        return
+    if donation.recurring and not donation.first_recurring:
+        # do not send email for recurring donations
+        return
+
+    now = timezone.now()
+    if donation.received_timestamp:
+        received_now = now - donation.received_timestamp <= timedelta(days=2)
+    else:
+        received_now = False
+
+    pending_ok = payment.variant in ("lastschrift", "banktransfer", "sepa")
+    confirmed = payment.status == PaymentStatus.CONFIRMED
+    pending = payment.status in (PaymentStatus.PENDING, PaymentStatus.DEFERRED)
+    if (confirmed and received_now and not pending_ok) or (pending and pending_ok):
+        if not donation.email_sent:
+            send_donation_notification.delay(donation.id)
+            send_donation_email(donation)
 
 
 def day_start(dt):
@@ -556,7 +588,7 @@ def send_donation_reminder_email(donation):
         ignore_active=True,
         priority=True,
     )
-    donation.note += "\n\n{} {}\n".format(REMINDER_TEXT, now.isoformat())
+    donation.note += f"\n\n{REMINDER_TEXT} {now.isoformat()}\n"
     donation.note = donation.note.strip()
     donation.save()
     return True
@@ -704,8 +736,8 @@ def send_incomplete_donation_reminder(donation):
         priority=True,
     )
     donation.email_sent = timezone.now()
-    donation.note += "{}: {}\n\n".format(
-        INCOMPLETE_DONATION_NOTE, donation.email_sent.isoformat()
+    donation.note += (
+        f"{INCOMPLETE_DONATION_NOTE}: {donation.email_sent.isoformat()}\n\n"
     )
     donation.save(update_fields=["email_sent", "note"])
     donor.email_confirmation_sent = donation.email_sent

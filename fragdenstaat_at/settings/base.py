@@ -324,11 +324,26 @@ class FragDenStaatBase(German, Base):
     #     "ConcactNotAllowedDonor",
     # ]
 
-    # Plugins allowed inside a mailing's email body. DE's list also includes
-    # donation-logic plugins (IsDonorPlugin, IsRecentDonor, ...); those are left
-    # out here because AT has not enabled that feature -- add them alongside the
-    # fds_donation adoption in P2.
+    # Plugins allowed inside a mailing's email body, DE's list in full: the
+    # donation-logic plugins (IsDonorPlugin, IsRecentDonor, CheckDonorTag, ...)
+    # came with the fds_donation adoption in P2.
     EMAIL_BODY_PLUGINS = [
+        "IsDonorPlugin",
+        "IsNotDonorPlugin",
+        "IsRecurringDonorPlugin",
+        "IsNotRecurringDonorPlugin",
+        "IsRecentDonor",
+        "IsNotRecentDonor",
+        "HasRecentlyUpgraded",
+        "CheckDonorTag",
+        "HasNotRecentlyUpgraded",
+        "ContactAllowedDonor",
+        "ContactNotAllowedDonor",
+        "IsFormalDonor",
+        "IsInformalDonor",
+        "IsNewsletterSubscriberPlugin",
+        "IsNotNewsletterSubscriberPlugin",
+        "EmailDonationButtonPlugin",
         "TextPlugin",
         "PicturePlugin",
         "EmailActionPlugin",
@@ -471,7 +486,7 @@ class FragDenStaatBase(German, Base):
                 "Outdent",
                 "Indent",
                 "-",
-                "figureblockquote",
+                # "figureblockquote",
                 "-",
                 "Link",
                 "Unlink",
@@ -712,6 +727,13 @@ class FragDenStaatBase(German, Base):
         return "{}img/fragdenstaat-share-tile-radial-1200x630.png".format(
             self.STATIC_URL
         )
+
+    # DE 95bde5e8, with AT's address: lets mail_managers() deliver in dev, so
+    # problem reports and failed-mailing alerts reach the dev mail sink.
+    # Production sets the same value. DE's localhost:800x redirect hosts and
+    # CSRF origins in the same hunk are for its multi-site dev setup; AT is
+    # single-site (P7.2 group 1).
+    MANAGERS = (("FragDenStaat.at", "mail@fragdenstaat.at"),)
 
     # Domains a mailing may be sent from. fds_mailing.validators reads this
     # unguarded, so without it saving a Mailing raises AttributeError.

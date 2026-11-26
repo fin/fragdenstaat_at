@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.apps import AppConfig
+from django.db.models.signals import post_save
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -43,11 +44,13 @@ class FdsDonationConfig(AppConfig):
         from fragdenstaat_at.fds_mailing import gather_mailing_preview_context
         from fragdenstaat_at.fds_newsletter import tag_subscriber
 
-        from . import actions  # noqa: F401
+        from . import actions, triggers  # noqa: F401
         from .listeners import (
             activate_user,
             cancel_user,
             export_user_data,
+            gift_order_inventory_check,
+            gift_order_tag_donor,
             merge_user,
             payment_status_changed,
             remove_newsletter_subscriber,
@@ -58,6 +61,7 @@ class FdsDonationConfig(AppConfig):
             tag_subscriber_donor,
             user_email_changed,
         )
+        from .models import DonationGiftOrder
 
         status_changed.connect(payment_status_changed)
         subscription_canceled.connect(subscription_was_canceled)
@@ -75,6 +79,8 @@ class FdsDonationConfig(AppConfig):
             mailing_donation_preview_context_listener
         )
         gather_mailing_preview_context.connect(mailing_payment_preview_context_listener)
+        post_save.connect(gift_order_inventory_check, sender=DonationGiftOrder)
+        post_save.connect(gift_order_tag_donor, sender=DonationGiftOrder)
 
         from froide.account.menu import MenuItem, menu_registry
 

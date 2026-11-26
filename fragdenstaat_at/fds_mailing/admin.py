@@ -157,6 +157,7 @@ class MailingAdminMixin:
 
 
 class MailingAdmin(MailingAdminMixin, admin.ModelAdmin):
+    list_per_page = 20
     raw_id_fields = ("email_template",)
     filter_horizontal = ("segments",)
     list_display = (
@@ -254,7 +255,7 @@ class MailingAdmin(MailingAdminMixin, admin.ModelAdmin):
         urls = super().get_urls()
 
         my_urls = [
-            re_path(r"^(.+)/send/$", self.send, name="fds_mailing_mailing_send"),
+            re_path(r"^(.+)/submit/$", self.submit, name="fds_mailing_mailing_send"),
             path(
                 "random-split/",
                 self.admin_site.admin_view(self.random_split),
@@ -301,6 +302,19 @@ class MailingAdmin(MailingAdminMixin, admin.ModelAdmin):
         extra_context["random_split_form"] = RandomSplitForm()
         return super().changelist_view(request, extra_context=extra_context)
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.ready:
+            return self.readonly_fields + (
+                "tracking",
+                "sender_name",
+                "sender_email",
+                "email_template",
+                # "newsletter",
+                "segments",
+                "sending_date",
+            )
+        return self.readonly_fields
+
     @admin.display(description=_("Segments"))
     def segment_list(self, obj):
         return ", ".join([segment.name for segment in obj.segments.all()]) or "-"
@@ -322,9 +336,10 @@ class MailingAdmin(MailingAdminMixin, admin.ModelAdmin):
             )
         )
         if obj.sending:
-            return _("Sending...\u202f{}").format(sent_percentage)
-        return _("Sent\u202f{}").format(sent_percentage)
+            return _("Sending... {percentage}").format(percentage=sent_percentage)
+        return _("Sent {percentage}").format(percentage=sent_percentage)
 
+    @admin.action(description=_("Continue sending mailing"))
     def trigger_continue_sending(self, request, queryset):
         for mailing in queryset:
             continue_sending.delay(mailing.id)
@@ -332,8 +347,6 @@ class MailingAdmin(MailingAdminMixin, admin.ModelAdmin):
         self.message_user(
             request, _("Continue sending selected mailings."), level=messages.INFO
         )
-
-    trigger_continue_sending.short_description = _("Continue sending mailing")
 
     def random_split(self, request):
         if not request.method == "POST":
@@ -349,7 +362,9 @@ class MailingAdmin(MailingAdminMixin, admin.ModelAdmin):
             )
         else:
             self.message_user(
-                request, _("Invalid form: {}").format(form.errors), level=messages.ERROR
+                request,
+                _("Invalid form: {errors}").format(errors=form.errors),
+                level=messages.ERROR,
             )
         return redirect("admin:fds_mailing_mailing_changelist")
 
@@ -385,7 +400,7 @@ class MailingAdmin(MailingAdminMixin, admin.ModelAdmin):
             self.message_user(request, _("CSV imported as mailing."))
         return redirect("admin:fds_mailing_mailing_changelist")
 
-    def send(self, request, object_id):
+    def submit(self, request, object_id):
         if request.method != "POST":
             raise PermissionDenied
         if not self.has_change_permission(request):
@@ -406,7 +421,10 @@ class MailingAdmin(MailingAdminMixin, admin.ModelAdmin):
 
         mailing.submit(request.user)
 
-        messages.info(request, _("Your mailing is being sent."))
+        if mailing.sending_date:
+            messages.info(request, _("Your mailing is scheduled."))
+        else:
+            messages.info(request, _("Your mailing is being sent."))
 
         return redirect(change_url)
 

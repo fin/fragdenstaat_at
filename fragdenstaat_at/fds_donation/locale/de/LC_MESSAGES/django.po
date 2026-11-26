@@ -118,7 +118,7 @@ msgstr "Überweisungen für {project} importiert"
 
 #: admin.py
 msgid "Banktransfer marked as refunded."
-msgstr ""
+msgstr "Überweisung wurde als rücküberwiesen markiert."
 
 #: forms.py
 msgid "Belgium"
@@ -160,7 +160,7 @@ msgstr "Ändern"
 #: actions.py
 #| msgid "Clear duplicate flag on donors"
 msgid "Change tag on donor"
-msgstr ""
+msgstr "Ändere Tag auf Spendi"
 
 #: templates/fds_donation/donation_form.html
 msgid "Change this or cancel with your bank."
@@ -182,7 +182,7 @@ msgstr "Rufen Sie Ihre E-Mails ab"
 
 #: actions.py
 msgid "Checks if object has recently donated"
-msgstr ""
+msgstr "Prüft, ob Objekt kürzlich gespendet hat"
 
 #: forms.py
 msgid "City"
@@ -484,7 +484,7 @@ msgstr "JZWB exportieren…"
 
 #: admin.py
 msgid "Export as Post Internetmarke CSV"
-msgstr ""
+msgstr "Exportiere als Post-Internetmarke-CSV"
 
 #: forms.py
 msgid "Feedback"
@@ -603,7 +603,7 @@ msgstr "Hat manche"
 
 #: admin_utils.py
 msgid "Has starting and active recurrences"
-msgstr ""
+msgstr "Hat angefangene und aktive Dauerspenden"
 
 #: models.py
 msgctxt "salutation neutral"
@@ -627,12 +627,12 @@ msgstr ""
 #: actions.py
 #| msgid "Is recent donor"
 msgid "If has recently donated"
-msgstr ""
+msgstr "Falls kürzlich gespendet"
 
 #: models.py
 #| msgid "Is not recent donor"
 msgid "If hasn't recently donated"
-msgstr ""
+msgstr "Falls nicht kürzlich gespendet"
 
 #: templates/fds_donation/donation_form.html
 msgid ""
@@ -755,7 +755,7 @@ msgstr "Markiere als unterschiedlich"
 #: admin.py
 #| msgid "Need two banktransfer donations from same donor."
 msgid "Mark banktransfer donation as refunded"
-msgstr ""
+msgstr "Markiere Überweisungsspende als zurücküberwiesen"
 
 #: templates/admin/fds_donation/donor/change_list.html
 #| msgid "Detect duplicate donors"
@@ -802,7 +802,7 @@ msgstr "Brauche zwei Überweisungsspenden von gleicher Spender:in."
 #: models.py
 #| msgid "Last donation"
 msgid "Negate condition"
-msgstr ""
+msgstr "Bedingung umkehren"
 
 #: forms.py
 msgid "Netherlands"
@@ -1175,7 +1175,7 @@ msgstr "Sende JZWB-E-Mail an {} Spender."
 
 #: admin.py
 msgid "Set processing date"
-msgstr ""
+msgstr "Setze Bearbeitungsdatum"
 
 #: export.py
 #| msgid "Clear receipt date"
@@ -1190,7 +1190,7 @@ msgstr "Setze Versanddatum"
 #: admin.py
 #, python-brace-format
 msgid "Set {count} order to processing."
-msgstr ""
+msgstr "Setze {count} Bestellungen auf in Bearbeitung."
 
 #: admin.py
 #, python-brace-format
@@ -1509,7 +1509,7 @@ msgstr ""
 #: admin.py
 #| msgid "Need two banktransfer donations from same donor."
 msgid "You can only select one banktransfer donation at a time."
-msgstr ""
+msgstr "Du kannst nur eine Überweisungsspende gleichzeitig auswählen."
 
 #: views.py
 #| msgid "You can manage your donation in your FragDenStaat account."
@@ -1801,7 +1801,7 @@ msgstr "z.B. 100-500, 1000-, -2000"
 
 #: forms.py
 msgid "e.g. name@example.org"
-msgstr "z.B. name@beispiel.de"
+msgstr "z.B. name@beispiel.at"
 
 #: utils.py
 #, python-brace-format
@@ -1850,7 +1850,7 @@ msgstr "hat Nutzerkonto"
 
 #: admin.py
 msgid "is processing"
-msgstr ""
+msgstr "wird bearbeitet"
 
 #: urls.py
 msgctxt "url pattern"
@@ -2018,3 +2018,134 @@ msgstr "✅ Spende bestätigen"
 #| msgid "General donation"
 msgid "❌ Cancel donations"
 msgstr "❌ Spende abbrechen"
+
+#: admin.py:189
+msgid "received donation count"
+msgstr "Anzahl erhaltener Spenden"
+
+#: admin.py:325
+msgid "Send email template directly..."
+msgstr "Sende E-Mail-Template direkt…"
+
+#: admin.py:684
+#, python-brace-format
+msgid "Sending JZWB email to {count} donors."
+msgstr "Sende JZWB-E-Mail an {count} Spender*innen."
+
+#: admin.py:1315
+msgid "processing timestamp"
+msgstr "Bearbeitungszeitpunkt"
+
+#: admin.py:1316
+msgid "shipped timestamp"
+msgstr "Versandzeitpunkt"
+
+#: admin.py:1320
+msgid "donation received timestamp"
+msgstr "Datum Spende erhalten"
+
+#: admin_utils.py:49
+msgid "Donor tags"
+msgstr "Spender*innen Tags"
+
+#: admin_utils.py:168 admin_utils.py:180
+#, python-brace-format
+msgid "Invalid amount format: '{value}'. Please enter a valid number."
+msgstr "Ungültiger Betrag: '{value}'. Bitte geben Sie eine gültige Zahl ein."
+
+#: cms_plugins.py:312
+msgid "Check Donor Tag"
+msgstr "Prüft Spender*innen-Tag"
+
+#: forms.py:71
+msgctxt "example email address"
+msgid "name"
+msgstr "name"
+
+#: forms.py:74
+msgctxt "example email address"
+msgid "example.org"
+msgstr "beispiel.at"
+
+#: forms.py:77
+#, python-brace-format
+msgid "e.g. {email}"
+msgstr "z.B. {email}"
+
+#: forms.py:1055
+#, python-brace-format
+msgid "Your new amount every {interval} months:"
+msgstr "Dein neuer Beitrag alle {interval} Monate:"
+
+#: models.py:568
+#, python-brace-format
+msgid "canceled on {date}"
+msgstr "gekündigt am {date}"
+
+#: models.py:1385
+#, python-brace-format
+msgid "Upgrade Recurrence ({choice_count})"
+msgstr "Dauerspende-Erhöhung ({choice_count})"
+
+#: models.py:1399
+msgid "If doesn't have tag"
+msgstr "Falls Tag nicht vorhanden"
+
+#: models.py:1404
+#, python-brace-format
+msgid "Donor doesn't have tag '{tag}'"
+msgstr "Spender*in hat Tag ‘{tag}’ nicht"
+
+#: models.py:1406
+#, python-brace-format
+msgid "Donor has tag '{tag}'"
+msgstr "Spender*in hat Tag ‘{tag}’"
+
+#: models.py:1425
+#, python-brace-format
+msgid "Remove tag {tag}"
+msgstr "Entferne Tag {tag}"
+
+#: models.py:1427
+#, python-brace-format
+msgid "Add tag {tag}"
+msgstr "Füge tag {tag} hinzu"
+
+#: models.py:1440
+#, python-brace-format
+msgid "{days} days ago"
+msgstr "{days} Tage her"
+
+#: models.py:1444
+#, python-brace-format
+msgid "Has not donated since {since}"
+msgstr "Hat nicht gespendet seit {since}"
+
+#: models.py:1446
+#, python-brace-format
+msgid "Has donated since {since}"
+msgstr "Hat gespendet seit {since}"
+
+#: tasks.py:279
+#, python-brace-format
+msgid "Donation gift order inventory warning: {name}"
+msgstr "Warnung zum Spendengeschenk-Lagerbestand: {name}"
+
+#: tasks.py:283
+#, python-brace-format
+msgid "🚨 Donation gift order inventory warning: {name} ({id})"
+msgstr "🚨 Warnung zum Spendengeschenk Lagerbestand: {name} ({id})"
+
+#: templates/fds_donation/donor_login_link_form.html:4
+msgid "Get a link to your donor profile"
+msgstr "Erhalte einen Link zu Deinem Spendenprofil"
+
+#: urls.py:32
+msgctxt "url pattern"
+msgid "donate/embed/"
+msgstr "spenden/embed/"
+
+#: widgets.py:34
+#, python-brace-format
+msgid "The amount needs to be at least {amount}."
+msgstr "Der Betrag muss mindestens {amount} sein."

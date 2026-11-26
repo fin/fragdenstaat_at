@@ -223,3 +223,40 @@ def get_url_tagger(mailing_campaign: str, query_param: str = "pk_campaign") -> s
         return url_regex.sub(replace_match, text)
 
     return tag_urls
+
+
+FEEDBACK_ID_SENDER = "fragdenstaat.at"
+
+
+def _feedback_id_field(value) -> str:
+    # Fields are colon-separated; keep each one to a conservative alphabet.
+    return re.sub(r"[^A-Za-z0-9._-]+", "-", str(value)).strip("-")
+
+
+def make_feedback_id(campaign_id="", mail_type="", sender_id=FEEDBACK_ID_SENDER):
+    """
+    Make a Google FBL Feedback-ID value:
+    CampaignID:CustomerID:MailTypeID:SenderId
+    https://support.google.com/mail/answer/6254652
+
+    Postmaster Tools aggregates spam complaints per field, so values must not
+    be unique per message or recipient. Unlike DE, CustomerID is therefore left
+    empty instead of carrying the subscriber id, which would also hand Google an
+    internal identifier on every mail. The header only counts if the outgoing
+    DKIM signature covers it.
+    """
+    return ":".join(
+        _feedback_id_field(v) for v in (campaign_id, "", mail_type, sender_id)
+    )
+
+
+def make_mailing_feedback_id(message):
+    """Feedback-ID for one message of a mailing: campaign = the mailing."""
+    mailing = message.mailing
+    mail_type = mailing.newsletter.slug if mailing.newsletter_id else "mailing"
+    return make_feedback_id(campaign_id=f"mailing-{mailing.id}", mail_type=mail_type)
+
+
+def make_intent_feedback_id(mail_intent):
+    """Feedback-ID for transactional mail: mail type = the froide mail intent."""
+    return make_feedback_id(mail_type=mail_intent.replace("/", "."))

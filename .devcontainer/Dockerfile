@@ -44,7 +44,7 @@ RUN set -eux; \
 # Keep PLAYWRIGHT_VERSION in step with uv.lock. It is an ARG rather than read
 # from uv.lock so a lock change does not bust this layer; a small skew is
 # harmless, since the dependency list barely moves between releases.
-ARG PLAYWRIGHT_VERSION=1.62.0
+ARG PLAYWRIGHT_VERSION=1.65.2
 RUN uvx --from "playwright==${PLAYWRIGHT_VERSION}" playwright install-deps chromium \
     && rm -rf /var/lib/apt/lists/*
 

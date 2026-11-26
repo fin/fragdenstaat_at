@@ -9,7 +9,9 @@ from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext_lazy
 
 from froide_payment.forms import StartPaymentMixin
 from froide_payment.utils import interval_description
@@ -28,6 +30,7 @@ from .form_settings import DonationFormFactory
 from .models import (
     CHECKOUT_PAYMENT_CHOICES_DICT,
     DEFAULT_DONATION_PROJECT,
+    DEFAULT_PURPOSE,
     INTERVAL_CHOICES,
     INTERVAL_CHOICES_DICT,
     MIN_AMOUNT,
@@ -59,7 +62,19 @@ from .widgets import AmountInput
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_PURPOSE = _("General donation")
+# The example address is assembled from its parts to avoid xgettext
+# warnings about embedded email addresses.
+EXAMPLE_EMAIL = format_lazy(
+    "{local}@{domain}",
+    # Translators: Local part (before the "@") of the example email address
+    # shown as a placeholder in email input fields.
+    local=pgettext_lazy("example email address", "name"),
+    # Translators: Domain part (after the "@") of the example email address
+    # shown as a placeholder in email input fields.
+    domain=pgettext_lazy("example email address", "example.org"),
+)
+
+EMAIL_PLACEHOLDER = format_lazy(_("e.g. {email}"), email=EXAMPLE_EMAIL)
 
 
 class BasicDonationForm(StartPaymentMixin, forms.Form):
@@ -126,7 +141,9 @@ class BasicDonationForm(StartPaymentMixin, forms.Form):
             self.quick_payment_only = True
 
         if hasattr(self, "request"):
-            self.fields["form_url"].initial = self.request.path
+            self.fields["form_url"].initial = self.request.build_absolute_uri(
+                location=self.request.path
+            )
             self.fields["query_params"].initial = self.request.GET.urlencode()
 
         if self.settings["min_amount"] and self.settings["min_amount"] >= MIN_AMOUNT:
@@ -260,7 +277,10 @@ class BasicDonationForm(StartPaymentMixin, forms.Form):
         donor = data.get("donor")
         if donor is None:
             donor = get_or_create_donor(
-                self.cleaned_data, user=self.user, subscription=order.subscription
+                self.cleaned_data,
+                user=self.user,
+                subscription=order.subscription,
+                request=self.request,
             )
         if order.subscription:
             donor.subscriptions.add(order.subscription)
@@ -507,7 +527,7 @@ class DonorEmailForm(forms.Form):
         label=_("Email"),
         required=True,
         widget=forms.EmailInput(
-            attrs={"class": "form-control", "placeholder": _("e.g. name@example.org")}
+            attrs={"class": "form-control", "placeholder": EMAIL_PLACEHOLDER}
         ),
     )
 
@@ -524,9 +544,12 @@ class BasicDonorForm(get_basic_info_form(), forms.Form):
         label=_("Email"),
         required=True,
         widget=forms.EmailInput(
-            attrs={"class": "form-control", "placeholder": _("e.g. name@example.org")}
+            attrs={"class": "form-control", "placeholder": EMAIL_PLACEHOLDER}
         ),
     )
+
+    def clean_email(self):
+        return self.cleaned_data["email"].lower()
 
 
 class DonorForm(BasicDonorForm):
@@ -841,6 +864,20 @@ class DonationGiftForm(forms.Form):
             raise forms.ValidationError(
                 _("You have already ordered this donation gift.")
             )
+        if DonationGiftOrder.objects.filter(
+            donation__donor_id=self.related_donation.donor_id,
+            donation_gift=self.cleaned_data["chosen_gift"],
+        ).exists():
+            raise forms.ValidationError(
+                _("You have already ordered this donation gift.")
+            )
+        if DonationGiftOrder.objects.filter(
+            donation__donor__email=self.donor.email,
+            donation_gift=self.cleaned_data["chosen_gift"],
+        ).exists():
+            raise forms.ValidationError(
+                _("You have already ordered this donation gift.")
+            )
 
     def save(self):
         if self.cleaned_data["update_address"]:
@@ -957,7 +994,7 @@ class DonorEmailLinkForm(SpamProtectionMixin, forms.Form):
         label=_("Email"),
         required=True,
         widget=forms.EmailInput(
-            attrs={"class": "form-control", "placeholder": _("e.g. name@example.org")}
+            attrs={"class": "form-control", "placeholder": EMAIL_PLACEHOLDER}
         ),
     )
     next_path = forms.CharField(
@@ -1015,7 +1052,9 @@ class RecurrenceUpgradeForm(forms.Form):
         elif recurrence.interval == 3:
             label = _("Your new quarterly amount:")
         else:
-            label = _("Your new amount every {} months:").format(recurrence.interval)
+            label = _("Your new amount every {interval} months:").format(
+                interval=recurrence.interval
+            )
         self.fields["upgrade_amount"] = forms.DecimalField(
             localize=True,
             required=True,

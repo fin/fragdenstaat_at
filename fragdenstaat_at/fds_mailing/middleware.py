@@ -100,3 +100,19 @@ class StaleClassificationReminderMiddleware:
         if not should_send_classification_reminder(foirequest.last_message):
             return False
         return None
+
+
+class FeedbackIdMailMiddleware:
+    """Add a Google FBL Feedback-ID to transactional mail, keyed on the intent.
+
+    Mailings set their own (campaign = mailing) in MailingMessage.send. The
+    registry merges this return value into the email kwargs with update(), so
+    return the *merged* headers or the caller's (threading, List-Id) are lost.
+    """
+
+    def enhance_email_kwargs(self, mail_intent, context, email_kwargs):
+        from .utils import make_intent_feedback_id
+
+        headers = dict(email_kwargs.get("headers") or {})
+        headers.setdefault("Feedback-ID", make_intent_feedback_id(mail_intent))
+        return {"headers": headers}

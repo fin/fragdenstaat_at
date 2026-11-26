@@ -97,41 +97,58 @@ dependencies() {
       echo "note: stripe CLI not found. Stripe tests (pytest -m stripe) need it;" >&2
       echo "      rebuild the devcontainer to pick it up from .devcontainer/Dockerfile." >&2
     fi
-    source .venv/bin/activate
-
-    if [[ $name == "froide" ]]; then
-      uv pip install -e ../django-filingcabinet --no-deps
-    fi
-
-    if [[ $name == "$MAIN" ]]; then
-      for project in "${REPOS[@]}"; do
-        uv pip install -e "../$project" --config-setting editable_mode=compat --no-deps
-      done
-
-      # The browser for the Playwright tests. Per-user (~/.cache/ms-playwright)
-      # and tied to the venv's playwright version, so it is installed here
-      # rather than in the image; the system libraries it needs come from
-      # .devcontainer/Dockerfile. Headless shell only: pytest runs headless.
-      # Warn rather than fail -- only the browser tests need it.
-      if ! python -m playwright install chromium-headless-shell; then
-        echo "note: playwright browser install failed; browser tests will error." >&2
-        echo "      Missing system libraries? Rebuild the devcontainer, or run" >&2
-        echo "      sudo .venv/bin/python -m playwright install-deps chromium" >&2
-      fi
-    fi
-
     if [ -e ".pre-commit-config.yaml" ]; then
       prek install
     fi
 
-    deactivate
     popd
+
+    install_editables "$name"
   done
+}
+
+install_editables() {
+  local name=$1
+  local editables=()
+  local install_args=()
+
+  if [[ $name == "froide" ]]; then
+    editables=("django-filingcabinet")
+  elif [[ $name == "$MAIN" ]]; then
+    editables=("${REPOS[@]}")
+    install_args=(--config-setting editable_mode=compat)
+  else
+    return 0
+  fi
+
+  pushd "$name"
+  source .venv/bin/activate
+
+  for project in "${editables[@]}"; do
+    uv pip install -e "../$project" "${install_args[@]}" --no-deps
+  done
+
+  if [[ $name == "$MAIN" ]]; then
+    # The browser for the Playwright tests. Per-user (~/.cache/ms-playwright)
+    # and tied to the venv's playwright version, so it is installed here
+    # rather than in the image; the system libraries it needs come from
+    # .devcontainer/Dockerfile. Headless shell only: pytest runs headless.
+    # Warn rather than fail -- only the browser tests need it.
+    if ! python -m playwright install chromium-headless-shell; then
+      echo "note: playwright browser install failed; browser tests will error." >&2
+      echo "      Missing system libraries? Rebuild the devcontainer, or run" >&2
+      echo "      sudo .venv/bin/python -m playwright install-deps chromium" >&2
+    fi
+  fi
+
+  deactivate
+  popd
 }
 
 upgrade_backend_repos() {
   pushd $MAIN
-  uv sync ${REPOS[@]/#/--upgrade-package }
+  # Upgrade our repos in uv.lock, but keep their editable installs in the venv
+  uv sync --all-extras --inexact ${REPOS[@]/#/--no-install-package } ${REPOS[@]/#/--upgrade-package }
   popd
 }
 
@@ -165,21 +182,26 @@ frontend() {
   # Setup main project and link dependencies
   pushd "$MAIN"
   pnpm install
+  link_frontend_repos
+  popd
+}
+
+link_frontend_repos() {
   for name in "${FRONTEND[@]}"; do
     pnpm link --global "$name"
   done
-  popd
 }
 
 upgrade_frontend_repos() {
   pushd "$MAIN"
   pnpm update "${FRONTEND[@]}"
+  link_frontend_repos
   popd
 }
 
 messages() {
   source $MAIN/.venv/bin/activate
-  python $MAIN/manage.py compilemessages -l de,de_AT -i node_modules
+  python $MAIN/manage.py compilemessages -l de,de_AT -i node_modules -i .venv
 }
 
 forall() {

@@ -70,8 +70,10 @@ class FragDenStaat(FragDenStaatBase):
         "media.frag.denstaat.at",
         "testserver",
     ]
-    ALLOWED_REDIRECT_HOSTS = ALLOWED_HOSTS + ["fragdenstaat.at"]
     CSRF_TRUSTED_ORIGINS = [x for x in env("CSRF_TRUSTED_ORIGINS", "").split(",") if x]
+    ALLOWED_REDIRECT_HOSTS = ALLOWED_HOSTS + [
+        x.split("://", 1)[1] for x in CSRF_TRUSTED_ORIGINS if x
+    ]
 
     PAYMENT_HOST = "fragdenstaat.at"
     PAYMENT_USES_SSL = True

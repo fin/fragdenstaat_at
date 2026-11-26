@@ -185,6 +185,27 @@ class DonationView(FormView):
         return redirect(order.get_absolute_payment_url(method))
 
 
+class DonationEmbedView(DonationView):
+    """The donation form, framable by approved partner sites.
+
+    AT fails closed where DE does not. The URL is wrapped in
+    xframe_options_exempt, which drops X-Frame-Options, and
+    theme.middleware.XFrameOptionsCSPMiddleware only adds a CSP when that
+    header is present or the CMS page sets frame ancestors. Without this
+    default, any site could frame a payment form. Partner sites are allowed
+    via FdsPageExtension.frame_ancestors on the donation apphook page, which
+    the middleware applies on top of this.
+    """
+
+    template_name = "fds_donation/forms/donation_embed.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if "Content-Security-Policy" not in response:
+            response["Content-Security-Policy"] = "frame-ancestors 'self'"
+        return response
+
+
 def quick_donation(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=405)
@@ -446,6 +467,10 @@ def donor_login(request, donor_id, token, next_path):
     query_string = ("?" + query_string) if query_string else ""
     if request.method == "POST":
         next_path = request.POST.get("next", next_path + query_string)
+        donor = get_donor_from_request(request)
+        if donor is not None and donor.id == int(donor_id):
+            # if already logged in as the correct donor, just redirect
+            return redirect(next_path)
         donor, valid = validate_donor_token(donor_id, token)
         if not valid:
             # Token expired or invalid

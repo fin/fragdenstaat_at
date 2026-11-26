@@ -1,4 +1,5 @@
 import tempfile
+import unicodedata
 import uuid
 from collections import defaultdict
 from decimal import Decimal
@@ -50,7 +51,7 @@ from froide.helper.auth import is_crew
 from froide.helper.csv_utils import dict_to_csv_stream, export_csv_response
 from froide.helper.widgets import TagAutocompleteWidget
 
-from fragdenstaat_at.fds_mailing.models import MailingMessage
+from fragdenstaat_at.fds_mailing.models import EmailTemplate, MailingMessage
 from fragdenstaat_at.fds_mailing.utils import SetupMailingMixin
 from fragdenstaat_at.fds_newsletter.admin_utils import make_subscriber_tagger
 from fragdenstaat_at.theme.admin import make_tag_autocomplete_admin
@@ -58,6 +59,7 @@ from fragdenstaat_at.theme.admin import make_tag_autocomplete_admin
 from .admin_utils import (
     ActiveRecurrencesListFilter,
     BanktransferReminderDueListFilter,
+    DonationDonorTagListFilter,
     DonorProjectFilter,
     DonorTagListFilter,
     DonorTotalAmountPerYearFilter,
@@ -145,6 +147,22 @@ class DonorChangeList(ChangeList):
         return ret
 
 
+def start_flow_on_donors(admin, request, qs, obj):
+    for donor in qs:
+        create_flowrun(obj, donor)
+
+
+def send_emailtemplate_to_donors(admin, request, qs, obj):
+    for donor in qs.exclude(email=""):
+        obj.send(
+            donor.email,
+            context={
+                "donor": donor,
+                "object": donor,
+            },
+        )
+
+
 @admin.register(Donor)
 class DonorAdmin(SetupMailingMixin, admin.ModelAdmin):
     form = DonorAdminForm
@@ -168,6 +186,7 @@ class DonorAdmin(SetupMailingMixin, admin.ModelAdmin):
         StartingAndActiveRecurrencesFilter,
         DonorTotalAmountPerYearFilter,
         make_rangefilter("recurring_amount", _("recurring monthly amount")),
+        make_rangefilter("donation_count", _("received donation count")),
         make_daterangefilter("recurrence_streak_start", _("Recurrence streak start")),
         make_daterangefilter("last_donation", _("Last donation")),
         make_daterangefilter("first_donation", _("First donation")),
@@ -287,6 +306,7 @@ class DonorAdmin(SetupMailingMixin, admin.ModelAdmin):
         "export_donor_csv",
         "tag_subscribers",
         "start_flow_on_donor",
+        "send_emailtemplate",
     ] + SetupMailingMixin.actions
 
     tag_all = make_batch_tag_action(autocomplete_url=DONOR_TAG_AUTOCOMPLETE)
@@ -295,8 +315,14 @@ class DonorAdmin(SetupMailingMixin, admin.ModelAdmin):
     )
     start_flow_on_donor = make_choose_object_action(
         Flow.objects.get_active,
-        lambda admin, request, qs, obj: [create_flowrun(obj, donor) for donor in qs],
+        start_flow_on_donors,
         _("Start workflow for donors..."),
+    )
+
+    send_emailtemplate = make_choose_object_action(
+        EmailTemplate,
+        send_emailtemplate_to_donors,
+        _("Send email template directly..."),
     )
 
     def get_changelist(self, request):
@@ -655,7 +681,7 @@ class DonorAdmin(SetupMailingMixin, admin.ModelAdmin):
                     count = queryset.count()
                     self.message_user(
                         request,
-                        _("Sending JZWB email to {} donors.").format(count),
+                        _("Sending JZWB email to {count} donors.").format(count=count),
                         level=messages.INFO,
                     )
                     return
@@ -834,6 +860,7 @@ class DonationAdmin(admin.ModelAdmin):
         make_nullfilter("payment", _("Has payment record")),
         "payment__status",
         BanktransferReminderDueListFilter,
+        DonationDonorTagListFilter,
     )
     date_hierarchy = "timestamp"
     raw_id_fields = ("donor", "order", "payment")
@@ -1075,6 +1102,12 @@ class DonationAdmin(admin.ModelAdmin):
         received.delete()
         # Save after delete so donation number is updated correctly
         pending.save()
+        if pending.payment:
+            payment = pending.payment
+            if pending.received_timestamp:
+                payment.status = PaymentStatus.CONFIRMED
+            payment.received_amount = pending.amount_received
+            payment.save()
         self.message_user(request, _("Donations matched."), level=messages.INFO)
 
     @admin.action(description=_("Resend donation email"))
@@ -1279,7 +1312,14 @@ class DonationGiftOrderAdmin(admin.ModelAdmin):
         make_nullfilter("shipped", _("has shipped")),
         make_nullfilter("processing", _("is processing")),
         make_daterangefilter("timestamp", _("order timestamp")),
+        make_daterangefilter("processing", _("processing timestamp")),
+        make_daterangefilter("shipped", _("shipped timestamp")),
+        "donation_gift__category_slug",
         "donation_gift",
+        make_daterangefilter(
+            "donation__received_timestamp", _("donation received timestamp")
+        ),
+        make_rangefilter("donation__amount_received", _("donation amount received")),
     )
     search_fields = ("email", "donation__donor__email", "donation_gift__name")
     actions = [
@@ -1379,6 +1419,21 @@ class DonationGiftOrderAdmin(admin.ModelAdmin):
 
     @admin.action(description=_("Export as Post Internetmarke CSV"))
     def export_post_csv(self, request, queryset):
+
+        def try_latinize_name(name):
+            parts = []
+            for n in name:
+                check = n.encode("latin-1", "ignore").decode("latin-1")
+                if check:
+                    parts.append(check)
+                else:
+                    parts.append(
+                        unicodedata.normalize("NFKD", n)
+                        .encode("latin-1", "ignore")
+                        .decode("latin-1")
+                    )
+            return "".join(parts)
+
         def get_rows(queryset):
             # First row is sender data
             yield {
@@ -1393,8 +1448,9 @@ class DonationGiftOrderAdmin(admin.ModelAdmin):
                 "REFERENZ": "",
             }
             for obj in queryset:
+                name = obj.get_name_or_company()[:50]
                 yield {
-                    "NAME": obj.get_name_or_company()[:50],
+                    "NAME": try_latinize_name(name),
                     "ZUSATZ": "",
                     "STRASSE": obj.get_street_without_housenumber()[:40],
                     "NUMMER": obj.get_housenumber()[:7],

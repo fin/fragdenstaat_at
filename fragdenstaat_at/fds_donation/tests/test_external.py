@@ -18,6 +18,7 @@ from ..external import (
     parse_banktransfer_amount,
 )
 from ..models import Donation, Donor
+from ..recurrence import process_recurrence_on_donor
 from ..tasks import import_banktransfers_task
 from .factories import DonationFactory, DonorFactory, make_banktransfer_donation
 
@@ -369,3 +370,31 @@ def test_import_banktransfers_task(tmp_path, mailoutbox, monkeypatch):
     assert "failed" in mailoutbox[2].subject
     assert "aborted partway" in mailoutbox[2].body
     assert "db went away" in mailoutbox[2].body
+
+
+@pytest.mark.django_db
+def test_import_banktransfer_keep_purpose(tmp_path):
+    # DE b70ab730, ported onto AT's CSV import: a follow-up transfer of a
+    # recurring banktransfer donor keeps the purpose of the donation it follows.
+    donor = DonorFactory.create()
+    first_date = timezone.now() - timezone.timedelta(days=60)
+    donation = make_banktransfer_donation(donor, Decimal("10.00"), first_date)
+    transfer_code = donation.payment.transaction_id
+    donation.purpose = "PURPOSE-1"
+    donation.save()
+    project = settings.DONATION_PROJECTS[0][0]
+
+    first = first_date.date().isoformat()
+    following = (first_date + timezone.timedelta(days=30)).date().isoformat()
+    import_banktransfers(
+        write_csv(tmp_path, [f"TX1,{transfer_code},10.00,{first},AT1,,,"]), project
+    )
+    import_banktransfers(
+        write_csv(tmp_path, [f"TX2,{transfer_code},10.00,{following},AT1,,,"]),
+        project,
+    )
+    process_recurrence_on_donor(donor)
+
+    follow_up = Donation.objects.get(identifier="TX2")
+    assert follow_up.donor == donor
+    assert follow_up.purpose == "PURPOSE-1"

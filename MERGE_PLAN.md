@@ -1143,8 +1143,21 @@ the dev mail sink. Without it, froide's `MANAGERS = ADMINS` is empty there.
 | `fds_mailing/0030–0032` | `0003–0005` | condition plugin, data migration |
 | froide `bounce/0003` | — | upstream, applies as-is |
 
-Rehearse against a production dump (`docs/runbooks/live-db-verification.md`).
-This matters for `0051`: count AT donors with non-empty `attributes` first.
+**Decided (2026-11-26): no live donation data goes through AI tooling.**
+The rehearsal is split. (a) Claude rehearses on **synthetic** donors, built to
+cover every attribute shape AT's code has ever written. (b) A human runs a
+deployment test on a staging copy after the merge, using a checklist that
+reports counts and types only, never values.
+
+**AT must not reuse DE's `0082` as-is.** It parses every hstore value with
+`json.loads(val.replace("'", '"'))`, a heuristic for DE's stringified Python
+lists. AT's shapes differ. `update_iban_on_donor` writes `ibans` as a
+`;`-joined string, older rows may hold `repr()`-ed lists (including the doubled
+ones that function's comment describes), and a purely numeric
+`banktransfer_reference` would silently become an `int`. AT's `0051` needs its
+own conversion: split `;` strings, `ast.literal_eval` legacy reprs, and leave
+everything else a string. `0052` drops the hstore column, so the staging test
+needs a pre-migration dump to roll back to.
 
 #### P7.4 — close-out [A]
 

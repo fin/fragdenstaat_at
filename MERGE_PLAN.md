@@ -1083,6 +1083,16 @@ Classified with AT's tree compared against DE@`938901ef`:
    0d205fcb b8c3899f b783f8b5 501e5787 2b281de7 b70ab730`.
    `8e9c395e` converts `Donor.attributes` from hstore to JSON; see P7.3.
 
+   **Decided (2026-11-26): take the donation embed** (`fb80c3bb 3f6d557b
+   0d205fcb`), but make it **fail closed**. DE wraps `DonationEmbedView` in
+   `xframe_options_exempt`, which drops X-Frame-Options, and
+   `XFrameOptionsCSPMiddleware` then adds no CSP either, so any site could
+   frame a payment form. In AT the view defaults to `frame-ancestors 'self'`;
+   the middleware swaps in the allowlist from the apphook page's
+   `FdsPageExtension.frame_ancestors`. Partner sites get access by being added
+   there in the CMS admin. From `b8c3899f`, take only the structure, not DE's
+   partner domains.
+
    **Gifts: AT runs no gift programme**, but the code inherited from DE is still
    there (`DonationGift`, `DonationGiftOrder`, `is_eligible_for_gift`,
    `test_gift_order.py`), unused. DE's gift commits `02d98316 12e697c7 6178d8ab
@@ -1094,7 +1104,16 @@ Classified with AT's tree compared against DE@`938901ef`:
    need its own migration and would raise drift in those five files on every
    future sync.
 3. **fds_mailing / fds_newsletter.** `844c143d 42dac2ff d988aff6 a329eb4b
-   942c80ab 40179bb7 ae640aea 52f286f6 7cbb54ff fbb982cc`. The batch sending
+   942c80ab 40179bb7 ae640aea 52f286f6 7cbb54ff fbb982cc`.
+   **Decided (2026-11-26): take Feedback-ID (`40179bb7`), extended.** Format is
+   `CampaignID:CustomerID:MailTypeID:SenderId`. Sender is `fragdenstaat.at`,
+   and the subscriber id is **not** used as CustomerID: DE does that, but
+   Google wants these identifiers not unique per recipient, and it would hand
+   Google an internal id. Mailings get campaign = mailing id and mail type =
+   newsletter slug (or `mailing`). Transactional mail also gets the header,
+   from a mail middleware, with mail type = the froide mail intent (e.g.
+   `foirequest.emails.classification_reminder`). Ops note: the header must be
+   covered by the DKIM signature to count. The batch sending
    (`a329eb4b`) and Feedback-ID (`40179bb7`) commits affect delivery, so send a
    test mailing. DE leaves `fds_mailing/middleware.py` alone, so AT's
    classification-reminder filter does not conflict.

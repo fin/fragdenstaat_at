@@ -89,6 +89,8 @@ Then delete the database when you are done.
 
 - **Feedback-ID / DKIM** needs real outbound mail. Check it after the
   production deploy instead.
-- **Production's Postgres version** may differ from `postgis:16-3.4`. If
-  `pg_restore` complains about the dump's version, change the `db` image tag
-  in `compose.yaml` to match production.
+- **Postgres version.** The staging db is `postgis/postgis:17-3.5`, because
+  pg_dump 17 writes a format 16 cannot restore ("unsupported version (1.16)
+  in file header"). If production's server is a different major version,
+  set `STAGING_PG_IMAGE_TAG` in the host environment (e.g. `18-3.6`) and
+  recreate the database with `down -v`.

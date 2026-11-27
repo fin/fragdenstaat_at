@@ -44,7 +44,9 @@ services:
       - redis
 
   db:
-    image: postgis/postgis:16-3.4
+    # Match production's major version: pg_restore cannot read dumps from a
+    # newer pg_dump (17 writes archive format 1.16, which 16 rejects).
+    image: postgis/postgis:${STAGING_PG_IMAGE_TAG:-17-3.5}
     volumes:
       - pg-data:/var/lib/postgresql/data
       # On first start (empty pg-data) the entrypoint runs initdb/*.sh, which

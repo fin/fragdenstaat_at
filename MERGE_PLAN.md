@@ -602,7 +602,8 @@ change would silently move the expectations in `testdata/search_tokens.py`.
 
 **Refreshed 2026-11-26 (after P7):** every registry package was upgraded towards
 DE@`b70ab730`'s lock — to DE's exact version, or AT's own where AT was already
-ahead (`django` 5.2.17, `pandas` 3.0.3, `djangocms-text` 1.1.0). Exception:
+ahead (`django` 5.2.17, `pandas` 3.0.3). Exceptions: `djangocms-text` was 1.1.0 here
+and went back to DE's 1.0.2 on 2026-11-27 (see P7.2 group 1, the ckeditor4 override), and
 `cron-descriptor` follows DE down to 1.4.5, because DE's `django-celery-beat`
 2.9 requires `<2`. Git pins were held (`-P` per registry package, never a blanket
 `--upgrade`, which would also move froide/froide-payment/froide-fax/filingcabinet
@@ -1121,6 +1122,22 @@ Classified with AT's tree compared against DE@`938901ef`:
    templates and styles (`2b8e9432 96ef9a37 5d4b2e4a 1dde3ecb 5cad006f ef9241e3
    efd76029`, `ubf.scss`, `cmssites/*_base.html`) and DE's `settings/cms.py`
    (`CMSSiteBase`, the separate settings class those sites run under).
+
+   **Fixed after the staging test (2026-11-27):** DE's ckeditor4 bundle override
+   (`5a225194`) ends in `//# sourceMappingURL=bundle.ckeditor4.min.js.750aee8d0616.map`,
+   a hashed name copied from DE's own collectstatic output. No such file exists,
+   so production's ManifestStaticFilesStorage aborted `collectstatic`. AT drops
+   that line (the package's map would not match the modified bundle anyway), so
+   the file now differs from DE by one line; DE's tree has the same bug.
+   `tests/test_collectstatic_manifest.py` now runs collectstatic with the
+   production storage.
+
+   The override is also **1.0.2's** bundle (DE runs djangocms-text 1.0.2), while
+   AT had 1.1.0, whose bundle is 2,800 lines longer (new a11y code, changed
+   dialog markup). So AT pins `djangocms-text>=1.0.2,<1.1` like DE's lock; the
+   override is now the installed package's file plus the one-word
+   `removePlugins` change. Production goes 0.9.1 → 1.0.2, no new migrations.
+   Lift the pin only together with a rebuilt override.
 2. **fds_donation.** `5f20c60b d99c5a99 d697ea1a c8959f38 3efe0019 91a5140c
    2dedbfaf 9610c82a c80c355f 79d48dfd b4dae2b5 4fe90ea6 b30192cd
    4722d6f3 c394893d 3aeb55a1 85138db4 7b22408c

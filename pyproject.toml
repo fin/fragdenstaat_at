@@ -63,7 +63,11 @@ dependencies = [
   "djangocms-link>=5.0.1",
   "djangocms-icon>=2.1.0",
   "djangocms-picture>=4.1.1",
-  "djangocms-text>=1.0.1,<2",
+  # Held at DE's 1.0.2: fragdenstaat_at/static/djangocms_text/bundles/
+  # bundle.ckeditor4.min.js (DE 5a225194, re-enables CKEditor's sourcearea)
+  # replaces the package's editor JS with 1.0.2's. On 1.1 that override runs
+  # 1.0.2 JS against 1.1 templates. Lift together with the override.
+  "djangocms-text>=1.0.2,<1.1",
   "djangocms-transfer>=2.0.1",
   "djangocms-versioning>=2.5.1",
   "djangocms-video>=3.1.0",

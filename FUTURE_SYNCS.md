@@ -89,6 +89,11 @@ doing, next time. Each point names the mistake or near-miss it comes from.
   conflict, yet it silently broke `send_fax_telnyx`'s return value. Every
   fork merge gets a test run against the new upstream, and a regression test
   for whatever it broke.
+- **A static file that overrides a package's file pins that package.** DE's
+  ckeditor4 bundle override (`5a225194`) is djangocms-text 1.0.2's JS. AT had
+  1.1.0, so it would have run 1.0.2 JS against 1.1 templates, unnoticed by
+  every test. For every DE file under `static/<app>/`, check which package
+  version it was built from, and diff it against the installed package's file.
 - **Take unused DE code as-is when it keeps files identical.** For example,
   the gift programme commits. Ripping it out would cost a migration and raise
   drift in five files on every future sync.

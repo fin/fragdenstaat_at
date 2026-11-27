@@ -1490,7 +1490,7 @@ wheels = [
 
 [[package]]
 name = "djangocms-text"
-version = "1.1.0"
+version = "1.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lxml" },
@@ -1498,9 +1498,9 @@ dependencies = [
     { name = "packaging" },
     { name = "pillow" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ea/d4/6e35174301342972a72a9d492b70b81c4790b786a452e3db911925d77a1d/djangocms_text-1.1.0.tar.gz", hash = "sha256:bb5b77ba25ea06ffba923efb23c324b978dde8f5492003e209c2aa473ac28ad5", size = 2461535, upload-time = "2026-11-18T17:26:09.575Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/cf/f0cafb90c23092d1e950ae3eb9739464e501677b36243d6a506f8be7bfcd/djangocms_text-1.0.2.tar.gz", hash = "sha256:26f8cef53f7b1396ed76ccf1ec1b479d3ad160276a5b72202282a5407a743638", size = 2242713, upload-time = "2026-10-15T12:08:58.664Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6c/5a/9eec74681fc53c6144541adc86f6ad02caf78338d379eaa57c79657b424e/djangocms_text-1.1.0-py3-none-any.whl", hash = "sha256:ba482509c7c4b2038d67aefd361ed84d5abab2e0aa5c4b13ca6c8153fbb38caf", size = 2998107, upload-time = "2026-11-18T17:26:07.488Z" },
+    { url = "https://files.pythonhosted.org/packages/68/bf/1f5bb3039be5a507fda9a775dc6061970dde9366385a4395a0cb8642b884/djangocms_text-1.0.2-py3-none-any.whl", hash = "sha256:9bbd1fef41ca280fc5e0c506875cf1ddbd084dafb6d1a4dd7f15ff85635fbe68", size = 2781930, upload-time = "2026-10-15T12:08:56.769Z" },
 ]
 
 [[package]]
@@ -2098,7 +2098,7 @@ requires-dist = [
     { name = "djangocms-icon", specifier = ">=2.1.0" },
     { name = "djangocms-link", specifier = ">=5.0.1" },
     { name = "djangocms-picture", specifier = ">=4.1.1" },
-    { name = "djangocms-text", specifier = ">=1.0.1,<2" },
+    { name = "djangocms-text", specifier = ">=1.0.2,<1.1" },
     { name = "djangocms-transfer", specifier = ">=2.0.1" },
     { name = "djangocms-versioning", specifier = ">=2.5.1" },
     { name = "djangocms-video", specifier = ">=3.1.0" },

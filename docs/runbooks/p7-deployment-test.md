@@ -23,7 +23,7 @@ is relative to that, not to `main`. What this deploy changes:
   `2026-feat-messagekind-initial-message` branch to `okfde/froide@main`
   (`65bdbb35`); froide-payment from `fin/froide-payment@main` to `okfde@main`;
   froide-fax to `fin/froide-fax@sync/okfde-2026-11`; djangocms-text 0.9.1 →
-  1.1.0, django-flowcontrol 0.0.19 → 0.0.21.
+  1.0.2 (held at DE's version, see MERGE_PLAN P7.2 group 1), django-flowcontrol 0.0.19 → 0.0.21.
 - **Lock refresh (`6da1a0a`):** on top of that, the registry packages were
   moved to DE@`b70ab730`'s locked versions. Against production that is **109
   changed packages**, 7 added, 10 removed (xlrd among them). `django` 5.2.17,

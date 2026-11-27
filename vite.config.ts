@@ -14,7 +14,8 @@ const outputDir = resolve(__dirname, 'build')
 const r = (project: string, file: string) =>
   resolve(__dirname, 'node_modules', project, 'frontend', 'javascript', file)
 
-const devServerOrigin = process.env.VITE_DEV_SERVER_ORIGIN || 'http://localhost:5173'
+const devServerOrigin =
+  process.env.VITE_DEV_SERVER_ORIGIN || 'http://localhost:5173'
 
 // vite-plugin-dev-manifest overwrites server.origin with the container's
 // network IP when vite runs with --host, which breaks asset urls (e.g.
@@ -75,7 +76,7 @@ export default defineConfig(({ mode }) => ({
         redact: r('froide', 'redact.js'),
         request: r('froide', 'request.ts'),
         tagautocomplete: r('froide', 'tagautocomplete.ts'),
-        vegacharts: './frontend/javascript/vegacharts.js',
+        vegacharts: './frontend/javascript/vegacharts.js'
         // opensearch: './frontend/javascript/opensearch.ts'
       },
       output: {

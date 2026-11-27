@@ -535,7 +535,7 @@ design or legal judgement.
 - [ ] **P7** — second sync: DE `938901ef..b70ab730` + `okfde/froide@65bdbb35`
   - [ ] P7.1 dependencies
     - [x] froide → okfde@`65bdbb35`, froide-payment → okfde@`713337fb`, filingcabinet → `5f825a21`
-    - [x] froide-fax: okfde's 2 commits merged as `fin/froide-fax@sync/okfde-2026-11` (`7dfd964`). AT pins that branch until `fin/main` has it
+    - [x] froide-fax: okfde's 2 commits merged as `fin/froide-fax@sync/okfde-2026-11` (`7dfd964`). `fin/main` fast-forwarded to it 2026-11-27 (old main tagged `main-before-p7-2026-11-27`); AT pins `@main` again
       (the auto-merge silently broke `send_fax_telnyx`'s return value; fixed, with a regression test)
     - [x] DE version floors (django-cms 5.1, djangocms-text 1.1, flowcontrol 0.0.21, playwright 1.65, Vite 7, ...)
       (the merge bumped package.json without regenerating pnpm-lock.yaml, failing CI's frozen install; fixed later, with

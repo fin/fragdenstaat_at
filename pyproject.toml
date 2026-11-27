@@ -125,10 +125,9 @@ dependencies = [
   # froide-payment there is no "repin to @main upstream" exit criterion --
   # okfde would have to catch up first. MERGE_PLAN.md 9.13.
   #
-  # TEMPORARY branch pin (P7.1): sync/okfde-2026-11 is fin/main plus okfde's two
-  # newer commits (cc562a6, 5f590b8), merged with a fix for the send_fax_telnyx
-  # return value that the auto-merge broke. Back to @main once fin/main has it.
-  "froide-fax @ git+https://github.com/fin/froide-fax.git@sync/okfde-2026-11",
+  # fin's fork: 28 commits not upstream (MERGE_PLAN 9.13). main includes okfde's
+  # cc562a6/5f590b8 since 2026-11-27 (fast-forwarded from sync/okfde-2026-11).
+  "froide-fax @ git+https://github.com/fin/froide-fax.git@main",
   "sortabletable @ git+https://github.com/stefanw/djangocms-sortabletable.git@main",
   "fcdocs-annotate @ git+https://github.com/okfde/fcdocs-annotate.git@main",
   # QR codes on outgoing fax letters (docs/qr-code-on-faxes.md). segno rather

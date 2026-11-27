@@ -593,9 +593,10 @@ The Dockerfile also now pins the german-decompounder data to DE's commit instead
 of tracking `master` — those two files define how compounds split, so an upstream
 change would silently move the expectations in `testdata/search_tokens.py`.
 
-- [ ] **Check the production Elasticsearch version.** If it is below 8.16, AT's
-  search is quietly running without `no_sub_matches` today. Nothing errors; the
-  index is just noisier. Dev is now on 8.19.3. **[R]**
+- [x] **Check the production Elasticsearch version.** Production runs the Debian
+  package `elasticsearch` 8.19.26 (checked 2026-11-27), so `no_sub_matches` is
+  honoured. The original concern: below 8.16 search quietly runs without
+  `no_sub_matches`, nothing errors, the index is just noisier. Dev is on 8.19.3. **[R]**
 
 ### Library drift beyond the test tooling
 
@@ -655,7 +656,7 @@ Worth a decision, not yet acted on:
   `>=5.2,<5.3` range. Django patch releases are where security fixes ship. **[R]**
 - [x] **`urllib3` 1.26.13 → 2.7.0** Done; matches DE. — a whole major behind, and the 1.26 series
   carries known advisories. **[R]**
-- [ ] **`pandas` 3.0.3 — AT is a major *ahead* of DE's 2.3.3.** pandas 3.0
+- [x] *(Decided 2026-11-27: ship pandas 3 without a further review, relying on `tests/test_external.py` and the staging import check.)* **`pandas` 3.0.3 — AT is a major *ahead* of DE's 2.3.3.** pandas 3.0
   changed defaults (copy-on-write, string dtypes), and AT parses bank statements
   with it (`fds_donation/external.py`: `read_csv` for PayPal; the bank transfer
   import uses the stdlib `csv` module since 2026-09-17).
@@ -1859,11 +1860,14 @@ carry the lock, not just the source.
   with `uv sync --locked` (or `--frozen`).** A plain `uv sync` may re-resolve and
   quietly hand production a different set than was tested. `--locked` fails
   instead, which is what you want on a deploy.
-- [ ] **Rebuild the Elasticsearch image.** `deps/elasticsearch/Dockerfile` now
+- [x] **Rebuild the Elasticsearch image.** *(Dev/CI only: production does not use
+  the image, it runs the Debian package, 8.19.26 as of 2026-11-27. Which
+  german-decompounder revision production's `config/analysis/` holds is not
+  checked.)* `deps/elasticsearch/Dockerfile` now
   pins 8.19.3 and pins the german-decompounder data to a commit. If production
   ES stays below 8.16, `no_sub_matches` is silently ignored and search quality
   degrades with no error — see §9.5 and the search section in §7.
-- [ ] *(django and urllib3 done; only the pandas review remains.)*
+- [x] *(django and urllib3 done; pandas 3 accepted as-is, 2026-11-27.)*
   **Decide the outstanding version bumps** before deploying rather than
   after: `django` 5.2.6 → 5.2.15 (nine patch releases, where security fixes
   ship), `urllib3` 1.26.13 → 2.7.0 (a major behind, with advisories), and a

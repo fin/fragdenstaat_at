@@ -161,10 +161,9 @@ class DonationForm {
             const displayAmount = (amount - fee).toFixed(2).replace(/\./, ',')
             // AT override: the document language is 'de-at', so a bare
             // === 'de' check would silently fall through to the English text.
-            feeHint.textContent =
-              document.documentElement.lang.startsWith('de')
-                ? ` (abzüglich Gebühren erhalten wir ${displayAmount} Euro)`
-                : `(minus fees we receive ${displayAmount} Euro)`
+            feeHint.textContent = document.documentElement.lang.startsWith('de')
+              ? ` (abzüglich Gebühren erhalten wir ${displayAmount} Euro)`
+              : `(minus fees we receive ${displayAmount} Euro)`
           }
         }
       }

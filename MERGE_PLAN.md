@@ -599,6 +599,21 @@ change would silently move the expectations in `testdata/search_tokens.py`.
 
 ### Library drift beyond the test tooling
 
+**Refreshed 2026-11-26 (after P7):** every registry package was upgraded towards
+DE@`b70ab730`'s lock — to DE's exact version, or AT's own where AT was already
+ahead (`django` 5.2.17, `pandas` 3.0.3, `djangocms-text` 1.1.0). Exception:
+`cron-descriptor` follows DE down to 1.4.5, because DE's `django-celery-beat`
+2.9 requires `<2`. Git pins were held (`-P` per registry package, never a blanket
+`--upgrade`, which would also move froide/froide-payment/froide-fax/filingcabinet
+off their P7.1 commits). A free `--upgrade` was tried first and rejected: it
+overshoots DE into majors nobody on this stack runs (sentry-sdk 3, pillow 13,
+python-dateutil 4, reportlab 5, pypdf 7, pycryptodome 4). Result: **34 of 229
+shared packages differ from DE, none with AT behind** (was 127, 94 behind).
+`xlrd` dropped; `openpyxl` kept, DE's `external.py` still uses it. The
+frontend was aligned the same way (Sentry 10/4, eslint-config-froide 1.4, vega
+minors; the unused npm `django-cookie-consent` and the `@types/dompurify` stub
+removed). The rest of this section is the pre-refresh state.
+
 **130 of 228 shared packages resolve to different versions than DE** — 97 where
 AT is behind, 33 ahead. Nearly all of the "behind" set is 2022-era: `packaging`
 22.0, `urllib3` 1.26.13, `faker` 15.3.4, `idna` 3.4, `pytest-django` 4.5.2. These
@@ -626,7 +641,7 @@ Acted on, because it was on a live path:
 
   Lifting the cap is a froide-payment change, not a bump here: port
   `StripeSofortProvider` to `StripeProviderV3`, or drop it (AT already has it
-  commented out at `settings/production.py:104`). 4.0 also drops Django < 5.2
+  commented out at `settings/production.py:107`). 4.0 also drops Django < 5.2
   and Python < 3.10 — AT satisfies both — and fixes a `StripeProviderV3`
   `captured_amount` bug that breaks refunds, which is worth having eventually.
 
@@ -636,9 +651,9 @@ Acted on, because it was on a live path:
 
 Worth a decision, not yet acted on:
 
-- [ ] **`django` 5.2.6 → 5.2.15.** Nine patch releases behind inside the pinned
+- [x] **`django` 5.2.6 → 5.2.15.** Done; 5.2.17 since P7, ahead of DE. Nine patch releases behind inside the pinned
   `>=5.2,<5.3` range. Django patch releases are where security fixes ship. **[R]**
-- [ ] **`urllib3` 1.26.13 → 2.7.0** — a whole major behind, and the 1.26 series
+- [x] **`urllib3` 1.26.13 → 2.7.0** Done; matches DE. — a whole major behind, and the 1.26 series
   carries known advisories. **[R]**
 - [ ] **`pandas` 3.0.3 — AT is a major *ahead* of DE's 2.3.3.** pandas 3.0
   changed defaults (copy-on-write, string dtypes), and AT parses bank statements
@@ -647,12 +662,12 @@ Worth a decision, not yet acted on:
   `tests/test_external.py` covers the import and passes,
   which is real reassurance, but this is the one place where being ahead of DE
   carries risk rather than benefit. **[R]**
-- [ ] AT's CMS stack is also ahead: `django-cms` 5.1.1 vs 5.0.7,
+- [x] *(Moot since P7: DE moved to `django-cms` 5.1.3 / `djangocms-versioning` 2.8.0, and the 2026-11-26 refresh matches them.)* AT's CMS stack was also ahead: `django-cms` 5.1.1 vs 5.0.7,
   `djangocms-versioning` 2.7.0 vs 2.5.1, `djangocms-frontend` 2.5.1 vs 2.4.0. We
   ported DE's CMS code onto a newer CMS than DE tests against. Nothing has broken,
   but it explains oddities like the stale `page.placeholders` test. **[R]**
 
-A blanket `uv lock --upgrade` would close most of the remaining 97 and the suite
+Done 2026-11-26, but not blanket — see the refresh note at the top of this section. A blanket `uv lock --upgrade` would close most of the remaining 97 and the suite
 (256 tests) would catch a lot of it, but it should be a deliberate step of its
 own, not folded into the merge.
 
@@ -1846,7 +1861,8 @@ carry the lock, not just the source.
   pins 8.19.3 and pins the german-decompounder data to a commit. If production
   ES stays below 8.16, `no_sub_matches` is silently ignored and search quality
   degrades with no error — see §9.5 and the search section in §7.
-- [ ] **Decide the outstanding version bumps** before deploying rather than
+- [ ] *(django and urllib3 done; only the pandas review remains.)*
+  **Decide the outstanding version bumps** before deploying rather than
   after: `django` 5.2.6 → 5.2.15 (nine patch releases, where security fixes
   ship), `urllib3` 1.26.13 → 2.7.0 (a major behind, with advisories), and a
   review of `pandas` 3.0.3 against the bank-statement import. All three are

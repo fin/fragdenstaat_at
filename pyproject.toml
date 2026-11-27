@@ -104,7 +104,6 @@ dependencies = [
   "weasyprint>=65.1",
   "webp>=0.4.0",
   "websockets>=13.0.1",
-  "xlrd>=2.0.1",
   # Back on upstream (P7.1). The recipient-aware outgoing-message-kind hook
   # froide-fax relies on, and froide-payment's "de-at" PayPal/Stripe locale
   # fixes, are all merged into okfde; the fin forks add nothing beyond them.

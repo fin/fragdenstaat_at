@@ -27,6 +27,10 @@
       "extensions": ["ms-python.python", "-anthropic.claude-code", "-github.copilot", "-github.copilot-chat"],
       "settings": {
         "python.defaultInterpreterPath": "/srv/venv/bin/python",
+        // Run everything from the installed copy. In /src, manage.py would
+        // import the working tree, and theme/checks.py (E001) refuses because
+        // the sibling checkouts sit next to it.
+        "terminal.integrated.cwd": "/srv/app",
         "workbench.colorCustomizations": {
           "titleBar.activeBackground": "#8b0000",
           "statusBar.background": "#8b0000"

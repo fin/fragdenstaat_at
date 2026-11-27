@@ -47,6 +47,11 @@ Then delete the database when you are done.
    compilemessages. Uncommitted changes are not tested. To test another
    commit, set `STAGING_REF` in the container and rerun `setup.sh`.
 
+   **Run every command from `/srv/app`**, not from the opened folder
+   `/src/fragdenstaat_at`. There, `manage.py` would import the working tree
+   and stop with `fragdenstaat_at.E001` (sibling checkouts found). New
+   terminals start in `/srv/app`.
+
 3. **Automated part** (runbook sections 0–3), in a container terminal:
 
    ```sh

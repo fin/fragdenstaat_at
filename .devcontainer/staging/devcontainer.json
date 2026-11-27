@@ -1,0 +1,37 @@
+{
+  // Deployment test against a copy of production. Read README.md first.
+  "name": "FragDenStaat AT staging (LIVE DATA)",
+  "dockerComposeFile": ["compose.yaml"],
+  "service": "app",
+  "runServices": ["app", "db", "elasticsearch", "redis"],
+  // The read-only source. The installed copy the scripts run is /srv/app,
+  // which only exists after setup.sh.
+  "workspaceFolder": "/src/fragdenstaat_at",
+  // Runs on the host before anything starts: refuses unless exactly one dump
+  // sits in ~/fds-at-staging/dump, outside the workspace.
+  "initializeCommand": "bash .devcontainer/staging/check-host.sh",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {"version": "22"}
+  },
+  "postCreateCommand": "bash /src/fragdenstaat_at/.devcontainer/staging/setup.sh",
+  "forwardPorts": [8001],
+  "portsAttributes": {"8001": {"label": "Staging (live data)"}},
+  "containerEnv": {"SHELL": "/bin/bash"},
+  "remoteEnv": {
+    "PATH": "/srv/venv/bin:${containerEnv:PATH}:/home/vscode/.local/share/pnpm"
+  },
+  "customizations": {
+    "vscode": {
+      // "-" removes an extension VS Code would otherwise install by default.
+      // No AI assistant in a container that holds live donor data.
+      "extensions": ["ms-python.python", "-anthropic.claude-code", "-github.copilot", "-github.copilot-chat"],
+      "settings": {
+        "python.defaultInterpreterPath": "/srv/venv/bin/python",
+        "workbench.colorCustomizations": {
+          "titleBar.activeBackground": "#8b0000",
+          "statusBar.background": "#8b0000"
+        }
+      }
+    }
+  }
+}

@@ -45,7 +45,8 @@ RUN set -eux; \
 # from uv.lock so a lock change does not bust this layer; a small skew is
 # harmless, since the dependency list barely moves between releases.
 ARG PLAYWRIGHT_VERSION=1.65.2
-RUN uvx --from "playwright==${PLAYWRIGHT_VERSION}" playwright install-deps chromium \
+# `uv tool run`, not `uvx`: only the uv binary is copied in above.
+RUN uv tool run --from "playwright==${PLAYWRIGHT_VERSION}" playwright install-deps chromium \
     && rm -rf /var/lib/apt/lists/*
 
 # Activate the project virtualenv in every interactive shell. The VS Code

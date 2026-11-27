@@ -7,6 +7,13 @@ the output can be shared for review without exposing donor data.
 
 Budget: about an hour. Stop and report if any step says **STOP**.
 
+**Local option:** `.devcontainer/staging/` runs this against a dump on your own
+machine, isolated from the dev container. `scripts/staging/p7-deploy-test.sh`
+automates sections 0–3 and writes the counts-only report; section 4 stays
+manual. Its README lists what is isolated and what isn't. In that setup the
+rollback in section 0 is recreating the database (`docker compose -p
+fds-at-staging down -v`), not a second dump.
+
 **Baseline: production runs `dev` @ `55ac7c4` (2026-10-19).** Everything below
 is relative to that, not to `main`. What this deploy changes:
 

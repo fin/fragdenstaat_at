@@ -1,0 +1,81 @@
+# Staging stack for a deployment test against a copy of the production
+# database. See README.md in this directory before using it.
+#
+# Its own compose project, so its network, database and volumes are separate
+# from the dev stack: the dev container cannot resolve or reach `db` here, and
+# nothing here publishes a port to the host. The only way in is VS Code's
+# forwarded port 8001 (devcontainer.json).
+name: fds-at-staging
+
+services:
+  app:
+    # Same Dockerfile and build context as the dev container, so every layer
+    # comes from the build cache and the image costs no extra disk.
+    build:
+      context: ../../..
+      dockerfile: fragdenstaat_at/.devcontainer/Dockerfile
+    init: true
+    command: sleep infinity
+    volumes:
+      # The source tree, read-only. setup.sh clones the committed HEAD into
+      # /srv/app, so nothing staging writes (venv, node_modules, build output,
+      # media, logs) ends up in the shared workspace.
+      - ../../..:/src:ro
+      - app:/srv
+      # Counts-only report, written outside the workspace on the host.
+      - ${HOME}/fds-at-staging/report:/report
+      - uv_cache:/home/vscode/.local/share/uv
+      - pnpm_cache:/home/vscode/.local/share/pnpm
+    environment:
+      DJANGO_SETTINGS_MODULE: fragdenstaat_at.settings.staging
+      DJANGO_CONFIGURATION: Staging
+      DATABASE_HOST: db
+      DATABASE_NAME: fragdenstaat_at
+      DATABASE_USER: fragdenstaat_at
+      DATABASE_PASSWORD: fragdenstaat_at
+      DJANGO_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      DJANGO_CELERY_BROKER_URL: redis://redis:6379/0
+      UV_PROJECT_ENVIRONMENT: /srv/venv
+      UV_CACHE_DIR: /home/vscode/.local/share/uv
+      PNPM_HOME: /home/vscode/.local/share/pnpm
+    depends_on:
+      - db
+      - elasticsearch
+      - redis
+
+  db:
+    image: postgis/postgis:16-3.4
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      # On first start (empty pg-data) the entrypoint runs initdb/*.sh, which
+      # restores the one dump found in /dump. Later starts reuse pg-data.
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ${HOME}/fds-at-staging/dump:/dump:ro
+    environment:
+      POSTGRES_USER: fragdenstaat_at
+      POSTGRES_DB: fragdenstaat_at
+      POSTGRES_PASSWORD: fragdenstaat_at
+
+  elasticsearch:
+    build: ../../deps/elasticsearch/
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    environment:
+      - 'discovery.type=single-node'
+      - 'cluster.routing.allocation.disk.threshold_enabled=false'
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - 'xpack.security.enabled=false'
+
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  app:
+  pg-data:
+  es-data:
+  # The dev container's package caches (devcontainer.json "mounts"). They hold
+  # downloaded packages only, no data.
+  uv_cache:
+    external: true
+  pnpm_cache:
+    external: true

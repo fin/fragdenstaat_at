@@ -73,9 +73,12 @@ volumes:
   app:
   pg-data:
   es-data:
-  # The dev container's package caches (devcontainer.json "mounts"). They hold
-  # downloaded packages only, no data.
+  # The dev container's package caches, which hold downloaded packages only, no
+  # data. check-host.sh looks up their real (project-prefixed) names and
+  # writes them to .env next to this file.
   uv_cache:
     external: true
+    name: ${STAGING_UV_CACHE:?run check-host.sh (devcontainer initializeCommand) first}
   pnpm_cache:
     external: true
+    name: ${STAGING_PNPM_CACHE:?run check-host.sh (devcontainer initializeCommand) first}

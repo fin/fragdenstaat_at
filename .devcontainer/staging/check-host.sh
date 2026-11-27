@@ -24,3 +24,23 @@ case "$dump_real/" in
 esac
 
 echo "Staging dump: ${dumps[0]##*/}"
+
+# Reuse the dev container's package caches (downloads only, no data). Compose
+# prefixes volume names with its project name, so look the real names up and
+# hand them to compose.yaml via .env (compose reads it from this directory).
+# Without a dev cache, staging gets its own, created here.
+pick_volume() {
+  local all found
+  all="$(docker volume ls -q)"
+  for pattern in "^$1\$" "devcontainer_$1\$" "_$1\$"; do
+    found="$(grep -E "$pattern" <<<"$all" | grep -v '^fds-at-staging_' | head -1 || true)"
+    [ -n "$found" ] && { echo "$found"; return; }
+  done
+  docker volume create "fds-at-staging_$1" >/dev/null
+  echo "fds-at-staging_$1"
+}
+uv_vol="$(pick_volume uv_cache)"
+pnpm_vol="$(pick_volume pnpm_cache)"
+printf 'STAGING_UV_CACHE=%s\nSTAGING_PNPM_CACHE=%s\n' "$uv_vol" "$pnpm_vol" \
+  > "$(dirname "$0")/.env"
+echo "Package caches: $uv_vol, $pnpm_vol"

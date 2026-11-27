@@ -41,3 +41,5 @@ migrate.log
 
 # Payment processor testing secrets
 payment_test_secrets.env
+# Written by .devcontainer/staging/check-host.sh (volume names only)
+.devcontainer/staging/.env

@@ -12,7 +12,7 @@ export PATH=/srv/venv/bin:$PATH
 pids=()
 trap 'kill "${pids[@]}" 2>/dev/null; wait' EXIT INT TERM
 
-python manage.py runserver 0.0.0.0:8001 --insecure >/srv/logs/web.log 2>&1 &
+python manage.py runserver 0.0.0.0:8002 --insecure >/srv/logs/web.log 2>&1 &
 pids+=($!)
 celery -A froide.celery worker -l info >/srv/logs/worker.log 2>&1 &
 pids+=($!)

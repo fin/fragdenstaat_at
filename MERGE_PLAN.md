@@ -952,6 +952,8 @@ database lacking those columns.
 
 ### P5 — repeatable sync — ✅ done
 
+Lessons from P7 for the next sync: [`FUTURE_SYNCS.md`](FUTURE_SYNCS.md).
+
 The drift job is wired into `ci.yml` (non-blocking, limit 260). **The limit is now
 far too loose** — measured today:
 

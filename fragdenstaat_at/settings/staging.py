@@ -41,10 +41,10 @@ if _forbidden:
 
 
 class Staging(FragDenStaat):
-    SITE_URL = env("STAGING_SITE_URL", "http://localhost:8001")
+    SITE_URL = env("STAGING_SITE_URL", "http://localhost:8002")
     META_SITE_PROTOCOL = "http"
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-    CSRF_TRUSTED_ORIGINS = ["http://localhost:8001", "http://127.0.0.1:8001"]
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:8002", "http://127.0.0.1:8002"]
     ALLOWED_REDIRECT_HOSTS = ALLOWED_HOSTS
     CSRF_COOKIE_SECURE = False
     SESSION_COOKIE_SECURE = False
@@ -64,7 +64,7 @@ class Staging(FragDenStaat):
     TELNYX_FROM_NUMBER = None
     SENTRY_JS_URL = None
 
-    PAYMENT_HOST = "localhost:8001"
+    PAYMENT_HOST = "localhost:8002"
     PAYMENT_USES_SSL = False
     # Production's variants with sandbox credentials (the STRIPE_TEST_* /
     # PAYPAL_TEST_* variables settings/test.py and Dev use). Unset, a payment

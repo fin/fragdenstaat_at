@@ -22,7 +22,7 @@ if [ "${NO_BEAT:-}" != 1 ]; then
   pids+=($!)
 fi
 
-echo "web http://localhost:8001 (admin: /admin/), worker, ${NO_BEAT:+no }beat running."
+echo "web http://localhost:8002 (admin: /admin/), worker, ${NO_BEAT:+no }beat running."
 echo "tail -f /srv/logs/*.log in another terminal. Ctrl-C stops everything."
 wait -n
 echo "a process exited, stopping the rest; see /srv/logs/" >&2

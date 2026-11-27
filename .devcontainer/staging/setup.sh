@@ -42,5 +42,5 @@ cat <<EOF
 Staging is installed at $APP ($(git -c safe.directory='*' log -1 --format='%h %s')).
 Next, in a terminal here:
   cd $APP && bash scripts/staging/p7-deploy-test.sh   # sections 0-3 of the runbook
-  bash $SRC/.devcontainer/staging/serve.sh            # then browse http://localhost:8001
+  bash $SRC/.devcontainer/staging/serve.sh            # then browse http://localhost:8002
 EOF

@@ -4,7 +4,7 @@
 # Its own compose project, so its network, database and volumes are separate
 # from the dev stack: the dev container cannot resolve or reach `db` here, and
 # nothing here publishes a port to the host. The only way in is VS Code's
-# forwarded port 8001 (devcontainer.json).
+# forwarded port 8002 (devcontainer.json).
 name: fds-at-staging
 
 services:

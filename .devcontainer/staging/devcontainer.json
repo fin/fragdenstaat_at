@@ -14,8 +14,8 @@
     "ghcr.io/devcontainers/features/node:1": {"version": "22"}
   },
   "postCreateCommand": "bash /src/fragdenstaat_at/.devcontainer/staging/setup.sh",
-  "forwardPorts": [8001],
-  "portsAttributes": {"8001": {"label": "Staging (live data)"}},
+  "forwardPorts": [8002],
+  "portsAttributes": {"8002": {"label": "Staging (live data)"}},
   "containerEnv": {"SHELL": "/bin/bash"},
   "remoteEnv": {
     "PATH": "/srv/venv/bin:${containerEnv:PATH}:/home/vscode/.local/share/pnpm"

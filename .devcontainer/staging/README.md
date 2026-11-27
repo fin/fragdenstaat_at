@@ -18,7 +18,7 @@ below.
 | **Report** | `~/fds-at-staging/report/` on the host. Counts, types and migration names only, so you can share it. |
 | **Outbound** | `settings/staging.py`: mail and faxes go to the console, payments use sandbox keys or none, Sentry is off. It refuses to start if production credentials are in the environment. |
 | **AI extensions** | The Claude Code and Copilot extensions are removed in this container (`"-…"` in devcontainer.json). |
-| **Not isolated: the web UI** | Port 8001 is forwarded by VS Code to `localhost` on the host. Other containers can reach host ports via `host.docker.internal`, and that includes the dev container. |
+| **Not isolated: the web UI** | Port 8002 is forwarded by VS Code to `localhost` on the host. Other containers can reach host ports via `host.docker.internal`, and that includes the dev container. |
 
 So the one rule that isolation cannot replace: **close any Claude Code session
 (in the dev container or on the host) while the staging stack is running.**
@@ -71,7 +71,7 @@ Then delete the database when you are done.
    bash /src/fragdenstaat_at/.devcontainer/staging/serve.sh   # NO_BEAT=1 to skip beat
    ```
 
-   <http://localhost:8001>. The admin is at `/admin/`, and production accounts
+   <http://localhost:8002>. The admin is at `/admin/`, and production accounts
    work with their production passwords. Mail and faxes show up in
    `/srv/logs/worker.log` and `/srv/logs/web.log`. Beat runs production's
    periodic tasks against the copy; that's harmless, nothing leaves. Search is

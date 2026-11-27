@@ -16,8 +16,33 @@ is relative to that, not to `main`. What this deploy changes:
   `2026-feat-messagekind-initial-message` branch to `okfde/froide@main`
   (`65bdbb35`); froide-payment from `fin/froide-payment@main` to `okfde@main`;
   froide-fax to `fin/froide-fax@sync/okfde-2026-11`; djangocms-text 0.9.1 →
-  1.1.0, django-flowcontrol 0.0.19 → 0.0.21. django-cms is unchanged.
-- **Frontend:** Vite 7 and new devDependencies (`pnpm-lock.yaml`), so rebuild.
+  1.1.0, django-flowcontrol 0.0.19 → 0.0.21.
+- **Lock refresh (`6da1a0a`):** on top of that, the registry packages were
+  moved to DE@`b70ab730`'s locked versions. Against production that is **109
+  changed packages**, 7 added, 10 removed (xlrd among them). `django` 5.2.17,
+  `urllib3` 2.7.0 and `pandas` 3.0.3 are **unchanged**: production already has
+  them. Every version below is what DE runs in production. The ones on a live
+  AT path, each with a check in section 4:
+
+  | package | production → this deploy | where it runs in AT | check |
+  |---|---|---|---|
+  | `weasyprint` | 66 → 69 | every letter/fax PDF (`froide.foirequest.pdf_generator`, froide-fax) | 4. PDFs, Fax |
+  | `pikepdf`, `reportlab`, `svglib` | 9 → 10, 4.4 → 4.5, 1.5 → 2.3 | redaction, filingcabinet PDF handling | 4. PDFs |
+  | `django-localflavor`, `python-stdnum` | 3.1 → 5.0, 1.18 → 2.2 | `IBANFormField` in froide-payment's SEPA form | 4. Donation form |
+  | `django-cms`, `djangocms-link`, `django-filer`, `djangocms-alias`, `djangocms-versioning` | 5.1.1 → 5.1.3, 5.0 → 5.2, 3.3 → 3.6, 3.1 → 3.2, 2.7 → 2.8 | every CMS page; three new migrations (section 1) | 3. `verify_render`, 4. CMS editing |
+  | `djangocms-simple-admin-style`, `django-tinymce` | 2.1 → 5.2, 3.5 → 5.0 | admin only | 4. CMS editing |
+  | `celery`, `kombu`, `billiard`, `django-celery-beat`, `cron-descriptor` | 5.5 → 5.6, 5.5 → 5.6, 4.2.1 → 4.2.4, 2.8 → 2.9, 2.1 → 1.4.5 | workers, beat, the periodic-task admin | 4. Celery |
+  | `channels`, `daphne`, `twisted`, `autobahn` | 4.2 → 4.3, 4.2.2 → 4.2.3, 26.4 → 26.10, 25 → 26 | the ASGI server | 4. Celery (service start) |
+  | `sentry-sdk`; npm `@sentry/browser` | 2.29 → 2.62; 9 → 10 | error reporting, backend and browser | 4. Sentry |
+  | `phonenumberslite`, `django-phonenumber-field` | 8 → 9, 7 → 8 | froide's phone fields (fax numbers) | 4. Fax |
+
+  The rest are dev/test tools (ipython, faker, debug-toolbar, honcho,
+  pytest-*) or transitive with no direct AT use. The suite passes on the new
+  lock (433 passed). Install with `uv sync --locked`: a plain `uv sync` may
+  re-resolve to something other than what was tested.
+- **Frontend:** Vite 7, `@vitejs/plugin-vue` 6, Sentry 10/4, vega minors; the
+  npm `django-cookie-consent` and `@types/dompurify` are gone (`pnpm-lock.yaml`).
+  Rebuild with `pnpm install --frozen-lockfile && pnpm run build`.
 - **Celery:** no renames (production already has `e07f8e5`); two new tasks
   queued from signal handlers, none scheduled. Restart the workers together
   with the web processes.
@@ -69,16 +94,28 @@ python manage.py showmigrations | grep '\[ \]'        # expect: nothing
 python manage.py makemigrations --check --dry-run      # see note
 ```
 
-New migrations, in order: `bounce 0003`, `froide_payment 0021`,
-`fds_cms 0010–0011`, `fds_donation 0049–0052`, `fds_mailing 0003–0005`. That
-list is complete against production's lock, third-party packages included:
-djangocms-text and flowcontrol add none, and the four edited froide `document`
-migrations only make their `foirequest` dependency conditional (already applied,
-no effect).
+New migrations: `bounce 0003`, `froide_payment 0021`, `fds_cms 0010–0011`,
+`fds_donation 0049–0052`, `fds_mailing 0003–0005`, plus three from the lock
+refresh:
 
-`makemigrations --check` also reports `djangocms_alias`, `contractor` and
-`sortabletable`. That is pre-existing and comes from those third-party
-packages, so it is not a STOP. Anything else listed is.
+- `filer 0018_alter_file_options`: model options only, no SQL.
+- `djangocms_alias 0008`: a unique constraint on category translations
+  (`language_code`, `master`). **STOP** if it fails with a duplicate-key error;
+  report the number of duplicate pairs, not their names.
+- `djangocms_link 0020`: renames the `Link` plugin column `target` →
+  `link_target`. AT overrides no djangocms_link templates, so nothing reads
+  the old name; still check a link plugin set to open in a new tab
+  (section 4, CMS editing).
+
+That list is complete against production's lock (old and new wheels compared
+for every changed package that ships migrations). The four edited froide
+`document` migrations only make their `foirequest` dependency conditional
+(already applied, no effect).
+
+`makemigrations --check` also reports `contractor` and `sortabletable`. That
+is pre-existing and comes from those third-party packages, so it is not a STOP
+(djangocms-alias 3.2 fixed the third one it used to list). Anything else
+listed is.
 
 ## 2. Donor attributes (hstore → JSON)
 
@@ -142,7 +179,33 @@ python scripts/verify_render.py   # needs a built frontend; every CMS page 200, 
   query).
 - **Donation form.** Make one test donation per enabled method. Recurring
   PayPal must not 400: production has the `de-at` locale fix from fin's
-  froide-payment fork, and this deploy swaps it for upstream's copy.
+  froide-payment fork, and this deploy swaps it for upstream's copy. For the
+  SEPA/bank-transfer form (localflavor 5, stdnum 2): an AT test IBAN
+  (`AT61 1904 3002 3457 3201`) and a DE one must be accepted, with and without
+  spaces; `AT61 1904 3002 3457 3202` (bad check digit) must be rejected.
+- **PDFs** (WeasyPrint 69, pikepdf 10). Download the PDF of one request and
+  of one letter-style message. Expect: it opens, the page count is plausible,
+  umlauts and the logo render, and the layout matches the same download on
+  production (compare side by side; report pass/fail only). Redact one test
+  attachment and check the redacted PDF opens.
+- **CMS editing** (django-cms 5.1.3, djangocms-link 5.2, filer 3.6, admin
+  style 5). Log in, open a page in edit mode, edit and publish a text plugin,
+  edit a link plugin (its "new tab" target must survive the `link_target`
+  rename), and upload an image through filer. Open one admin form with a
+  TinyMCE field.
+- **Celery** (celery 5.6, beat 2.9). After the restart, the worker logs
+  `ready`, beat logs its schedule, and
+  `celery -A froide.celery inspect registered` (use the app your service
+  units pass to `-A`) lists
+  `fragdenstaat_at.fds_donation.process_new_donation_task`. The periodic-task
+  admin list must load: cron-descriptor goes *down* to 1.4.5, and it renders
+  the human-readable schedules there. The ASGI server (daphne/channels) must
+  start without errors.
+- **Sentry** (SDK 2.62, browser SDK 10). Trigger one backend test event
+  (`python manage.py shell -c "import sentry_sdk; sentry_sdk.capture_message('p7 staging')"`)
+  and check that the browser SDK still reports: a frontend error from staging
+  must show up in Sentry. If the build uploads source maps (`sentryVitePlugin`
+  in production mode, needs `SENTRY_AUTH_TOKEN`), its frames must be readable.
 - **Donation embed.** `python manage.py shell -c "from django.urls import reverse; print(reverse('fds_donation:donate-embed'))"`,
   then:
   - `curl -sI <url>` must show `Content-Security-Policy: frame-ancestors 'self'`
@@ -168,10 +231,14 @@ python scripts/verify_render.py   # needs a built frontend; every CMS page 200, 
 - **Fax.** With `FAX_BACKEND` pointing at the dummy backend, send a fax-routed
   reply and check a `DeliveryStatus` is created and `email_message_id` is set.
   Production's froide-fax (`7b74f80`) works; this checks the okfde merge on the
-  sync branch, whose auto-merge broke the send path before P7.1 fixed it.
+  sync branch, whose auto-merge broke the send path before P7.1 fixed it. Open
+  the generated fax PDF (WeasyPrint 69): cover letter, QR code and body must
+  render. Also edit and save a public body's fax number in the admin
+  (phonenumbers 9).
 
 ## 5. Report
 
 The two count tables (sections 0 and 2), the shape table, the
-`empty_conditions` count, and pass/fail for each section-4 item, including what
+`empty_conditions` count, whether the three lock-refresh migrations applied,
+and pass/fail for each section-4 item, including what
 the iframe submit did.

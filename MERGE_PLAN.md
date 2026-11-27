@@ -538,6 +538,8 @@ design or legal judgement.
     - [x] froide-fax: okfde's 2 commits merged as `fin/froide-fax@sync/okfde-2026-11` (`7dfd964`). AT pins that branch until `fin/main` has it
       (the auto-merge silently broke `send_fax_telnyx`'s return value; fixed, with a regression test)
     - [x] DE version floors (django-cms 5.1, djangocms-text 1.1, flowcontrol 0.0.21, playwright 1.65, Vite 7, ...)
+      (the merge bumped package.json without regenerating pnpm-lock.yaml, failing CI's frozen install; fixed later, with
+      `@vitejs/plugin-vue` ^6.0.7 — 5.x has no Vite 7 peer support)
   - [x] P7.2 DE code: per-file three-way merge, 23 conflicts resolved by hand, skipped commits kept out
   - [x] P7.3 migrations forward-ported (fds_cms 0010–0011, fds_donation 0049–0052, fds_mailing 0003–0005), synthetic rehearsal passing
   - [ ] **P7.3 deployment test on a staging copy, run by a human** — `docs/runbooks/p7-deployment-test.md`

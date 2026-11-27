@@ -58,10 +58,17 @@ doing, next time. Each point names the mistake or near-miss it comes from.
   only because its lock happens not to move. Before lifting any cap, check why
   it is there (§9.9).
 - **Compare migration sets by installing the old and new wheels** (`pip
-  download` into a scratch dir). Don't trust changelogs. In P7, third-party
-  packages added no migrations, and froide's edits to historical `document`
-  migrations only changed dependencies. Expected `makemigrations --check`
-  noise: `djangocms_alias`, `contractor`, `sortabletable`.
+  download` into a scratch dir). Don't trust changelogs. **Redo it after every
+  lock change, against production's lock.** P7's first comparison found no
+  third-party migrations. The later lock refresh added three (`filer 0018`,
+  `djangocms_alias 0008`, and `djangocms_link 0020`, a column rename), and the
+  runbook only learnt about them because the comparison was rerun. froide's
+  edits to historical `document` migrations only changed dependencies.
+  Expected `makemigrations --check` noise: `contractor`, `sortabletable`.
+- **Write the runbook last**, after the final lock, and diff it against
+  production's `uv.lock`/`package.json`, not the branch's previous lock. The
+  first P7 runbook predated the lock refresh and listed 6 dependency changes,
+  when production would actually get 109.
 
 ## 3. Local test runs that lie
 
